@@ -32,7 +32,7 @@ def ismodule(obj):
 
 def isdirmodule(obj):
    try:
-      assert hasattr(suite, '__path__')
+      assert hasattr(obj, '__path__')
       assert ismodule(obj)
    except:
       return False
