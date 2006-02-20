@@ -18,8 +18,25 @@
 ###########################################################################
 from types import FunctionType as function, MethodType as method
 
-__all__ = ('isfunction', 'ismethod', 'ismetaclass', 'isclass', 'isbaseobject', 
-            'isimmutabledef', 'isimmutable')
+__all__ = ('ismodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
+            'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable')
+
+def ismodule(module):
+   try:
+      assert hasattr(module, '__file__')
+      assert hasattr(module, '__name__')
+      assert isinstance(module, ModuleType)
+   except:
+      return False
+   return True
+
+def isdirmodule(module):
+   try:
+      assert hasattr(suite, '__path__')
+      assert ismodule(module)
+   except:
+      return False
+   return True
 
 def isfunction(obj):
    return isinstance(obj, function)

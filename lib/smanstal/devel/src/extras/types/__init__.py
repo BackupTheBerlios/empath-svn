@@ -17,9 +17,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
 from extras.types.introspect import isfunction, ismethod, ismetaclass, isclass, isbaseobject, \ 
-                                    isimmutabledef, isimmutable
+                                    isimmutabledef, isimmutable, ismodule, isdirmodule
 
 from extras.types.odict import odict
 
-__all__ = ('isfunction', 'ismethod', 'ismetaclass', 'isclass', 'isbaseobject', 
-            'isimmutabledef', 'isimmutable')
+__all__ = ('ismodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
+            'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable')
