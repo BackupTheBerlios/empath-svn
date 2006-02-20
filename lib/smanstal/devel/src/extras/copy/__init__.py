@@ -16,48 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
-from types import FunctionType as function, MethodType as method
-import dispatch
 
-@dispatch.generic()
-def copyfunction(func, name = None):
-   """Base generic function for 'copyfunction()'"""
-   
-@copyfunction.when('not isinstance(func, function) and not isinstance(func, method)')
-def copyfunction(func, name = None):
-   raise TypeError, "The 'func' argument must be a python function or method."
-   
-@copyfunction.when('name is not None and not isinstance(name, str)')
-def copyfunction(func, name = None):
-   raise TypeError, "The 'name' argument must be either a string or None."
-   
-@copyfunction.when('name is None or (isinstance(name, str) and name == "")')
-def copyfunction(func, name = None):
-   return copyfunction(func, func.func_name)
-   
-@copyfunction.when('isinstance(name, str) and name != ""')
-def copyfunction(func, name = None):
-   tempfunc = function(func.func_code, func.func_globals, name, func.func_defaults, func.func_closure)
-   tempfunc.func_doc = None
-   return tempfunc
-   
-@dispatch.generic()
-def copymethod(meth, name = None):
-   """Base generic function for 'copymethod()'"""
-   
-@copymethod.when('not isinstance(meth, method)')   
-def copymethod(meth, name = None):
-   raise TypeError, "The 'meth' argument must be a python method object."
+from extras.copy.function import copyfunction, copymethod
 
-@copymethod.when('name is not None and not isinstance(name, str)')   
-def copymethod(meth, name = None):
-   raise TypeError, "The 'name' argument must be a string or None."
-
-@copymethod.when('name is None or (isinstance(name, str) and name == "")')   
-def copymethod(meth, name = None):
-   copymethod(meth, meth.func_name)
-
-@copymethod.when('isinstance(name, str)')
-def copymethod(meth, name = None):
-   tempmeth = copyfunction(meth, name)
-   return method(tempmeth, None)
+__all__ = ('copyfunction', 'copymethod')
