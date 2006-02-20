@@ -1,5 +1,5 @@
 ###########################################################################
-# extras.datatypes -- Description goes here
+# extras.types -- Description goes here
 # Copyright (C) 2006  Ariel De Ocampo
 # 
 # This program is free software; you can redistribute it and/or
@@ -16,3 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
+from extras.types.introspect import isfunction, ismethod, ismetaclass, isclass, isbaseobject, \ 
+                                    isimmutabledef, isimmutable
+
+from extras.types.odict import odict
+
+__all__ = ('isfunction', 'ismethod', 'ismetaclass', 'isclass', 'isbaseobject', 
+            'isimmutabledef', 'isimmutable')

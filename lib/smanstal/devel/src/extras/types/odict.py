@@ -1,5 +1,5 @@
 ###########################################################################
-# extras.datatypes.odict -- Ordered dictionary
+# extras.types.odict -- Ordered dictionary
 # Copyright (C) 2006  Ariel De Ocampo
 # 
 # This program is free software; you can redistribute it and/or
