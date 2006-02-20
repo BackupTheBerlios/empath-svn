@@ -1,0 +1,4 @@
+commit[.]log
+[.].*[.]swp
+.*[.]pyc
+.*[.]e3[pst]
