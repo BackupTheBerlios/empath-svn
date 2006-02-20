@@ -16,24 +16,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
-from types import FunctionType as function, MethodType as method
+from types import FunctionType as function, MethodType as method, ModuleType
 
 __all__ = ('ismodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
             'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable')
 
-def ismodule(module):
+def ismodule(obj):
    try:
-      assert hasattr(module, '__file__')
-      assert hasattr(module, '__name__')
-      assert isinstance(module, ModuleType)
+      assert hasattr(obj, '__file__')
+      assert hasattr(obj, '__name__')
+      assert isinstance(obj, ModuleType)
    except:
       return False
    return True
 
-def isdirmodule(module):
+def isdirmodule(obj):
    try:
       assert hasattr(suite, '__path__')
-      assert ismodule(module)
+      assert ismodule(obj)
    except:
       return False
    return True
