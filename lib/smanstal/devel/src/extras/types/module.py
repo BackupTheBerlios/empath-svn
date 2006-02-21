@@ -90,12 +90,6 @@ def RootPackagePathOf(module):
    parent, cur = op.split(dir)
    return parent
    
-##def SysPathToModulePath(syspath):
-##   pkgdir, t = op.split(RootPackagePath())
-##   assert syspath.startswith(pkgdir)
-##   abspath = syspath.replace(pkgdir, '').replace(os.sep, '', 1).replace(os.sep, '.')
-##   return abspath
-
 @dispatch.generic()
 def ModuleObjectFromModulePath(modpath):
    """Base generic function of 'ModuleObjectFromModulePath'"""
@@ -119,37 +113,6 @@ def ModuleObjectFromModuleName(modname):
    exec newcode in locals()
    return mod
    
-##@dispatch.generic()
-##def SelfModule(modname = None):
-##   """Base generic function of 'SelfModule()'"""
-##
-##@SelfModule.when("modname is None")
-##def SelfModule(modname = None):
-##   def deco(func):
-##      def wrapper(*args, **kwargs)
-##         func(*args, **kwargs)
-##         return ModuleObjectFromModulePath(__name__)
-##      return wrapper
-##   return deco   
-   
-##@ParentModule.when('ismodule(module)')
-##def ParentModule(module):
-##   assert ismodule(module)
-##   #assert not isdirmodule(module)
-##   parentmod_name = '.'.join(AbsoluteModulePath(module).rsplit('.', 1)[0:-1])
-##   return _selfmod(parentmod_name)
-
-##@ParentModule.when('ismodule(module) and not isdirmodule(module)')
-##def ParentModule(module):
-##   dir, file = op.split(module.__file__)
-##   assert not file.startswith('__init__.py')
-##   if dir == "":
-##      pass
-##   else:
-##      head, tail = op.split(dir)
-##   parentmod_name = '.'.join(AbsoluteModulePath(module).rsplit('.', 1)[0:-1])
-##   return _selfmod(parentmod_name)
-
 @dispatch.generic()
 def ParentModule(module):
    """Base generic function of 'ParentModuleName()'"""
