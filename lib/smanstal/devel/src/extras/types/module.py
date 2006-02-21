@@ -161,3 +161,15 @@ def ParentModule(module):
    if parentname == absname:
       return None
    return ModuleObjectFromModuleName(parentname)
+
+@ParentModule.when('isinstance(module, str) and module != ""')
+def ParentModule(module):
+   abspath = op.realpath(module)
+   path, file = op.split(abspath)
+   if not file.startswith('__init__.py'):
+      path, ext = op.splitext(abspath)
+   absname = AbsoluteModuleName(path)
+   parentname = absname.rsplit('.', 1)[0]
+   if parentname == absname:
+      return None
+   return ModuleObjectFromModuleName(parentname)

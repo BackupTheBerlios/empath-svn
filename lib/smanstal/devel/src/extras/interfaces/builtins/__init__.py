@@ -17,8 +17,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
 from extras.interfaces.builtins.containers import IIterable, IContainer, ISequence, \
-                                                   IMutableContainer, IMutableSequence, \
-                                                   IMapping, IMutableMapping
+IMutableContainer, IMutableSequence, IMapping, IMutableMapping
 
 
 __all__ = ('IIterable', 'IContainer', 'ISequence', 'IMutableContainer', 'IMutableSequence', 
