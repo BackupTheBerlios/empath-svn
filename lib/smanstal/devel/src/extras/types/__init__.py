@@ -16,10 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ###########################################################################
-from extras.types.introspect import isfunction, ismethod, ismetaclass, isclass, isbaseobject, \ 
-                                    isimmutabledef, isimmutable, ismodule, isdirmodule
+from extras.types.introspect import *
+from extras.types.module import *
 
 from extras.types.odict import odict
 
-__all__ = ('ismodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
-            'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable')
+__all__ = ('ismodule', 'isfilemodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
+            'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable', 'odict'
+            'DirHasPythonInit', 'AbsoluteModuleName', 'RootPackageOf', 'RootPackagePathOf',
+            'ModuleObjectFromModulePath', 'ModuleObjectFromModuleName', 'ParentModule')
