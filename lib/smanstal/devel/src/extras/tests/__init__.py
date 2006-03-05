@@ -29,6 +29,8 @@ import os, os.path as op
 from extras.types.module import AbsoluteModuleName, ModuleObjectFromModuleName, ModuleObjectFromModulePath
 from extras.types.introspect import isdirmodule
 
+__all__ = ('TestModules', 'TestSuites', 'AllTestNames', 'AllTestObjects', 'AddTest')
+
 @dispatch.generic()
 def TestModules(suite):
    """Base generic function of 'TestModules()'"""
