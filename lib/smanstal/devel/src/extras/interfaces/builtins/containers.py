@@ -20,7 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-################################################################################from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
+################################################################################
+from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
 
 __all__ = ('IIterable', 'IContainer', 'ISequence', 'IMutableContainer', 'IMutableSequence', 
             'IMapping', 'IMutableMapping')

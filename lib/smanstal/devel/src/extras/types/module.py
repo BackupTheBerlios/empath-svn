@@ -20,8 +20,8 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-################################################################################from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
-
+################################################################################
+from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
 
 import os, sys
 import dispatch
@@ -62,7 +62,7 @@ def AbsoluteModuleName(module):
 
 @AbsoluteModuleName.when('isfilemodule(module)')
 def AbsoluteModuleName(module):
-   abspath = op.realpath(module.__file__)
+   abspath = op.abspath(module.__file__)
    dir, file = op.split(abspath)
    ret = None
    if file.startswith('__init__.py'):
@@ -78,7 +78,7 @@ def RootPackageOf(module):
 
 @RootPackageOf.when('isfilemodule(module)')
 def RootPackageOf(module):
-   cur, ext = op.splitext(op.realpath(__file__))
+   cur, ext = op.splitext(op.abspath(__file__))
    rootpkgstr = AbsoluteModuleName(cur).split('.', 1)[0]
    newcode = compile("import %s as rootpkg" %rootpkgstr, '<string>', 'exec')
    exec newcode in locals()
@@ -91,7 +91,7 @@ def RootPackagePathOf(module):
 @RootPackagePathOf.when('isfilemodule(module)')
 def RootPackagePathOf(module):
    rootpkg = RootPackageOf(module)
-   curpath = op.realpath(rootpkg.__file__)
+   curpath = op.abspath(rootpkg.__file__)
    dir = op.dirname(curpath)
    parent, cur = op.split(dir)
    return parent
@@ -102,7 +102,7 @@ def ModuleObjectFromModulePath(modpath):
    
 @ModuleObjectFromModulePath.when('isinstance(modpath, str) and op.exists(modpath)')
 def ModuleObjectFromModulePath(modpath):
-   abspath = op.realpath(modpath)
+   abspath = op.abspath(modpath)
    path, file = op.split(abspath)
    if not file.startswith('__init__.py'):
       path, ext = op.splitext(abspath)
@@ -133,7 +133,7 @@ def ParentModule(module):
 
 @ParentModule.when('isinstance(module, str) and module != ""')
 def ParentModule(module):
-   abspath = op.realpath(module)
+   abspath = op.abspath(module)
    path, file = op.split(abspath)
    if not file.startswith('__init__.py'):
       path, ext = op.splitext(abspath)
