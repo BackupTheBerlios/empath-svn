@@ -27,7 +27,7 @@ import unittest
 import dispatch
 import os, os.path as op
 from extras.types.module import AbsoluteModuleName, ModuleObjectFromModuleName, ModuleObjectFromModulePath
-from extras.types.introspect import isdirmodule
+from extras.types.introspect import isdirmodule, isfunction
 
 __all__ = ('TestModules', 'TestSuites', 'AllTestNames', 'AllTestObjects', 'AddTest')
 
@@ -85,7 +85,10 @@ def AllTestObjects(suite):
    abssuitename = AbsoluteModuleName(suite)
    for modname in AllTestNames(suite):
       absmodpath = "%s.%s" %(abssuitename, modname)
-      yield ModuleObjectFromModuleName(absmodpath).suite()
+      mod = ModuleObjectFromModuleName(absmodpath)
+      if not hasattr(mod, 'suite') or not isfunction(mod.suite):
+         raise ValueError, "Test module '%s' is missing a 'suite()' function" %absmodpath
+      yield mod.suite()
 
 @dispatch.generic()
 def AddTest(x):
