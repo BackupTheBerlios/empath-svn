@@ -26,8 +26,8 @@
 # =========================================================================
 
 # =========================================================================
-from extras.types.module import ParentModule
-from extras.tests import AddTest
+from smanstal.types.module import ParentModule
+from smanstal.tests import AddTest
 ##import extras.tests.Test_tests as parentmod
 
 parentmod = ParentModule(__file__)

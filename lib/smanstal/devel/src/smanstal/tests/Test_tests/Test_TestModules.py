@@ -26,8 +26,8 @@
 # =========================================================================
 
 # =========================================================================
-from extras.types.module import ParentModule
-from extras.tests import AddTest
+from smanstal.types.module import ParentModule
+from smanstal.tests import AddTest
 import dispatch as d
 
 parentmod = ParentModule(__file__)
@@ -57,7 +57,7 @@ class TestTestModules(parentmod.Test_tests):
    # --------------------------------------------------------
    def testFileModuleArg(self):
       """tests.TestModules - File-module will generate a NoApplicableMethods error"""
-      mod = __import__('extras.tests.Test_tests.Test___all__')
+      mod = __import__('smanstal.tests.Test_tests.Test___all__')
       try:
          self.tests.TestModules(mod)
       except d.NoApplicableMethods:
@@ -73,7 +73,7 @@ class TestTestModules(parentmod.Test_tests):
    # --------------------------------------------------------
    def testReturnsStrings(self):
       """tests.TestModules - Passing in a directory module will yield strings that start with 'Test_'"""
-      mod = __import__('extras.tests.Test_tests')
+      mod = __import__('smanstal.tests.Test_tests')
       for i in self.tests.TestModules(mod):
          self.assert_(isinstance(i, str))
          self.assert_(i.startswith('Test_'))
@@ -86,7 +86,7 @@ class TestTestModules(parentmod.Test_tests):
    # --------------------------------------------------------
    def testReturnsExistingFileModules(self):
       """tests.TestModules - Passing in a directory module will yield all child file test modules"""
-      mod = __import__('extras.tests.Test_tests')
+      mod = __import__('smanstal.tests.Test_tests')
       import os, os.path as op
       abspath = op.abspath(mod.__file__)
       dirpath = op.dirname(abspath)

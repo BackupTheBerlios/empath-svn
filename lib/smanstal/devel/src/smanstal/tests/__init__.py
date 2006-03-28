@@ -26,8 +26,8 @@
 import unittest
 import dispatch
 import os, os.path as op
-from extras.types.module import AbsoluteModuleName, ModuleObjectFromModuleName, ModuleObjectFromModulePath
-from extras.types.introspect import isdirmodule, isfunction
+from smanstal.types.module import AbsoluteModuleName, ModuleObjectFromModuleName, ModuleObjectFromModulePath
+from smanstal.types.introspect import isdirmodule, isfunction
 
 __all__ = ('TestModules', 'TestSuites', 'AllTestNames', 'AllTestObjects', 'AddTest')
 

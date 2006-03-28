@@ -22,6 +22,6 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ################################################################################
 
-from extras.copy.function import copyfunction, copymethod
+from smanstal.copy.function import copyfunction, copymethod
 
 __all__ = ('copyfunction', 'copymethod')

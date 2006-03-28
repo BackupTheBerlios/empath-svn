@@ -27,7 +27,7 @@ import os, sys
 import dispatch
 op = os.path
 
-from extras.types import isfilemodule, isdirmodule
+from smanstal.types import isfilemodule, isdirmodule
 
 __all__ = ('DirHasPythonInit', 'AbsoluteModuleName', 'RootPackageOf', 'RootPackagePathOf',
             'ModuleObjectFromModulePath', 'ModuleObjectFromModuleName', 'ParentModule')

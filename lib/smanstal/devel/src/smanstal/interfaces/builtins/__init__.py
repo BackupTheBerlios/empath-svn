@@ -21,7 +21,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ################################################################################
-from extras.interfaces.builtins.containers import IIterable, IContainer, ISequence, \
+from smanstal.interfaces.builtins.containers import IIterable, IContainer, ISequence, \
 IMutableContainer, IMutableSequence, IMapping, IMutableMapping
 
 

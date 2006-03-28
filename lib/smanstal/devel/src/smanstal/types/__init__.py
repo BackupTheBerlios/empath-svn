@@ -22,10 +22,10 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ################################################################################from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
 
-from extras.types.introspect import *
-from extras.types.module import *
+from smanstal.types.introspect import *
+from smanstal.types.module import *
 
-from extras.types.odict import odict
+from smanstal.types.odict import odict
 
 __all__ = ('ismodule', 'isfilemodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
             'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable', 'odict'

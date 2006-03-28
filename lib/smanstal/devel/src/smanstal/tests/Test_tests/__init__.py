@@ -28,8 +28,8 @@
 # ==========IMPORT STUFF===========
 # Put stuff you want to import here.
 import unittest
-from extras import tests
-from extras.tests import AddTest
+from smanstal import tests
+from smanstal.tests import AddTest
 # =================================
 
 class Test_tests(unittest.TestCase):
