@@ -28,6 +28,8 @@
 # =========================================================================
 from extras.types.module import ParentModule
 from extras.tests import AddTest
+##import extras.tests.Test_tests as parentmod
+
 parentmod = ParentModule(__file__)
 
 class Test__all__(parentmod.Test_tests):

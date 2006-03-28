@@ -2,3 +2,6 @@ commit[.]log
 [.].*[.]swp
 .*[.]pyc
 .*[.]e3[pst]
+.coverage
+.*[.]vp
+.*[.]vs

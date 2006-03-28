@@ -31,6 +31,7 @@ from extras.tests import AddTest
 import dispatch as d
 
 parentmod = ParentModule(__file__)
+##import extras.tests.Test_tests as parentmod
 
 class TestTestModules(parentmod.Test_tests):
 # =========================================================================
@@ -90,8 +91,7 @@ class TestTestModules(parentmod.Test_tests):
       abspath = op.abspath(mod.__file__)
       dirpath = op.dirname(abspath)
       for i in self.tests.TestModules(mod):
-         pyf = "%s.py" %i
-         fullpyf = op.join(*(dirname, pyf))
+         fullpyf = op.join(*(dirname, "%s.py" %i))
          self.assert_(op.isfile(fullpyf))
    # --------------------------------------------------------
    # End testReturnsExistingFileModules Method
