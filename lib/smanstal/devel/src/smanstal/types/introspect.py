@@ -21,9 +21,9 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ################################################################################
-from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
+#from protocols import Interface, declareAdapter, NO_ADAPTER_NEEDED
 
-from types import FunctionType as function, MethodType as method, ModuleType
+from types import FunctionType as function, BuiltinFunctionType as bfunction, MethodType as method, BuiltinMethodType as bmethod, ModuleType
 
 __all__ = ('ismodule', 'isfilemodule', 'isdirmodule', 'isfunction', 'ismethod', 'ismetaclass', 
             'isclass', 'isbaseobject', 'isimmutabledef', 'isimmutable')
@@ -48,10 +48,10 @@ def isdirmodule(obj):
    return True
 
 def isfunction(obj):
-   return isinstance(obj, function)
+   return isinstance(obj, function) or isinstance(obj, bfunction)
 
 def ismethod(obj):
-   return isinstance(obj, method)
+   return isinstance(obj, method) or isinstance(obj, bmethod)
 
 def ismetaclass(obj):
    return isclass(obj) and issubclass(obj, type)
