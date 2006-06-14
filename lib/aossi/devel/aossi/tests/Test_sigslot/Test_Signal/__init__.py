@@ -1,4 +1,4 @@
-# Module: aossi.tests
+# Module: aossi.tests.sigslot.Signal
 # File: __init__.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
