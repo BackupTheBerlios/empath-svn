@@ -135,14 +135,12 @@ def ChooseCallable(choices, policy, *args, **kwargs): #{{{
                 return func
             found.append(func)
     if found:
-        flen = len(found)
         if policy == 'last':
             return found[-1]
-        elif flen == 1:
+        elif len(found) == 1:
             return found[0]
-        elif flen > 1:
-            if policy == 'default':
-                return None
+        elif policy == 'default':
+            return None
         raise AmbiguousChoiceError('Found more than one selectable callable')
     return None
     # End for #}}}
