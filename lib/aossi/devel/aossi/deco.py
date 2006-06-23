@@ -6,7 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from aossi.signal import Signal
-from inspect import isfunction as _isf
+from inspect import isfunction as _isf, stack
 from aossi.misc import cargdefstr
 
 __all__ = ('DecoSignal', 'setsignal', 'signal', 'after', 'before', 'around',
@@ -19,10 +19,15 @@ class DecoSignal(Signal): #{{{
         super(DecoSignal, self).__init__(signal, weak)
         self._settings = {}
         self._global_settings = {}
+
+#        temp = stack()[2][0].f_locals
+#        raise Exception(temp.keys())
+#        if 'var' not in temp:
+#            raise Exception(temp.keys())
     # End def #}}}
 
     def _csettings(self): #{{{
-        block = ('globals',)
+        block = ('globals', 'chooser', 'policy')
         allset = self._allsettings()
         gen = ((k, v) for k, v in allset.iteritems() if k not in block)
         temp = dict(gen)
@@ -39,13 +44,18 @@ class DecoSignal(Signal): #{{{
     def _set_settings(self, kwargs, gset=None): #{{{
         if not isinstance(kwargs, dict):
             raise TypeError('connect_settings attribute must be a dict')
-        expected = ('weak', 'weakcondf', 'globals')
+        expected = ('weak', 'weakcondf', 'globals', 'chooser', 'policy')
         if [i for i in kwargs if i not in expected]:
             raise ValueError('got keywords: %s -- but valid keyword arguments are: %s' %(', '.join(kwargs.keys()), ', '.join(expected)))
         if not isinstance(kwargs.get('globals', {}), dict):
             raise TypeError('globals keyword must be a dictionary')
         if gset is None:
             gset = self._global_settings
+        if gset is self._global_settings:
+            if 'policy' in kwargs:
+                self.chooserpolicy = kwargs['policy']
+            if 'chooser' in kwargs:
+                self.chooser = kwargs['chooser']
         gset.clear()
         gset.update(kwargs)
     # End def #}}}
@@ -98,15 +108,18 @@ class DecoSignal(Signal): #{{{
         if not isinstance(s, basestring):
             raise TypeError('argument must be a string')
         def factory(func):
+            fglob = dict(func.func_globals)
+            if g:
+                fglob.update(g)
+#            else:
+#                temp = stack()[1][0].f_locals
+            fglob.update(locals())
             defstr, callstr = cargdefstr(func)
             fstr = """
             def whenfunc(%s):
                 return bool(%s)
             """ %(defstr, s)
-            if g:
-                exec compile(fstr.strip(), '<string>', 'exec') in g, locals()
-            else:
-                exec compile(fstr.strip(), '<string>', 'exec') in locals()
+            exec compile(fstr.strip(), '<string>', 'exec') in fglob, locals()
             self._settings['weakcondf'] = False
             return self.cond(whenfunc)(func)
         return factory

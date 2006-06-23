@@ -20,9 +20,9 @@ class UnitTestTemplate(unittest.TestCase): #{{{
     def testDefault(self): #{{{
         '''Always suceeds'''
         var = []
-        l = {'var': var}
 
-        @setsignal(globals=l)
+        @setsignal(globals=locals())
+#        @signal
         def test(s, a):
             return 'Default'
         

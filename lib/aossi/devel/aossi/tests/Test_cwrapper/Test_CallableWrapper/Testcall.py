@@ -1,5 +1,5 @@
-# Module: aossi.tests.Test_sigslot.Test_CallableWrapper.Test___call__
-# File: Test___call__.py
+# Module: aossi.tests.Test_sigslot.Test_CallableWrapper.Testcall
+# File: Testcall.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
 # This module is part of the aossi project and is released under

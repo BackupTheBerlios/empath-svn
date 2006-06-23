@@ -31,7 +31,9 @@ class Testcancel(unittest.TestCase): #{{{
         self.assertEqual(len(_siglist), 0)
         subscribe(s, dummy)
         subscribe(s, dummy2)
-        self.assertEqual(len(_siglist), 1)
+        for s in xrange(5):
+            subscribe(s, dummy)
+        self.assertEqual(len(_siglist), 6)
         cancel()
         self.assertEqual(len(_siglist), 0)
     # End def #}}}

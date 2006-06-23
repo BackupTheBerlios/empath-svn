@@ -1,5 +1,5 @@
-# Module: aossi.tests.Test_deco.Test_DecoSignal.Test___init__
-# File: Test___init__.py
+# Module: aossi.tests.Test_deco.Test_DecoSignal.Testinit
+# File: Testinit.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
 # This module is part of the aossi project and is released under
