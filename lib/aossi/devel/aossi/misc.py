@@ -128,21 +128,24 @@ class cref(object): #{{{
 # End class #}}}
 
 def ChooseCallable(choices, policy, *args, **kwargs): #{{{
-    found = []
-    for chooser, func in choices: #{{{
-        if chooser(*args, **kwargs):
-            if policy == 'first':
-                return func
-            found.append(func)
-    if found:
-        if policy == 'last':
-            return found[-1]
-        elif len(found) == 1:
-            return found[0]
-        elif policy == 'default':
-            return None
-        raise AmbiguousChoiceError('Found more than one selectable callable')
-    return None
+    if policy == 'default':
+        return None
+    def build_found(): #{{{
+        for chooser, func in choices: #{{{
+            if chooser(*args, **kwargs):
+                if policy == 'first':
+                    yield func
+                    return 
+                yield func
+    # End def #}}}
+    found = [f for f in build_found()]
+    if not found:
+        return None
+    elif policy == 'last':
+        return [found[-1]]
+    elif policy == 'cascade' or len(found) == 1:
+        return found
+    raise AmbiguousChoiceError('Found more than one selectable callable')
     # End for #}}}
 # End def #}}}
 

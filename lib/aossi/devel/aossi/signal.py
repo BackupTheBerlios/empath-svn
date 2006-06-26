@@ -88,8 +88,9 @@ class Signal(object): #{{{
                     gen = ((i.choosefunc, i.callable) for i in self._choosefunc)
                     choice = self.chooser(gen, self.chooserpolicy, *args, **kwargs)
                 if not choice:
-                    choice = func
-                ret = choice(*args, **kwargs)
+                    choice = [func]
+                for f in choice:
+                    ret = f(*args, **kwargs)
                 for afunc, t in cleanlist(self._afterfunc):
                     afunc(*args, **kwargs)
                 for rfunc, t in cleanlist(self._onreturnfunc):
