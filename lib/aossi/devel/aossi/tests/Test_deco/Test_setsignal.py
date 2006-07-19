@@ -30,6 +30,7 @@ class Testsetsignal(unittest.TestCase): #{{{
         self.assert_(hasattr(s, 'onreturn'))
         self.assert_(hasattr(s, 'cond'))
         self.assert_(hasattr(s, 'when'))
+        self.assert_(hasattr(s, 'cascade'))
         self.assert_(isinstance(s.signal, DecoSignal))
         self.assertEqual(s(), 1)
     # End def #}}}

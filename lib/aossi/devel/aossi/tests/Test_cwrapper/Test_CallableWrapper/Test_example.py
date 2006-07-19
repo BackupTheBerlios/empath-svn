@@ -45,5 +45,29 @@ class UnitTestTemplate(unittest.TestCase): #{{{
         self.assertEqual(test(a, 1), 'Replacement')
         self.assertEqual(test(a, 2), 'newtest')
     # End def #}}}
+
+    def testCascade(self): #{{{
+        var = []
+
+        @signal
+        def test(a):
+            a.append('first')
+
+        @test.cascade('True', True)
+        def test1(a):
+            a.append('test1')
+
+        @test.cascade('True')
+        def test2(a):
+            a.append('test2')
+
+        @test.cascade('True')
+        def test3(a):
+            a.append('test3')
+
+        test(var)
+        expected = ['first', 'test1']
+        self.assertEqual(var, expected)
+    # End def #}}}
 # End class #}}}
 
