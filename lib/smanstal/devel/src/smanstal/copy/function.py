@@ -1,70 +1,48 @@
-################################################################################
-# extras.function -- Description goes here
-# Copyright (c) 2006 Ariel De Ocampo
-# 
-# Permission is hereby granted, free of charge, to any person obtaining 
-# a copy of this software and associated documentation files (the 
-# "Software"), to deal in the Software without restriction, including 
-# without limitation the rights to use, copy, modify, merge, publish, 
-# distribute, sublicense, and/or sell copies of the Software, and to 
-# permit persons to whom the Software is furnished to do so, subject to 
-# the following conditions:
+# Module: smanstal.copy.function
+# File: function.py
+# Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
-# The above copyright notice and this permission notice shall be 
-# included in all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
-# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-################################################################################
+# This module is part of the smanstal project and is released under
+# the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 from types import FunctionType as function, MethodType as method
-import dispatch
+from aossi.deco import signal_settings
+from validate.base import valTrue
+from validate.type import vt
 
 __all__ = ('copyfunction', 'copymethod')
 
-@dispatch.generic()
+# ===================================================
+# copyfunction
+# ===================================================
+@signal_settings(policy='first')
 def copyfunction(func, name = None):
-   """Base generic function for 'copyfunction()'"""
+    names = tuple(o.__class__.__name__ for o in (func, name))
+    raise TypeError("Cannot copy function = %s with name = %s" %names)
    
-@copyfunction.when('not isinstance(func, function) and not isinstance(func, method)')
-def copyfunction(func, name = None):
-   raise TypeError, "The 'func' argument must be a python function or method."
-   
-@copyfunction.when('name is not None and not isinstance(name, str)')
-def copyfunction(func, name = None):
-   raise TypeError, "The 'name' argument must be either a string or None."
-   
-@copyfunction.when('name is None or (isinstance(name, str) and name == "")')
-def copyfunction(func, name = None):
+@copyfunction.match_value(vt(function, method), None)
+def _cf_noname(func, name = None):
    return copyfunction(func, func.func_name)
    
-@copyfunction.when('isinstance(name, str) and name != ""')
-def copyfunction(func, name = None):
+@copyfunction.match_type(vt(function, method), basestring)
+def _cf_docopy(func, name = None):
    tempfunc = function(func.func_code, func.func_globals, name, func.func_defaults, func.func_closure)
    tempfunc.func_doc = None
    return tempfunc
    
-@dispatch.generic()
+# ===================================================
+# copymethod
+# ===================================================
+@signal_settings(policy='first')
 def copymethod(meth, name = None):
-   """Base generic function for 'copymethod()'"""
+    names = tuple(o.__class__.__name__ for o in (meth, name))
+    raise TypeError("Cannot copy method = %s with name = %s" %names)
    
-@copymethod.when('not isinstance(meth, method)')   
-def copymethod(meth, name = None):
-   raise TypeError, "The 'meth' argument must be a python method object."
+@copymethod.match_value(vt(method), None)
+def _cm_noname(meth, name = None):
+   return copymethod(meth, meth.func_name)
 
-@copymethod.when('name is not None and not isinstance(name, str)')   
-def copymethod(meth, name = None):
-   raise TypeError, "The 'name' argument must be a string or None."
-
-@copymethod.when('name is None or (isinstance(name, str) and name == "")')   
-def copymethod(meth, name = None):
-   copymethod(meth, meth.func_name)
-
-@copymethod.when('isinstance(name, str)')
-def copymethod(meth, name = None):
+@copymethod.match_type(method, basestring)
+def _cm_docopy(meth, name = None):
    tempmeth = copyfunction(meth, name)
    return method(tempmeth, None)
