@@ -24,6 +24,31 @@ class TestValidateTypeSequence_Or(unittest.TestCase): #{{{
         self.assertEqual(val, v)
     # End def #}}}
 
+    def testShallowOption(self): #{{{
+        '''Specifying shallow will not dig into sub-sequences'''
+        v = ValidateTypeSequence_Or(str, list, shallow=True)
+        val = ['hello', ['world', 1, 2]]
+        self.assertEqual(v, val)
+    # End def #}}}
+
+    def testShallowEmpty(self): #{{{
+        '''An empty and shallow type sequence validates against any sequence'''
+        v = ValidateTypeSequence_Or(shallow=True)
+        val = ['hello', ['world', 1, 2]]
+        self.assertEqual(v, val)
+        self.assertNotEqual(v, 1)
+        self.assertNotEqual(v, 'hello')
+        self.assertEqual(v, [])
+    # End def #}}}
+
+    def testNonShallowEmpty(self): #{{{
+        '''An empty but non-shallow type sequence validates only against an empty sequence'''
+        v = ValidateTypeSequence_Or()
+        val = ['hello', ['world', 1, 2]]
+        self.assertNotEqual(v, val)
+        self.assertEqual(v, [])
+    # End def #}}}
+
     def testNonSequenceValue(self): #{{{
         '''Trying to validate a non-sequence will return False'''
         v = ValidateTypeSequence_Or(str, int)
@@ -35,6 +60,17 @@ class TestValidateTypeSequence_Or(unittest.TestCase): #{{{
         '''Passing a bad argument raises error'''
         try:
             ValidateTypeSequence_Or(str, 1)
+            self.assert_(False)
+        except TypeError, err:
+            errstr = "Detected non-ValidateType instance, non-type, non-sequence argument"
+            e = str(err).strip()
+            self.assertEqual(errstr, e)
+    # End def #}}}
+
+    def testStringIsBadArg(self): #{{{
+        '''Passing a string raises error'''
+        try:
+            ValidateTypeSequence_Or('hello')
             self.assert_(False)
         except TypeError, err:
             errstr = "Detected non-ValidateType instance, non-type, non-sequence argument"

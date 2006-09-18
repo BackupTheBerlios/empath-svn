@@ -24,6 +24,15 @@ class TestValidateTypeMapping_And(unittest.TestCase): #{{{
         self.assertEqual(val, v)
     # End def #}}}
 
+    def testShallowOption(self): #{{{
+        '''Specifying shallow will not dig into sub-mappings'''
+        subvmap = dict(world=int)
+        vmap = dict(hello=int, world=subvmap)
+        v = ValidateTypeMapping(vmap, shallow=True)
+        val = dict(hello=1, world={})
+        self.assertEqual(v, val)
+    # End def #}}}
+
     def testNonMappingValue(self): #{{{
         '''Trying to validate a non-mapping will return False'''
         v = ValidateTypeMapping(dict(hello=int))
