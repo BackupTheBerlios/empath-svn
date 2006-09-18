@@ -30,7 +30,7 @@ class Testconnect(unittest.TestCase): #{{{
             s.connect(hello=1)
             self.assert_(False)
         except ValueError, err:
-            self.assertEqual(str(err).strip(), 'valid keyword arguments are: before, around, onreturn, choose, weak')
+            self.assertEqual(str(err).strip(), 'valid keyword arguments are: before, around, onreturn, choose, weak, weakcondf')
     # End def #}}}
 
     def testNonFunction(self): #{{{
