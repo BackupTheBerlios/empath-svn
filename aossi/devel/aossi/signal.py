@@ -195,7 +195,12 @@ class Signal(object): #{{{
 
     def disconnect(self, *after_slots, **other_slots): #{{{
         before_slots, around_slots, onreturn_slots, choose_slots, w, wcf = self._validate_connect_args(*after_slots, **other_slots)
+        noargs = not after_slots and not other_slots
         def delfunc(a, l):
+            if noargs:
+                while l:
+                    l.pop()
+                return
             for f in a:
                 found = self._find(f, l)
                 if found:
@@ -208,17 +213,17 @@ class Signal(object): #{{{
         self.reload()
     # End def #}}}
 
-    def disconnectAll(self): #{{{
-        def delfunc(l):
-            while l:
-                l.pop()
-        delfunc(self._afterfunc)
-        delfunc(self._beforefunc)
-        delfunc(self._aroundfunc)
-        delfunc(self._onreturnfunc)
-        delfunc(self._choosefunc)
-        self.reload()
-    # End def #}}}
+#    def disconnectAll(self): #{{{
+#        def delfunc(l):
+#            while l:
+#                l.pop()
+#        delfunc(self._afterfunc)
+#        delfunc(self._beforefunc)
+#        delfunc(self._aroundfunc)
+#        delfunc(self._onreturnfunc)
+#        delfunc(self._choosefunc)
+#        self.reload()
+#    # End def #}}}
 
     def _setpolicy(self, p): #{{{
         self._choosepolicy = p
