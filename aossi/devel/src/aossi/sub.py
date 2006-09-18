@@ -1,5 +1,5 @@
 # Module: aossi.sub
-# File: subscription.py
+# File: sub.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
 # This module is part of the aossi project and is released under
@@ -70,15 +70,21 @@ def subscribe(iobj, target, ftype=None, choosefunc=None): #{{{
         i.connect(onreturn=[target])
     elif ftype == 'choose':
         i.connect(choose=[(choosefunc, target)])
+    return i
 # End def #}}}
 
-def cancel(iobj=None, *after_slots, **other_slots): #{{{
+def cancel(iobj=None, *after_slots, **kwargs): #{{{
+    other_slots = kwargs.get('other_slots', {})
+    keep_signal = bool(kwargs.get('keep_signal', False))
     for io, signal, i in _cleanlist():
         if iobj is None:
             _siglist[i] = None
         elif io is iobj:
             if not after_slots and not other_slots:
-                _siglist[i] = None
+                if keep_signal:
+                    signal.disconnect()
+                else:
+                    _siglist[i] = None
             else:
                 signal.disconnect(*after_slots, **other_slots)
 # End def #}}}
