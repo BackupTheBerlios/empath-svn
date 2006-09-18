@@ -5,11 +5,16 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-__all__ = ('iscallable', 'methodtype', 'methodname', 'cref', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
-            'StopCascade', 'cargnames', 'cargdefstr', 'cargval', 'callableobj', 'cgetargspec',
+__all__ = ('iscallable', 'methodtype', 'methodname', 'cref', 'isreadonly', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
+            'StopCascade', 'cargnames', 'cargdefstr', 'cargval', 'iswrapped', 'callableobj', 'cgetargspec', 'callable_wrapper',
             'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE')
+from aossi.impex import import_, CopyModuleImporter
+_ab = import_(':aossi:__builtin__', importer=CopyModuleImporter(copy_prefix=':aossi:'))
+property = _ab.property
+
 from weakref import ref
-from inspect import isfunction as _isf, ismethod as _ism, formatargspec, getargspec
+from inspect import isfunction as _isf, ismethod as _ism, isbuiltin as _isb, \
+        isclass, formatargspec, getargspec
 
 METHODTYPE_NOTMETHOD = 0
 METHODTYPE_UNBOUND = 1
@@ -27,6 +32,7 @@ def cargnames(obj): #{{{
 # End def #}}}
 
 def cgetargspec(obj): #{{{
+    len = _ab.len
     obj = callableobj(obj)
     if not obj: return None
     fargnames, fvargs, fvkey, fdef = getargspec(obj)
@@ -61,24 +67,49 @@ def cargval(obj): #{{{
         return ret[-1]
 # End def #}}}
 
+def iswrapped(obj): #{{{
+    if _ism(obj) or _isf(obj):
+        return False
+    elif hasattr(obj, '__call__') and _ism(obj.__call__):
+        return False
+    else:
+        return True
+# End def #}}}
+
 def callableobj(obj): #{{{
     if not iscallable(obj):
         return None
-    if not _ism(obj) and not _isf(obj):
-        obj = obj.__call__
+    if _ism(obj) or _isf(obj):
+        return obj
+    elif hasattr(obj, '__call__') and _ism(obj.__call__):
+        return obj.__call__
+    else:
+        obj = callable_wrapper(obj)
     return obj
 # End def #}}}
 
 def iscallable(obj): #{{{
-    if not callable(obj):
+    if isclass(obj):
         return False
-    elif _ism(obj) or _isf(obj):
-        return True
-    elif isinstance(obj, type(str.__call__)):
-        return False
-    elif hasattr(obj, '__call__'):
-        return iscallable(obj.__call__)
-    return False
+    return _ab.callable(obj)
+#    if not callable(obj):
+#        return False
+#    elif _ism(obj) or _isf(obj) or _isb(obj):
+#        return True
+#    elif isinstance(obj, type(str.__call__)):
+#        return False
+#    elif hasattr(obj, '__call__'):
+#        return iscallable(obj.__call__)
+#    return False
+# End def #}}}
+
+def callable_wrapper(func): #{{{
+    if not _ab.callable(func):
+        raise TypeError('Argument is not callable')
+    def callwrapper(*args, **kwargs): #{{{
+        return func(*args, **kwargs)
+    # End def #}}}
+    return callwrapper
 # End def #}}}
 
 def methodtype(obj): #{{{
@@ -101,8 +132,8 @@ def methodname(obj): #{{{
         o = obj.im_self
     else:
         return
-    for i in dir(o):
-        if getattr(o, i) == obj:
+    for i in _ab.dir(o):
+        if _ab.getattr(o, i) == obj:
             return i
 # End def #}}}
 
@@ -128,7 +159,21 @@ class cref(object): #{{{
     # End properties #}}}
 # End class #}}}
 
-def ChooseCallable(choices, policy, origfunc, *args, **kwargs): #{{{
+def isreadonly(obj, aname, attr): #{{{
+    ret = False
+    try:
+        _ab.setattr(obj, aname, attr)
+    except:
+        ret = True
+    return ret
+# End def #}}}
+
+def isiterable(obj): #{{{
+    iobj = getattr(obj, '__iter__', None)
+    return bool(iobj and not isclass(obj))
+# End def #}}}
+
+def ChooseCallable(choices, policy, origfunc, callfunc, *args, **kwargs): #{{{
     if policy == 'default':
         return None
     cascade = policy == 'cascade'
@@ -137,10 +182,10 @@ def ChooseCallable(choices, policy, origfunc, *args, **kwargs): #{{{
             cret = False
             stop = False
             try:
-                cret = chooser(*args, **kwargs)
+                cret = callfunc(chooser, *args, **kwargs)
             except StopCascade, err:
                 if err.args:
-                    cret = bool(err.args[0])
+                    cret = _ab.bool(err.args[0])
                 stop = True
             return cret, stop
         # End def #}}}
@@ -152,7 +197,7 @@ def ChooseCallable(choices, policy, origfunc, *args, **kwargs): #{{{
             if cascade:
                 cret, stop = cascade_chooser(chooser, *args, **kwargs)
             else:
-                cret = chooser(*args, **kwargs)
+                cret = callfunc(chooser, *args, **kwargs)
             if cret:
                 yield func
                 if policy == 'first':
@@ -165,8 +210,8 @@ def ChooseCallable(choices, policy, origfunc, *args, **kwargs): #{{{
     if not found:
         return None
     elif policy == 'last':
-        return [found[-1]]
-    elif cascade or len(found) == 1:
+        return found[-1:]
+    elif cascade or _ab.len(found) == 1:
         return found
     raise AmbiguousChoiceError('Found more than one selectable callable')
 # End def #}}}
