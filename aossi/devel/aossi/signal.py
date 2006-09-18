@@ -161,7 +161,7 @@ class Signal(object): #{{{
                 if not iscallable(f):
                     seqname = lname
                     if lname == 'after':
-                        seqname += '_slots'
+                        seqname = ''.join([lname, '_slots'])
                     raise TypeError('Detected non-callable element of %s sequence' %seqname)
                 found = self._find(f, l)
                 if not found:
@@ -209,10 +209,8 @@ class Signal(object): #{{{
 
     def disconnectAll(self): #{{{
         def delfunc(l):
-            lsl = len(l)
-            while lsl:
-                del l[i]
-                lsl -= 1
+            while l:
+                l.pop()
         delfunc(self._afterfunc)
         delfunc(self._beforefunc)
         delfunc(self._aroundfunc)

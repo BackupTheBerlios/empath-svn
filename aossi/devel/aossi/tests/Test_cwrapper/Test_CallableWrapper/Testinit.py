@@ -1,5 +1,5 @@
-# Module: aossi.tests.Test_sigslot.Test_CallableWrapper.Test___init__
-# Module: Test___init__.py
+# Module: aossi.tests.Test_sigslot.Test_CallableWrapper.Testinit
+# Module: Testinit.py
 # File: template.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
