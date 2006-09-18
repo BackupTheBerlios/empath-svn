@@ -7,7 +7,7 @@
 
 from aossi.signal import Signal
 from inspect import isfunction as _isf, stack
-from aossi.misc import cargdefstr
+from aossi.misc import cargdefstr, StopCascade
 
 __all__ = ('DecoSignal', 'setsignal', 'signal', 'after', 'before', 'around',
             'onreturn', 'cond', 'when', 'settings', 'global_settings')
@@ -52,10 +52,12 @@ class DecoSignal(Signal): #{{{
         if gset is None:
             gset = self._global_settings
         if gset is self._global_settings:
-            if 'policy' in kwargs:
-                self.chooserpolicy = kwargs['policy']
-            if 'chooser' in kwargs:
-                self.chooser = kwargs['chooser']
+            self.chooserpolicy = kwargs.get('policy', self.chooserpolicy)
+            self.chooser = kwargs.get('chooser', None)
+#            if 'policy' in kwargs:
+#                self.chooserpolicy = kwargs['policy']
+#            if 'chooser' in kwargs:
+#                self.chooser = kwargs['chooser']
         gset.clear()
         gset.update(kwargs)
     # End def #}}}
@@ -111,8 +113,6 @@ class DecoSignal(Signal): #{{{
             fglob = dict(func.func_globals)
             if g:
                 fglob.update(g)
-#            else:
-#                temp = stack()[1][0].f_locals
             fglob.update(locals())
             defstr, callstr = cargdefstr(func)
             fstr = """
@@ -122,6 +122,31 @@ class DecoSignal(Signal): #{{{
             exec compile(fstr.strip(), '<string>', 'exec') in fglob, locals()
             self._settings['weakcondf'] = False
             return self.cond(whenfunc)(func)
+        return factory
+    # End def #}}}
+
+    def cascade(self, s, stop=False): #{{{
+        self._set_settings({'policy': 'cascade'})
+        g = self.connect_settings.get('globals', None)
+        if not isinstance(s, basestring):
+            raise TypeError('argument must be a string')
+        def factory(func):
+            fglob = dict(func.func_globals)
+            if g:
+                fglob.update(g)
+            fglob.update(locals())
+            fglob.update(StopCascade=StopCascade)
+            defstr, callstr = cargdefstr(func)
+            fstr = """
+            def cascadefunc(%s):
+                ret = bool(%s)
+                if %s:
+                    raise StopCascade(ret)
+                return ret
+            """ %(defstr, s, str(bool(stop)))
+            exec compile(fstr.strip(), '<string>', 'exec') in fglob, locals()
+            self._settings['weakcondf'] = False
+            return self.cond(cascadefunc)(func)
         return factory
     # End def #}}}
 
@@ -162,6 +187,7 @@ def signal(func): #{{{
     d.around = signal.around
     d.cond = signal.cond
     d.when = signal.when
+    d.cascade = signal.cascade
     return d
 # End def #}}}
 
@@ -210,4 +236,9 @@ def cond(signal, condfunc): #{{{
 def when(signal, s): #{{{
     _validate_signal(signal)
     return signal.when(s)
+# End def #}}}
+
+def cascade(signal, s, stop=False): #{{{
+    _validate_signal(signal)
+    return signal.cascade(s, stop)
 # End def #}}}

@@ -86,7 +86,7 @@ class Signal(object): #{{{
                     if not chooser or chooser.isdead:
                         self.chooser = ChooseCallable
                     gen = ((i.choosefunc, i.callable) for i in self._choosefunc)
-                    choice = self.chooser(gen, self.chooserpolicy, *args, **kwargs)
+                    choice = self.chooser(gen, self.chooserpolicy, func, *args, **kwargs)
                 if not choice:
                     choice = [func]
                 for f in choice:
@@ -225,7 +225,9 @@ class Signal(object): #{{{
     # End def #}}}
 
     def _setchooser(self, c): #{{{
-        if not iscallable(c):
+        if c is None:
+            return
+        elif not iscallable(c):
             raise TypeError('chooser property must be a valid callable object')
         self._chooser = CallableWrapper(c, weak=False)
     # End def #}}}

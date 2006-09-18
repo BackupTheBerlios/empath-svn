@@ -6,7 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 __all__ = ('iscallable', 'methodtype', 'methodname', 'cref', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
-            'cargnames', 'cargdefstr', 'cargval', 'callableobj', 'cgetargspec',
+            'StopCascade', 'cargnames', 'cargdefstr', 'cargval', 'callableobj', 'cgetargspec',
             'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE')
 from weakref import ref
 from inspect import isfunction as _isf, ismethod as _ism, formatargspec, getargspec
@@ -17,6 +17,7 @@ METHODTYPE_CLASS = 2
 METHODTYPE_INSTANCE = 3
 
 class AmbiguousChoiceError(StandardError): pass
+class StopCascade(Exception): pass
 
 def cargnames(obj): #{{{
     obj = callableobj(obj)
@@ -127,25 +128,47 @@ class cref(object): #{{{
     # End properties #}}}
 # End class #}}}
 
-def ChooseCallable(choices, policy, *args, **kwargs): #{{{
+def ChooseCallable(choices, policy, origfunc, *args, **kwargs): #{{{
     if policy == 'default':
         return None
+    cascade = policy == 'cascade'
     def build_found(): #{{{
+        def cascade_chooser(chooser, *args, **kwargs): #{{{
+            cret = False
+            stop = False
+            try:
+                cret = chooser(*args, **kwargs)
+            except StopCascade, err:
+                if err.args:
+                    cret = bool(err.args[0])
+                stop = True
+            return cret, stop
+        # End def #}}}
+        if cascade:
+            yield origfunc
         for chooser, func in choices: #{{{
-            if chooser(*args, **kwargs):
+            cret = False
+            stop = False
+            if cascade:
+                cret, stop = cascade_chooser(chooser, *args, **kwargs)
+            else:
+                cret = chooser(*args, **kwargs)
+            if cret:
                 yield func
                 if policy == 'first':
                     return 
+            if cascade and stop:
+                break
+        # End for #}}}
     # End def #}}}
     found = [f for f in build_found()]
     if not found:
         return None
     elif policy == 'last':
         return [found[-1]]
-    elif policy == 'cascade' or len(found) == 1:
+    elif cascade or len(found) == 1:
         return found
     raise AmbiguousChoiceError('Found more than one selectable callable')
-    # End for #}}}
 # End def #}}}
 
 class ChoiceObject(object): #{{{
