@@ -7,10 +7,11 @@
 
 from weakref import ref
 
-__all__ = ('Validate',)
+__all__ = ('Validate', 'Validate_And', 'Validate_Or', 'ValidateTrue', 'ValidateFalse', 'ValidateInverse', 
+            'valTrue', 'valFalse', 'vinv', 'ReturnBoolean', 'callobj', 'quote', 'q', 'callcallable', 'evalobj')
 
 class Validate(object): #{{{
-    __slots__ = ('_exact', '_stored', '_options', '__weakref__')
+    __slots__ = ('_exact', '_stored', '_options', '__weakref__', '_shallow')
     def __init__(self, *vobj, **options): #{{{
         if self.__class__ is Validate:
             raise NotImplementedError("Validate is an abstract class")
@@ -18,11 +19,12 @@ class Validate(object): #{{{
         mvlen = bool(options.pop('multiple_args', False))
         if not mvlen and vlen > 1:
             raise NotImplementedError("Passing more than one argument is not supported")
-        expected = ('exact',)
+        expected = ('exact', 'shallow')
         unexpected = tuple(kw for kw in options if kw not in expected)
         if unexpected:
             raise ValueError("Unexpected arguments %s" %', '.join(unexpected))
         self._exact = bool(options.pop('exact', False))
+        self._shallow = bool(options.pop('shallow', False))
         self._stored = vobj
         self._set_options(*options.items())
     # End def #}}}
@@ -40,8 +42,11 @@ class Validate(object): #{{{
     # End def #}}}
 
     def __eq__(self, obj): #{{{
+        stored = self._stored
+        if not stored:
+            return self._shallow
         result = self._validate_single_result
-        return self._validate_results(result(vobj, obj) for vobj in self._stored)
+        return self._validate_results(result(vobj, obj) for vobj in stored)
     # End def #}}}
 
     def _validate_single_result(self, vobj, obj): #{{{
@@ -60,6 +65,8 @@ class Validate(object): #{{{
     # End def #}}}
 
     def _validate(self, vobj, obj): #{{{
+        if not vobj and not obj:
+            return True
         return vobj == obj
     # End def #}}}
 
@@ -113,8 +120,52 @@ class Validate_Or(BooleanValidate): #{{{
     # End def #}}}
 # End class #}}}
 
+class ReturnBoolean(Validate): #{{{
+    __slots__ = tuple()
+    def __init__(self, *vobj, **options): #{{{
+        pass
+    # End def #}}}
+# End class #}}}
+
+class ValidateTrue(ReturnBoolean): #{{{
+    __slots__ = tuple()
+    def __eq__(self, obj): #{{{
+        return True
+    # End def #}}}
+# End class #}}}
+
+class ValidateFalse(ReturnBoolean): #{{{
+    __slots__ = tuple()
+    def __eq__(self, obj): #{{{
+        return False
+    # End def #}}}
+# End class #}}}
+
+class ValidateInverse(ReturnBoolean): #{{{
+    __slots__ = tuple()
+    def __init__(self, *vobj, **options): #{{{
+        if False in (isinstance(vo, Validate) for vo in vobj):
+            raise TypeError("ValidateInverse can only accept Validate objects, but got %s" %vo.__class__.__name__)
+        super(ReturnBoolean, self).__init__(*vobj, **options)
+    # End def #}}}
+
+    def __eq__(self, obj): #{{{
+        ret = super(ReturnBoolean, self).__eq__(obj)
+        return not ret
+    # End def #}}}
+
+    def _validate_exact(self, vobj, obj): #{{{
+        return vobj == obj
+    # End def #}}}
+
+# End class #}}}
+
+valTrue = ValidateTrue()
+valFalse = ValidateFalse()
+vinv = ValidateInverse
+
 class callobj(object): #{{{
-    __slots__ = tuple(['__weakref__'])
+    __slots__ = ('__weakref__',)
     def __init__(self): #{{{
         raise NotImplementedError("callobj is an abstract class")
     # End def #}}}
@@ -210,6 +261,7 @@ class evalobj(callobj): #{{{
     # End def #}}}
 
     # Properties #{{{
-    evalstr = property()
+    evalstr = property(lambda s: s._evalstr)
     # End properties #}}}
 # End class #}}}
+
