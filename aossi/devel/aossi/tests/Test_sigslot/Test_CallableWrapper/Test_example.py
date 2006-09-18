@@ -6,7 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 import unittest
-from aossi.misc import cargnames, cargdefstr, cargval
+from aossi.deco import *
 
 class UnitTestTemplate(unittest.TestCase): #{{{
     def setUp(self): #{{{
@@ -19,15 +19,31 @@ class UnitTestTemplate(unittest.TestCase): #{{{
 
     def testDefault(self): #{{{
         '''Always suceeds'''
-        def a(hello, me, you=1, *what, **world):
-            pass
+        var = []
+        l = {'var': var}
+
+        @setsignal(globals=l)
+        def test(s, a):
+            return 'Default'
+        
+        @test.when('a == 1')
+        def replacement(s, a):
+            return 'Replacement'
+
         class A(object):
-            def a(self):
-                pass
-        temp1 = cargnames(a)
-        temp2 = cargnames(A.a)
-        args = '%s ::: %s' %(str(temp1), str(temp2))
-        raise Exception(args)
+            @test.when('var')
+            def newtest(self, a):
+                return 'newtest'
+
+        @test.onreturn
+        def helloworld(ret):
+            if ret == 'Replacement':
+                var.append(1)
+        a = A()
+
+        self.assertEqual(test(a, 42), 'Default')
+        self.assertEqual(test(a, 1), 'Replacement')
+        self.assertEqual(test(a, 2), 'newtest')
     # End def #}}}
 # End class #}}}
 

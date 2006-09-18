@@ -16,10 +16,10 @@ class Signal(object): #{{{
     __slots__ = ('__weakref__', '_func', '_beforefunc', '_afterfunc', 
                     '_aroundfunc', '_onreturnfunc', '_choosefunc', 
                     '_chooser', '_choosepolicy')
-    def __init__(self, signal): #{{{
+    def __init__(self, signal, weak=True): #{{{
         if not iscallable(signal):
             raise TypeError("Argument must be callable.");
-        self._func = CallableWrapper(signal)
+        self._func = CallableWrapper(signal, weak=weak)
         self._beforefunc = []
         self._afterfunc = []
         self._aroundfunc = []
@@ -117,7 +117,7 @@ class Signal(object): #{{{
     # End def #}}}
 
     def _validate_connect_args(self, *args, **other_slots): #{{{
-        expected = ('before', 'around', 'onreturn', 'choose', 'weak')
+        expected = ('before', 'around', 'onreturn', 'choose', 'weak', 'weakcondf')
         if [i for i in other_slots if i not in expected]:
             raise ValueError('valid keyword arguments are: %s' %', '.join(expected))
         b = other_slots.get('before', tuple())
@@ -125,7 +125,8 @@ class Signal(object): #{{{
         r = other_slots.get('onreturn', tuple())
         c = other_slots.get('choose', tuple())
         w = bool(other_slots.get('weak', True))
-        return b, a, r, c, w
+        wcf = bool(other_slots.get('weakcondf', w))
+        return b, a, r, c, w, wcf
     # End def #}}}
 
     def _find(self, func, siglistseq=None): #{{{
@@ -152,7 +153,7 @@ class Signal(object): #{{{
     # End def #}}}
 
     def connect(self, *after_slots, **other_slots): #{{{
-        before_slots, around_slots, onreturn_slots, choose_slots, isweak = self._validate_connect_args(*after_slots, **other_slots)
+        before_slots, around_slots, onreturn_slots, choose_slots, isweak, wcf = self._validate_connect_args(*after_slots, **other_slots)
         if not after_slots and not before_slots and not around_slots and not onreturn_slots and not choose_slots:
             return
         def addfunc(a, l, lname):
@@ -181,18 +182,18 @@ class Signal(object): #{{{
                 cf = clist[i].choosefunc
                 cfid = cid(cf)
                 if cfid != cid(c):
-                    cfunc = CallableWrapper(c, weak=isweak)
+                    cfunc = CallableWrapper(c, weak=wcf)
                     func = CallableWrapper(f, weak=isweak)
                     clist[i] = ChoiceObject(cfunc, func)
             if not found:
-                cfunc = CallableWrapper(c, weak=isweak)
+                cfunc = CallableWrapper(c, weak=wcf)
                 func = CallableWrapper(f, weak=isweak)
                 clist.append(ChoiceObject(cfunc, func))
         self.reload()
     # End def #}}}
 
     def disconnect(self, *after_slots, **other_slots): #{{{
-        before_slots, around_slots, onreturn_slots, choose_slots, w = self._validate_connect_args(*after_slots, **other_slots)
+        before_slots, around_slots, onreturn_slots, choose_slots, w, wcf = self._validate_connect_args(*after_slots, **other_slots)
         def delfunc(a, l):
             for f in a:
                 found = self._find(f, l)
