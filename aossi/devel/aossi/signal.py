@@ -165,7 +165,7 @@ class Signal(object): #{{{
                     raise TypeError('Detected non-callable element of %s sequence' %seqname)
                 found = self._find(f, l)
                 if not found:
-                    l.append(CallableWrapper(f, eval('self._clean%s' %lname), weak=isweak))
+                    l.append(CallableWrapper(f, getattr(self, '_clean%s' %lname), weak=isweak))
 
         addfunc(after_slots, self._afterfunc, 'after')
         addfunc(before_slots, self._beforefunc, 'before')
@@ -204,6 +204,20 @@ class Signal(object): #{{{
         delfunc(around_slots, self._aroundfunc)
         delfunc(onreturn_slots, self._onreturnfunc)
         delfunc(choose_slots, self._choosefunc)
+        self.reload()
+    # End def #}}}
+
+    def disconnectAll(self): #{{{
+        def delfunc(l):
+            lsl = len(l)
+            while lsl:
+                del l[i]
+                lsl -= 1
+        delfunc(self._afterfunc)
+        delfunc(self._beforefunc)
+        delfunc(self._aroundfunc)
+        delfunc(self._onreturnfunc)
+        delfunc(self._choosefunc)
         self.reload()
     # End def #}}}
 

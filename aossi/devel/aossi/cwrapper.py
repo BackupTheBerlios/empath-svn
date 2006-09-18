@@ -51,7 +51,6 @@ class CallableWrapper(object): #{{{
         mtype = methodtype(obj)
         if mtype not in (METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND):
             o = obj.im_class
-            raise Exception(o.__name__)
             if mtype == METHODTYPE_INSTANCE:
                 o = obj.im_self
             self._object = cref(o, callback, weak=isweak)
