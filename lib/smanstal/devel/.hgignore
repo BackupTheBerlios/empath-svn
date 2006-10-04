@@ -1,5 +1,5 @@
 commit[.]log
-[.].*[.]swp
+[.].*[.]sw[po]
 .*[.]pyc
 .*[.]e3[pst]
 .coverage

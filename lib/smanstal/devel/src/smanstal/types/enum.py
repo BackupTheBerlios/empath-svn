@@ -12,6 +12,8 @@ from smanstal.util.misc import increment
 
 from weakref import ref
 
+__all__ = ('enum',)
+
 def enum(names, **options): #{{{
     assert names, "Empty enums are not supported"
     def enumvals(names, incfunc): #{{{
@@ -21,12 +23,12 @@ def enum(names, **options): #{{{
             if isinstance(n, tuple):
                 name, val = n
                 if not isinstance(name, basestring):
-                    raise TypeError("Non-string name detected: %s" %name.__class__.__name__)
+                    raise TypeError("Non-string name detected: %s" %n.__class__.__name__)
                 elif not isinstance(val, int) and not isinstance(val, long):
                     raise TypeError("Non-integer value detected: %s" %val.__class__.__name__)
                 yield name, cfunc(val)
             elif not isinstance(n, basestring):
-                raise TypeError("Non-string name detected: %s" %name.__class__.__name__)
+                raise TypeError("Non-string name detected: %s" %n.__class__.__name__)
             else:
                 yield n, nfunc()
         # End for #}}}
