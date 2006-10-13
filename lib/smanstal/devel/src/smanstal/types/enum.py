@@ -9,10 +9,9 @@
 # by Zoran Isailovski:
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/413486
 from smanstal.util.misc import increment
+from smanstal.types.introspect import ismagicname
 
 from weakref import ref
-
-__all__ = ('enum',)
 
 def enum(names, **options): #{{{
     assert names, "Empty enums are not supported"
@@ -37,6 +36,11 @@ def enum(names, **options): #{{{
 
     optget = options.get
     incfunc = optget('incfunc', increment)
+    cur = []
+    for n in names:
+        if n not in cur:
+            cur.append(n)
+    names = cur
     constants = [(k, v) for k, v in enumvals(names, incfunc)]
     names = tuple(k for k, v in constants)
     constants = tuple(sorted(constants, key=lambda k: k[1]))
@@ -51,7 +55,7 @@ def enum(names, **options): #{{{
 
         def __getattribute__(self, name): #{{{
             ogetattr = object.__getattribute__
-            if name in dir(object) + ['__get__', '__iter__', '__getitem__']:
+            if ismagicname(name) and name in dir(self):
                 return ogetattr(self, name)
             try:
                 return enumdict[name]

@@ -5,19 +5,22 @@
 # This module is part of the smanstal project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+import __builtin__
 from types import (FunctionType as function, BuiltinFunctionType as bfunction, 
         MethodType as method, BuiltinMethodType as bmethod, ModuleType, ClassType,
         GeneratorType)
+from weakref import ref
 import inspect as i
 import os.path as op
 import re
 _CompiledRegex = type(re.compile(''))
 
 __all__ = ('ismodule', 'isfilemodule', 'ispackage', 'isfunction', 'isbfunction', 'ismethod',
-            'isbmethod', 'isboundmethod', 'isunboundmethod', 'hasmagicname', 'ismagicname', 
-            'ismetaclass', 'isclass', 'isobjclass', 'isobjinstance', 'isbaseobject', 
-            'isimmutable', 'iscallable', 'isiterable', 'isgenerator', 'issequence', 'isindexable',
-            'iscompiledregex', 'mro')
+            'isclassmethod', 'isbmethod', 'isboundmethod', 'isunboundmethod', 'hasmagicname', 
+            'ismagicname', 'instanceclsname', 'ismetaclass', 'isclass', 'isobjclass', 'isobjinstance', 
+            'isbaseobject', 'isimmutable', 'ishashable', 'iscallable', 'isiterable', 'isgenerator', 
+            'issequence', 'isindexable', 'iscompiledregex', 'mro', 'isbasemetaclass', 'canweakref',
+            'isbuiltin', 'numeric_methods')
 
 def isproperty(obj): #{{{
     return isinstance(obj, property)
@@ -46,7 +49,7 @@ def ispackage(obj): #{{{
 # End def #}}}
 
 def isfunction(obj): #{{{
-   return isinstance(obj, function) or isinstance(obj, bfunction)
+   return isinstance(obj, function)
 # End def #}}}
 
 def isbfunction(obj): #{{{
@@ -54,7 +57,11 @@ def isbfunction(obj): #{{{
 # End def #}}}
 
 def ismethod(obj): #{{{
-   return isinstance(obj, method) or isinstance(obj, bmethod)
+   return isinstance(obj, method)
+# End def #}}}
+
+def isclassmethod(obj): #{{{
+    return ismethod(obj) and isclass(getattr(obj, 'im_self', None))
 # End def #}}}
 
 def isbmethod(obj): #{{{
@@ -75,6 +82,10 @@ def hasmagicname(obj): #{{{
 
 def ismagicname(obj): #{{{
     return isinstance(obj, basestring) and obj.startswith('__') and obj.endswith('__')
+# End def #}}}
+
+def instanceclsname(obj): #{{{
+    return obj.__class__.__name__
 # End def #}}}
 
 def ismetaclass(obj): #{{{
@@ -108,6 +119,8 @@ def isimmutable(obj): #{{{
     else:
         return True
 # End def #}}}
+
+ishashable = isimmutable
 
 def iscallable(obj): #{{{
     return isfunction(obj) or ismethod(obj) or isclass(obj) or hasattr(obj, '__call__')
@@ -152,4 +165,45 @@ def mro(cls): #{{{
                 yield c
     # End def #}}}
     return [c for c in calc_mro(cls)]
+# End def #}}}
+
+def isbasemetaclass(bases, metacls): #{{{
+    return not any(isinstance(b, metacls) for b in bases)
+# End def #}}}
+
+def canweakref(obj): #{{{
+    try:
+        r = ref(obj)
+    except TypeError:
+        return False
+    else:
+        return True
+# End def #}}}
+
+def isbuiltin(obj): #{{{
+    if isbfunction(obj) or isbmethod(obj):
+        return True
+    if not isclass(obj):
+        obj = obj.__class__
+    return obj in __builtin__.__dict__.values()
+# End def #}}}
+
+def numeric_methods(): #{{{
+    standard = [k for k, v in object.__dict__.iteritems() if iscallable(v)]
+    numtype = (int, long, float, complex)
+    num = set()
+    for t in numtype:
+        num |= set(k for k, v in t.__dict__.iteritems() if k not in standard and iscallable(v))
+    num |= set(["__iadd__", "__isub__", "__imul__", "__idiv__", "__itruediv__", "__ifloordiv__", 
+                "__imod__", "__ipow__", "__ilshift__", "__irshift__", "__iand__", "__ixor__", "__ior__",
+                "__complex__", "__oct__", "__hex__"])
+    remove = set(['__%s__' %n for n in ['getnewargs', 'setformat', 'getformat']] + ['conjugate'])
+    num -= remove
+    return num
+# End def #}}}
+
+def numeric_methods_proxysafe(): #{{{
+    num_meth = numeric_methods()
+    num_meth -= set('__%s__' %n for n in ['int', 'float', 'long', 'complex', 'oct', 'hex', 'index', 'coerce'])
+    return num_meth
 # End def #}}}
