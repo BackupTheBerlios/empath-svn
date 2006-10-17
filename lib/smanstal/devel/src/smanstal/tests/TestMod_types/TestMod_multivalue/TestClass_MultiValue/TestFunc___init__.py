@@ -8,9 +8,9 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from smanstal.types.enum import Enum
+from smanstal.types.multivalue import MultiValue
 
-class Test_EnumInit(BaseUnitTest): #{{{
+class Test_MultiValueInit(BaseUnitTest): #{{{
     def setUp(self): #{{{
         pass
     # End def #}}}
@@ -21,18 +21,18 @@ class Test_EnumInit(BaseUnitTest): #{{{
 
     def testNoArgs(self): #{{{
         '''No init args raises error'''
-        msg = re.compile("Cannot create empty enum")
-        self.assertRaisesEx(ValueError, Enum, exc_pattern=msg)
+        msg = re.compile("Cannot create empty mval")
+        self.assertRaisesEx(ValueError, MultiValue, exc_pattern=msg)
     # End def #}}}
 
     def testStoreArgs(self): #{{{
         '''Any arguments passed in is stored'''
         expected = dict(red=1, blue=2)
-        test = Enum(**expected)
-        self.assertTrue(isinstance(getattr(test, '_enum', None), dict))
-        self.assertEqual(test._enum, expected)
-        self.assertTrue(test.enum_ is not test._enum)
-        self.assertEqual(test.enum_, test._enum)
+        test = MultiValue(**expected)
+        self.assertTrue(isinstance(getattr(test, '_mval', None), dict))
+        self.assertEqual(test._mval, expected)
+        self.assertTrue(test.p.mval is not test._mval)
+        self.assertEqual(test.p.mval, test._mval)
     # End def #}}}
 
     def testStoreTransformer(self): #{{{
@@ -42,9 +42,9 @@ class Test_EnumInit(BaseUnitTest): #{{{
                 return v + 1
             return v
         # End def #}}}
-        test = Enum(red=1, blue=2)
-        test.transformer_ = transform
-        self.assertTrue(test.transformer_ is transform)
+        test = MultiValue(red=1, blue=2)
+        test.p.transformer = transform
+        self.assertTrue(test._tfunc is transform)
     # End def #}}}
 # End class #}}}
 

@@ -9,7 +9,7 @@ from smanstal.types.introspect import (isclass, iscallable,
         isfunction, isclassmethod, isbasemetaclass,
         isbuiltin, mro, numeric_methods_proxysafe)
 
-__all__ = ('Proxy', 'proxy', 'MetaProxy')
+__all__ = ('Proxy', 'proxy', 'MetaProxy', 'isproxy')
 
 class Proxy(object): #{{{
     __slots__ = ()
@@ -31,12 +31,12 @@ def _mkproxycallable(obj, name, wrap=tuple(), deco=None): #{{{
         sa = object.__setattr__
         isga = name == '__getattribute__'
         issa = name == '__setattr__'
-        if not isproxy(self):
-            if isga:
-                return ga(self, *args)
-            elif issa:
-                return sa(self, *args)
-            return ga(self, name)(*args, **kwargs)
+#        if not isproxy(self):
+#            if isga:
+#                return ga(self, *args)
+#            elif issa:
+#                return sa(self, *args)
+#            return ga(self, name)(*args, **kwargs)
         args = tuple(getattr(a, '__proxyinst__', a) for a in args)
         kwargs = dict((k, getattr(v, '__proxyinst__', v)) for k, v in kwargs.iteritems())
         me_cls = ga(self, '__class__')
@@ -77,7 +77,7 @@ class MetaProxy(type): #{{{
         curobj = obj
         clsproxy = isclass(curobj)
         ga = object.__getattribute__
-        block = ('__new__', '__init__', '__class__', '__name__', '__slots__')
+        block = ('__new__', '__init__', '__class__', '__name__', '__slots__', '__proxyinst__')
         if clsproxy:
             def __init__(self, *args, **kwargs): #{{{
                 object.__setattr__(self, '__proxyinst__', obj(*args, **kwargs))

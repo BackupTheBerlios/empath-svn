@@ -8,7 +8,7 @@
 import unittest
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from smanstal.types.enum import Enum
+from smanstal.types.multivalue import MultiValue
 
 class Test_getattr(BaseUnitTest): #{{{
     def setUp(self): #{{{
@@ -19,12 +19,12 @@ class Test_getattr(BaseUnitTest): #{{{
         pass
     # End def #}}}
 
-    def testInEnum(self): #{{{
+    def testInMultiValue(self): #{{{
         '''Return attr stored in enum'''
-        test = Enum(red=1, blue=2)
-        self.assertEqual(test.red, 1)
-        self.assertEqual(test.blue, 2)
-        self.assertRaisesEx(AttributeError, test.__getattr__, 'wacky')
+        test = MultiValue(red=1, blue=2)
+        self.assertEqual(test.v.red, 1)
+        self.assertEqual(test.v.blue, 2)
+        self.assertRaisesEx(AttributeError, test.v.__getattribute__, 'wacky')
     # End def #}}}
 
     def testTransform(self): #{{{
@@ -34,14 +34,34 @@ class Test_getattr(BaseUnitTest): #{{{
                 return v + 1
             return v
         # End def #}}}
-        test = Enum(red=1, blue=3)
-        test.transformer_ = transform
-        self.assertEqual(test.red, 2)
-        self.assertEqual(test.blue, 4)
+        test = MultiValue(red=1, blue=3)
+        test.p.transformer = transform
+        self.assertEqual(test.v.red, 2)
+        self.assertEqual(test.v.blue, 4)
         self.assertEqual(test, 2)
         self.assertEqual(test, 4)
         self.assertNotEqual(test, 1)
         self.assertNotEqual(test, 3)
+    # End def #}}}
+
+    def testEqfunc(self): #{{{
+        '''Function to test equality of two objects'''
+        def eqfunc(s, o): #{{{
+            return s.__class__ == o
+        # End def #}}}
+        test = MultiValue(red=1, white='hello')
+        test.p.eqfunc = eqfunc
+        self.assertNotEqual(test, 1)
+        self.assertNotEqual(test, 'hello')
+        self.assertEqual(test, int)
+        self.assertEqual(test, str)
+
+        test.p.eqfunc = test._mkeqfunc()
+
+        self.assertEqual(test, 1)
+        self.assertEqual(test, 'hello')
+        self.assertNotEqual(test, int)
+        self.assertNotEqual(test, str)
     # End def #}}}
 # End class #}}}
 

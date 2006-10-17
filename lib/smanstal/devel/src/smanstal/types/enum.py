@@ -13,10 +13,13 @@ from smanstal.types.introspect import ismagicname
 
 from weakref import ref
 
-def enum(names, **options): #{{{
+__all__ = ('enum',)
+
+def enum(names=(), **options): #{{{
     assert names, "Empty enums are not supported"
-    def enumvals(names, incfunc): #{{{
-        inc = incfunc()
+    def enumvals(names, incfunc, start=0): #{{{
+        inc = incfunc(start-1)
+        inc.next()
         nfunc, cfunc = inc.next, inc.send
         for n in names: #{{{
             if isinstance(n, tuple):
@@ -36,12 +39,13 @@ def enum(names, **options): #{{{
 
     optget = options.get
     incfunc = optget('incfunc', increment)
+    start = optget('start', 0)
     cur = []
     for n in names:
         if n not in cur:
             cur.append(n)
     names = cur
-    constants = [(k, v) for k, v in enumvals(names, incfunc)]
+    constants = [(k, v) for k, v in enumvals(names, incfunc, start)]
     names = tuple(k for k, v in constants)
     constants = tuple(sorted(constants, key=lambda k: k[1]))
     chash, enumdict = hash(constants), dict(constants)
@@ -79,6 +83,7 @@ def enum(names, **options): #{{{
         def __str__(self):         return 'enum ' + str(names)
         def __hash__(self):        return chash
         def __getitem__(self, name):  return enumdict[name]
+        def __eq__(self, obj): return self.__contains__(obj)
         def keys(self):            return names[:]
         def values(self):          return [enumdict[n] for n in names]
         def items(self):           return [(n, enumdict[n]) for n in names]

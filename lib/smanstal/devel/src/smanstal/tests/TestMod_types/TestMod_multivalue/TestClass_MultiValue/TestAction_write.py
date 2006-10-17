@@ -8,7 +8,7 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from smanstal.types.enum import Enum
+from smanstal.types.multivalue import MultiValue
 
 class Test_write(BaseUnitTest): #{{{
     def setUp(self): #{{{
@@ -19,35 +19,35 @@ class Test_write(BaseUnitTest): #{{{
         pass
     # End def #}}}
 
-    def testSettingEnum(self): #{{{
+    def testSettingMultiValue(self): #{{{
         '''Setting a value to an enum is illegal'''
         name = 'red'
         msg = re.compile("Attribute '%s' is read-only" %name)
-        test = Enum(red=1)
+        test = MultiValue(red=1)
         self.assertRaisesEx(AttributeError, test.__setattr__, name, 2, exc_pattern=msg)
     # End def #}}}
 
-    def testSetNonEnumVal(self): #{{{
+    def testSetNonMultiValueVal(self): #{{{
         '''Setting any attribute is illegal'''
         name = 'boo'
         msg = re.compile("Attribute '%s' is read-only" %name)
-        test = Enum(red=1)
+        test = MultiValue(red=1)
         self.assertRaisesEx(AttributeError, test.__setattr__, name, 2, exc_pattern=msg)
     # End def #}}}
 
-    def testDeleteEnumVal(self): #{{{
+    def testDeleteMultiValueVal(self): #{{{
         '''Deleting an enum value is illegal'''
         name = 'red'
         msg = re.compile("Attribute '%s' is read-only" %name)
-        test = Enum(red=1)
+        test = MultiValue(red=1)
         self.assertRaisesEx(AttributeError, test.__delattr__, name, exc_pattern=msg)
     # End def #}}}
 
-    def testDeleteNonEnumVal(self): #{{{
+    def testDeleteNonMultiValueVal(self): #{{{
         '''Deleting any attribute is illegal'''
         name = 'boo'
         msg = re.compile("Attribute '%s' is read-only" %name)
-        test = Enum(red=1)
+        test = MultiValue(red=1)
         self.assertRaisesEx(AttributeError, test.__delattr__, name, exc_pattern=msg)
     # End def #}}}
 

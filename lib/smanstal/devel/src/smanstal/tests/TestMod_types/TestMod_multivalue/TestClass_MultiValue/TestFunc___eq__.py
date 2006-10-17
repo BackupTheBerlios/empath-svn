@@ -8,7 +8,7 @@
 import unittest
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from smanstal.types.enum import Enum
+from smanstal.types.multivalue import MultiValue
 
 class Test_eq(BaseUnitTest): #{{{
     def setUp(self): #{{{
@@ -21,7 +21,7 @@ class Test_eq(BaseUnitTest): #{{{
 
     def testSingleValue(self): #{{{
         '''Single value enum is equal'''
-        test = Enum(red=42)
+        test = MultiValue(red=42)
         self.assertEqual(test, 42)
         self.assertNotEqual(test, 1)
     # End def #}}}
@@ -31,7 +31,7 @@ class Test_eq(BaseUnitTest): #{{{
         names = 'abcdefghijklmn'
         valid = len(names) - 1
         d = dict(zip(names, range(valid + 1)))
-        test = Enum(**d)
+        test = MultiValue(**d)
         from random import randint
         for i in xrange(valid+1):
             self.assertEqual(test, i)
