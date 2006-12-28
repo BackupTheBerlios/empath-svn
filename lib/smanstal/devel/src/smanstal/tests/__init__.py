@@ -7,6 +7,7 @@
 
 
 from unittest import TestCase, TestSuite, makeSuite, TextTestRunner
+import doctest
 import os, os.path as op, re, sys
 
 from smanstal.types import (absmodpath, modpathmod, pathmod, hasinit, 
@@ -17,14 +18,15 @@ __all__ = ('testmodules', 'testsuites', 'alltestnames', 'alltestobjects', 'addte
 
 _REType = type(re.compile(''))
 _DefaultModNameRegex = re.compile(r'[Tt]est')
+_DefaultDocTestRegex = re.compile(r'[Dd]oc[Tt]est')
 
 # =================================================
 # testmodules
 # =================================================
 def testmodules(suite, regex=None): #{{{
     if not regex:
-        return _tm_gen(suite, _DefaultModNameRegex)
-    elif ispackage(suite):
+        regex = _DefaultModNameRegex
+    if ispackage(suite) or (isinstance(suite, basestring) and op.isdir(suite)):
         return _tm_gen(suite, regex)
     raise TypeError('Cannot walk through sub modules of %s object' %suite.__class__.__name__)
 # End def #}}}
@@ -32,7 +34,9 @@ def testmodules(suite, regex=None): #{{{
 def _tm_gen(suite, regex): #{{{
     if not isinstance(regex, _REType):
         raise TypeError("%s object is not a compiled regular expression" %regex.__class__.__name__)
-    topdir = op.dirname(suite.__file__)
+    topdir = suite
+    if ispackage(suite):
+        topdir = op.dirname(suite.__file__)
     for dir, subdir, files in os.walk(topdir):
         for f in files:
             name, ext = op.splitext(f)
@@ -45,8 +49,8 @@ def _tm_gen(suite, regex): #{{{
 # =================================================
 def testsuites(suite, regex=None): #{{{
     if not regex:
-        return _ts_gen(suite, _DefaultModNameRegex)
-    elif ispackage(suite):
+        regex = _DefaultModNameRegex
+    if ispackage(suite) or (isinstance(suite, basestring) and op.isdir(suite)):
         return _ts_gen(suite, regex)
     raise TypeError('Cannot walk through sub packages of %s object' %suite.__class__.__name__)
 # End def #}}}
@@ -54,7 +58,9 @@ def testsuites(suite, regex=None): #{{{
 def _ts_gen(suite, regex): #{{{
     if not isinstance(regex, _REType):
         raise TypeError("%s object is not a compiled regular expression" %regex.__class__.__name__)
-    topdir = op.dirname(suite.__file__)
+    topdir = suite
+    if ispackage(suite):
+        topdir = op.dirname(suite.__file__)
     for dir, subdir, files in os.walk(topdir):
         for d in subdir:
             if hasinit(op.join(topdir, d)) and regex.match(d):
@@ -66,8 +72,8 @@ def _ts_gen(suite, regex): #{{{
 # =================================================
 def alltestnames(suite, regex=None): #{{{
     if not regex:
-        return _atn_gen(suite, _DefaultModNameRegex)
-    elif ispackage(suite):
+        regex = _DefaultModNameRegex
+    if ispackage(suite) or (isinstance(suite, basestring) and op.isdir(suite)):
         return _atn_gen(suite, regex)
     raise TypeError('Cannot walk through sub packages/modules of %s object' %suite.__class__.__name__)
 # End def #}}}
@@ -75,7 +81,9 @@ def alltestnames(suite, regex=None): #{{{
 def _atn_gen(suite, regex): #{{{
     if not isinstance(regex, _REType):
         raise TypeError("%s object is not a compiled regular expression" %regex.__class__.__name__)
-    topdir = op.dirname(suite.__file__)
+    topdir = suite
+    if ispackage(suite):
+        topdir = op.dirname(suite.__file__)
     for dir, subdir, files in os.walk(topdir):
         for f in files:
             name, ext = op.splitext(f)
@@ -91,8 +99,8 @@ def _atn_gen(suite, regex): #{{{
 # =================================================
 def alltestobjects(suite, regex=None): #{{{
     if not regex:
-        return _ato_gen(suite, _DefaultModNameRegex)
-    elif ispackage(suite):
+        regex = _DefaultModNameRegex
+    if ispackage(suite) or (isinstance(suite, basestring) and op.isdir(suite)):
         return _ato_gen(suite, regex)
     raise TypeError("%s object is not a package" %suite.__class__.__name__)
 # End def #}}}
@@ -238,6 +246,39 @@ def mksuite(magicfile, ignore=None): #{{{
                 count += 1
         if count:
             return test
+    # End def #}}}
+    return suite
+# End def #}}}
+
+
+# =================================================
+# allrstfiles
+# =================================================
+def allrstfiles(dir): #{{{
+    if not op.isdir(dir):
+        raise OSError("No such directory: %s" %dir)
+    for root, dirs, files in os.walk(dir):
+        for f in files:
+            name, ext = op.splitext(f)
+            if ext == '.rst':
+                yield f
+        return
+# End def #}}}
+# =================================================
+# mkdocsuite
+# =================================================
+def mkdocsuite(dir, recurse=True): #{{{
+    def suite(): #{{{
+        test = TestSuite()
+        for f in allrstfiles(dir):
+            test.addTest(doctest.DocFileSuite(op.join(dir, f), module_relative=False))
+        if recurse:
+            for curdir, subdir, files in os.walk(dir):
+                for d in subdir:
+                    adir = op.abspath(op.join(curdir, d))
+                    for f in allrstfiles(adir):
+                        test.addTest(doctest.DocFileSuite(op.join(adir, f), module_relative=False))
+        return test
     # End def #}}}
     return suite
 # End def #}}}

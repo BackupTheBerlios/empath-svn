@@ -15,12 +15,12 @@ import os.path as op
 import re
 _CompiledRegex = type(re.compile(''))
 
-__all__ = ('ismodule', 'isfilemodule', 'ispackage', 'isfunction', 'isbfunction', 'ismethod',
-            'isclassmethod', 'isbmethod', 'isboundmethod', 'isunboundmethod', 'hasmagicname', 
-            'ismagicname', 'instanceclsname', 'ismetaclass', 'isclass', 'isobjclass', 'isobjinstance', 
-            'isbaseobject', 'isimmutable', 'ishashable', 'iscallable', 'isiterable', 'isgenerator', 
-            'issequence', 'isindexable', 'iscompiledregex', 'mro', 'isbasemetaclass', 'canweakref',
-            'isbuiltin', 'numeric_methods')
+__all__ = ('isproperty', 'ismodule', 'isfilemodule', 'ispackage', 'isfunction', 'isbfunction', 
+            'ismethod', 'isclassmethod', 'isbmethod', 'isboundmethod', 'isunboundmethod', 
+            'hasmagicname', 'ismagicname', 'instanceclsname', 'ismetaclass', 'isclass', 'isobjclass', 
+            'isobjinstance', 'isbaseobject', 'isimmutable', 'ishashable', 'iscallable', 'isiterable', 
+            'isgenerator', 'issequence', 'isindexable', 'iscompiledregex', 'mro', 'dirdict', 
+            'isbasemetaclass', 'canweakref', 'isbuiltin', 'numeric_methods')
 
 def isproperty(obj): #{{{
     return isinstance(obj, property)
@@ -165,6 +165,15 @@ def mro(cls): #{{{
                 yield c
     # End def #}}}
     return [c for c in calc_mro(cls)]
+# End def #}}}
+
+def dirdict(obj): #{{{
+    arg_is_class = isclass(obj)
+    ocls = obj if arg_is_class else obj.__class__
+    ret = dict((k, v) for cls in reversed(mro(ocls)) for k, v in cls.__dict__.iteritems())
+    if not arg_is_class:
+        ret.update((n, getattr(obj, n)) for n in dir(obj))
+    return ret
 # End def #}}}
 
 def isbasemetaclass(bases, metacls): #{{{

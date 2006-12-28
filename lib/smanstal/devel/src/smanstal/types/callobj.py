@@ -74,7 +74,10 @@ class callcallable(callobj): #{{{
             c = c()
         args = tuple(a() for a in self._args) 
         kwargs = dict((k, v()) for k, v in self._kwargs.iteritems())
-        return c(*args, **kwargs)
+        try:
+            return c(*args, **kwargs)
+        except:
+            raise Exception(kwargs)
     # End def #}}}
 
     # Properties #{{{

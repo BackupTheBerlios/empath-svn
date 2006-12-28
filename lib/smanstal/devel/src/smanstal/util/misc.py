@@ -16,6 +16,34 @@ def increment(val=0, step=1): #{{{
             val = next
 # End def #}}}
 
+#def increment(*args): #{{{
+#    largs = len(args)
+#    if not args or largs > 3:
+#        raise TypeError("increment expected at least %i arguments, got %i" %(1, largs))
+#    start = 0
+#    stop = 0
+#    step = 1
+#    if largs == 1:
+#        stop = largs[0]
+#    elif largs == 2:
+#        start, stop = largs
+#    else:
+#        start, stop, step = largs
+#        if not step:
+#            raise ValueError("increment step argument must not be zero")
+#    counter = 0
+#    while 1:
+#        next = (yield val)
+#        if val == stop - 1:
+#            break
+#        elif isinstance(next, StopIteration):
+#            break
+#        elif next is None:
+#            val += step
+#        else:
+#            val = next
+## End def #}}}
+
 # This is v1.0 of imerge by Raymond Hettinger taken from:
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/491285
 import heapq

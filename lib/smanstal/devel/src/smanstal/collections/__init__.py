@@ -114,7 +114,10 @@ def staticsequence(name, pcls, **options): #{{{
 
         def __eq__(self, obj): #{{{
             if not isinstance(obj, self.__class__):
-                obj = self.__class__(obj)
+                try:
+                    obj = self.__class__(obj)
+                except TypeError:
+                    return False
             return super(StaticSequence, self).__eq__(obj)
         # End def #}}}
 
@@ -127,7 +130,37 @@ def staticsequence(name, pcls, **options): #{{{
 # End def #}}}
 
 opair = staticsequence('opair', tuple, n=2)
-unopair = staticsequence('unopair', frozenset, n=2)
+
+class baseunopair(tuple): #{{{
+    __slots__ = ()
+    def __eq__(self, o): #{{{
+        try:
+            val = (v1, v2) = o
+        except:
+            raise Exception(o)
+        sup = super(baseunopair, self).__eq__
+        return bool(sup(val) or sup(val[::-1]))
+    # End def #}}}
+
+    def __hash__(self): #{{{
+        return hash((min(self), max(self)))
+    # End def #}}}
+# End class #}}}
+unopair = staticsequence('unopair', baseunopair, n=2)
+
+class basedisunopair(baseunopair): #{{{
+    __slots__ = ()
+    def __init__(self, *args): #{{{
+        if len(args) == 1:
+            args = args[0]
+        if args:
+            v1, v2 = args
+            if v1 == v2:
+                raise ValueError("Pairs must be of distinct values")
+        super(basedisunopair, self).__init__(self, *args)
+    # End def #}}}
+# End class #}}}
+disunopair = staticsequence('disunopair', basedisunopair, n=2)
 
 
 class multiset(dict): #{{{
@@ -177,6 +210,14 @@ class multiset(dict): #{{{
             cur = val
             self.__setitem__(obj, cur)
         return cur
+    # End def #}}}
+
+    def __iter__(self): #{{{
+        for k, v in self.iteritems():
+            count = v
+            while count:
+                yield k
+                count -= 1
     # End def #}}}
     # =======================
     # Set methods
@@ -297,7 +338,7 @@ class multiset(dict): #{{{
                 try:
                     obj, count = item
                 except (ValueError, TypeError):
-                    obj, count = item, self.get(item, 1)
+                    obj, count = item, self.get(item, 0) + 1
                     cur = count
                 else:
                     cur = self.get(obj, 1)
@@ -307,10 +348,11 @@ class multiset(dict): #{{{
                     count = cur
                 else:
                     if not count:
+                        self.pop(obj, 0)
                         continue
                     elif count < 0:
                         raise ValueError("Invalid count of %i for %s object" %(count, obj.__class__.__name__))
-                yield obj, max([count, cur])
+                yield obj, count
         # End def #}}}
         super(multiset, self).update(set_mapping(s))
     # End def #}}}
