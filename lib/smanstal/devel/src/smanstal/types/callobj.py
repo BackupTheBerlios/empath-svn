@@ -77,6 +77,7 @@ class callcallable(callobj): #{{{
         try:
             return c(*args, **kwargs)
         except:
+            raise
             raise Exception(kwargs)
     # End def #}}}
 

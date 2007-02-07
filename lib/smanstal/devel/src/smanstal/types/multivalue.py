@@ -8,6 +8,8 @@
 from smanstal.types.introspect import iscallable
 from smanstal.types.mdict import mdict
 
+from smanstal.builtins import getobjattr, setobjattr
+
 from weakref import ref
 
 __all__ = ('MultiValueProperties', 'MultiValueValues', 'MultiValue', 'AnyValue', 'AllValues', 
@@ -45,7 +47,8 @@ class MultiValueProperties(object): #{{{
         func = args[0]
         if not iscallable(func):
             raise TypeError("Transform function is not callable")
-        object.__setattr__(mval, '_tfunc', func)
+#        object.__setattr__(mval, '_tfunc', func)
+        setobjattr(mval, '_tfunc', func)
     # End def #}}}
 
     def _getset_eqfunc(self, *args): #{{{
@@ -56,7 +59,8 @@ class MultiValueProperties(object): #{{{
         func = args[0]
         if not iscallable(func):
             raise TypeError("Equals function is not callable")
-        object.__setattr__(mval, '_eqfunc', func)
+#        object.__setattr__(mval, '_eqfunc', func)
+        setobjattr(mval, '_eqfunc', func)
     # End def #}}}
 
     raw = property(lambda s: s._get_mval())
@@ -71,7 +75,8 @@ class MultiValueValues(object): #{{{
         if mval is not None:
             if not isinstance(mval, MultiValue) or not isinstance(self, mval.__class__.v.__class__):
                 raise TypeError("Cannot use %s object as an multivalue" %mval.__class__.__name__)
-            object.__setattr__(self, '_mval', ref(mval))
+#            object.__setattr__(self, '_mval', ref(mval))
+            setobjattr(self, '_mval', ref(mval))
     # End def #}}}
 
     def __get__(self, inst, owner): #{{{
@@ -81,15 +86,18 @@ class MultiValueValues(object): #{{{
     def __getattribute__(self, name): #{{{
         if name in dir(object) + ['__get__', '__getitem__']:
             return object.__getattribute__(self, name)
-        mval = object.__getattribute__(self, '_mval')()
+#        mval = object.__getattribute__(self, '_mval')()
+        mval = getobjattr(self, '_mval')()
         try:
             return mval.p.transformer(name, mval._mval[name])
         except KeyError:
-            return object.__getattribute__(self, name)
+#            return object.__getattribute__(self, name)
+            return getobjattr(self, name)
     # End def #}}}
 
     def __getitem__(self, key): #{{{
-        mval = object.__getattribute__(self, '_mval')()
+#        mval = object.__getattribute__(self, '_mval')()
+        mval = getobjattr(self, '_mval')()
         return mval.p.transformer(key, mval._mval[key])
     # End def #}}}
 
@@ -124,9 +132,12 @@ class MultiValue(object): #{{{
         anon = ((k, v) for k, v in enumerate(anon))
         mval = mdict(anon, mval)
         mval.clearmerged()
-        object.__setattr__(self, '_mval', mval)
-        object.__setattr__(self, '_tfunc', tfunc)
-        object.__setattr__(self, '_eqfunc', eqfunc)
+#        object.__setattr__(self, '_mval', mval)
+#        object.__setattr__(self, '_tfunc', tfunc)
+#        object.__setattr__(self, '_eqfunc', eqfunc)
+        setobjattr(self, '_mval', mval)
+        setobjattr(self, '_tfunc', tfunc)
+        setobjattr(self, '_eqfunc', eqfunc)
     # End def #}}}
 
     def __delattr__(self, name): #{{{

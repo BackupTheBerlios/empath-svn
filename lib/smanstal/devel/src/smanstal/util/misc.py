@@ -71,3 +71,10 @@ def imerge(*iterables): #{{{
             continue
         heappush(h, (v, next))
 # End def #}}}
+
+# Make it easier to deprecate functionality
+def deprecated(msg, stacklevel=2): #{{{
+    from warnings import warn
+    warn(msg, DeprecationWarning, stacklevel=stacklevel)
+# End def #}}}
+
