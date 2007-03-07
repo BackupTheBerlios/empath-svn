@@ -8,7 +8,7 @@
 from weakref import ref
 from smanstal.types.introspect import iscallable
 
-__all__ = ('callobj','quote', 'q', 'callcallable', 'evalobj')
+__all__ = ('callobj','quote', 'q', 'callcallable', 'weakcallable', 'evalobj')
 
 class callobj(object): #{{{
     __slots__ = ('__weakref__',)
@@ -65,7 +65,7 @@ class callcallable(callobj): #{{{
     def _make_callobj(self, obj): #{{{
         if isinstance(obj, callobj):
             return obj
-        return q(obj)
+        return q(obj, weak=False)
     # End def #}}}
 
     def __call__(self): #{{{
@@ -81,11 +81,31 @@ class callcallable(callobj): #{{{
             raise Exception(kwargs)
     # End def #}}}
 
+    def _set_args(self, val): #{{{
+        mc = self._make_callobj
+        self._args = tuple(mc(a) for a in val)
+    # End def #}}}
+
+    def _set_kwargs(self, val): #{{{
+        mc = self._make_callobj
+        val = dict(val)
+        self._kwargs = dict((k, mc(v)) for k, v in val.iteritems())
+    # End def #}}}
+
     # Properties #{{{
-    args = property(lambda s: s._args)
-    kwargs = property(lambda s: dict(s._kwargs))
+    args = property(lambda s: s._args, lambda s, v: s._set_args(v))
+    kwargs = property(lambda s: dict(s._kwargs), lambda s, v: s._set_kwargs(v))
     callable = property(lambda s: s._callable)
     # End properties #}}}
+# End class #}}}
+
+class weakcallable(callcallable): #{{{
+    __slots__ = ()
+    def _make_callobj(self, obj): #{{{
+        if isinstance(obj, callobj):
+            return obj
+        return q(obj, weak=True)
+    # End def #}}}
 # End class #}}}
 
 class evalobj(callobj): #{{{

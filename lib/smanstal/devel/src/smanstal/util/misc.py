@@ -78,3 +78,7 @@ def deprecated(msg, stacklevel=2): #{{{
     warn(msg, DeprecationWarning, stacklevel=stacklevel)
 # End def #}}}
 
+def bool_check(val, *ret): #{{{
+    ret = None if not ret else ret[0]
+    return (ret, val)[int(bool(val))]
+# End def #}}}

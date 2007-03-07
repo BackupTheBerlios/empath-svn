@@ -52,6 +52,10 @@ class MultiDictMixin(object): #{{{
     def values(self): #{{{
         return list(self.itervalues())
     # End def #}}}
+
+    def keys(self): #{{{
+        return list(self.iterkeys())
+    # End def #}}}
     
     def iterkeys(self): #{{{
         return self.__iter__()
@@ -127,14 +131,23 @@ class MultiDictMixin(object): #{{{
         return get(k, d)[i]
     # End def #}}}
 
-    def getall(self, key, *d): #{{{
+    def getiter(self, key, *d): #{{{
         len_d = len(d)
         if len_d > 1:
             raise TypeError('getall expected 1 or 2 arguments, got %i' %len_d)
         d = [] if not d else d[0]
         get = super(MultiDictMixin, self).get
-        ret = list(get(key, []))
+        ret = iter(get(key, []))
         return d if not ret else ret
+    # End def #}}}
+
+    def getall(self, key, *d): #{{{
+        return list(self.getiter(key, *d))
+    # End def #}}}
+
+    def getlen(self, key): #{{{
+        get = super(MultiDictMixin, self).get
+        return len(get(key, []))
     # End def #}}}
 
     # 1 arg: normal dict setdefault

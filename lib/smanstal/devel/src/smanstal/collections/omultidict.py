@@ -17,6 +17,16 @@ class omultidict(OrderedDictMixin, MultiDictMixin, dict): #{{{
         return o %t
     # End def #}}}
 
+    def __iter__(self): #{{{
+        return iter(k for k, i in self._keys)
+    # End def #}}}
+
+    def _add_key(self, key): #{{{
+        ind = self.getlen(key)
+        key = (key, ind-1)
+        super(omultidict, self)._add_key(key)
+    # End def #}}}
+
     def _setitem_keycheck(self, key): #{{{
         # Allow addition to internal key list even if key already
         # exists
@@ -24,15 +34,11 @@ class omultidict(OrderedDictMixin, MultiDictMixin, dict): #{{{
     # End def #}}}
 
     def _itergetfunc(self): #{{{
-        getall = self.getall
-        count = list.count
         keys = self._keys
-        def func(key, index): #{{{
-            ind = count(keys[:index], key)
-            try:
-                return getall(key)[ind]
-            except:
-                raise Exception(key, index, ind, getall(key), keys)
+        get = self.get
+        def func(index): #{{{
+            key, ind = keys[index]
+            return get(key, index=ind)
         # End def #}}}
         return func
     # End def #}}}

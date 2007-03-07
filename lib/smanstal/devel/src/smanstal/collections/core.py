@@ -51,7 +51,7 @@ class iterquery(object): #{{{
         raise IndexError('iterquery index out of range')
     # End def #}}}
 
-    def as(self, itertype): #{{{
+    def as_(self, itertype): #{{{
         return itertype(self)
     # End def #}}}
 
@@ -86,18 +86,35 @@ class iterquery(object): #{{{
         return self.__class__(newiter, **kw)
     # End def #}}}
 
+#    def reduce(self, f, *init): #{{{
+#        if len(init) > 1:
+#            raise TypeError('reduce() expected at most 2 arguments (%i given)' %len(init))
+#        value = list(init)
+#        vappend = value.append
+#        for val in self:
+#            if not value:
+#                vappend(val)
+#            else:
+#                value[0] = f(value[0], val)
+#        if not value:
+#            raise TypeError('reduce() of empty sequence with no initial value')
+#        return value[0]
+#    # End def #}}}
+
     def reduce(self, f, *init): #{{{
         if len(init) > 1:
             raise TypeError('reduce() expected at most 2 arguments (%i given)' %len(init))
-        value = list(init)
+        value = init
+        if init:
+            value = init[0]
         for val in self:
             if not value:
-                value.append(val)
+                value = val
             else:
-                value[0] = f(value[0], val)
-        if not value:
+                value = f(value, val)
+        if value is init:
             raise TypeError('reduce() of empty sequence with no initial value')
-        return value[0]
+        return value
     # End def #}}}
 
     def _anyall_func(self, args): #{{{

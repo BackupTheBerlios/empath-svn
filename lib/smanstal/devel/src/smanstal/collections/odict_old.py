@@ -13,26 +13,29 @@ class OrderedDictMixin(object): #{{{
     def __init__(self, *args, **kwargs): #{{{
         self._keys = []
         super(OrderedDictMixin, self).__init__()
-        if not args and not kwargs:
-            return
         arglen = len(args)
         if arglen == 1:
-            self.update(args[0], **kwargs)
+            if isinstance(args[0], dict):
+                self.update(args[0])
+            else:
+                for k, v in args[0]:
+                    self.__setitem__(k, v)
+            self.update(kwargs)
         elif arglen == 0:
             self.update(kwargs)
         else:
             self.update(*args, **kwargs)
     # End def #}}}
 
+#    def _keyval(self, key): #{{{
+#        return key
+#    # End def #}}}
+
     def __eq__(self, other): #{{{
         if not isinstance(other, OrderedDictMixin): return False
         if super(OrderedDictMixin, self).__eq__(other):
             return self._keys == other._keys
         return False
-    # End def #}}}
-
-    def __ne__(self, other): #{{{
-        return not self.__eq__(other)
     # End def #}}}
 
     def __str__(self): #{{{
@@ -48,11 +51,7 @@ class OrderedDictMixin(object): #{{{
     def __setitem__(self, key, val): #{{{
         super(OrderedDictMixin, self).__setitem__(key, val)
         if self._setitem_keycheck(key): 
-            self._add_key(key)
-    # End def #}}}
-
-    def _add_key(self, key): #{{{
-        self._keys.append(key)
+            self._keys.append(key)
     # End def #}}}
 
     def _setitem_keycheck(self, key): #{{{
@@ -65,7 +64,7 @@ class OrderedDictMixin(object): #{{{
     # End def #}}}
 
     def __copy__(self): #{{{
-        od = self.__class__()
+        od = odict()
         od.update(self)
         return od
     # End def #}}}
@@ -101,9 +100,7 @@ class OrderedDictMixin(object): #{{{
 
     def _itergetfunc(self): #{{{
         get = self.get
-        keys = self._keys
-        def func(index): #{{{
-            key = keys[index]
+        def func(key, index): #{{{
             return get(key)
         # End def #}}}
         return func
@@ -113,7 +110,7 @@ class OrderedDictMixin(object): #{{{
         iterget = self._itergetfunc()
         i = 0
         for key in self: 
-            yield (key, iterget(i))
+            yield (key, iterget(key, i))
             i += 1
     # End def #}}}
 
@@ -150,10 +147,8 @@ class OrderedDictMixin(object): #{{{
     # End def #}}}
 
     def setdefault(self, key, *args, **opt): #{{{
-        ret = super(OrderedDictMixin, self).setdefault(key, *args, **opt)
-        if self._setitem_keycheck(key): 
-            self._add_key(key)
-        return ret
+        if key not in self._keys: self._keys.append(key)
+        return super(OrderedDictMixin, self).setdefault(key, *args, **opt)
     # End def #}}}
 
     def update(self, *args, **kw): #{{{
@@ -170,10 +165,6 @@ class OrderedDictMixin(object): #{{{
         if kw:
             for k, v in kw.iteritems():
                 setitem(k, v)
-    # End def #}}}
-
-    def sort(self, cmp=None, key=None, reverse=False): #{{{
-        return self._keys.sort(cmp, key, reverse)
     # End def #}}}
 # End class #}}}
 

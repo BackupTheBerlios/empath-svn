@@ -32,3 +32,27 @@ def selfcaller(i=1): #{{{
         raise NameError("'%s' object does not exist yet -- calling from a class definition?" %n)
     return glob.get(n)
 # End def #}}}
+
+# One implementation of properties
+from smanstal.types.introspect import isfunction
+class AutoProp(type): #{{{
+    def __new__(apcls, classname, bases, clsdict): #{{{
+        names = {}
+        sd, clspop = names.setdefault, clsdict.pop
+        for fname, f in clsdict.items():
+            orig, ind = fname, fname.find('_')
+            type = orig[:ind]
+            if ind < 0 or ind+1 == len(orig):
+                continue
+            actions = set(['get', 'set', 'del', 'doc'])
+            if type in actions:
+                if not ((type == 'doc' and isinstance(f, basestring)) or isfunction(f)):
+                    continue
+                fname = orig[ind+1:]
+                arg = type if type == 'doc' else 'f'+type
+                sd(fname, {})[arg] = f
+                clspop(orig)
+        clsdict.update((n, property(**kw)) for n, kw in names.iteritems())
+        return super(AutoProp, apcls).__new__(apcls, classname, bases, clsdict)
+    # End def #}}}
+# End class #}}}

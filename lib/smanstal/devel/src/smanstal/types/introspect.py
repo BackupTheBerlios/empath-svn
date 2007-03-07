@@ -16,11 +16,11 @@ import re
 _CompiledRegex = type(re.compile(''))
 
 __all__ = ('isproperty', 'ismodule', 'isfilemodule', 'ispackage', 'isfunction', 'isbfunction', 
-            'ismethod', 'isclassmethod', 'isbmethod', 'isboundmethod', 'isunboundmethod', 
-            'hasmagicname', 'ismagicname', 'instanceclsname', 'ismetaclass', 'isclass', 'isobjclass', 
-            'isobjinstance', 'isbaseobject', 'isimmutable', 'ishashable', 'iscallable', 'isiterable', 
-            'isgenerator', 'issequence', 'isindexable', 'iscompiledregex', 'mro', 'dirdict', 
-            'isbasemetaclass', 'canweakref', 'isbuiltin', 'numeric_methods')
+            'ismethod', 'isclassmethod', 'isstaticmethod', 'isbmethod', 'isboundmethod', 
+            'isunboundmethod', 'hasmagicname', 'ismagicname', 'instanceclsname', 'ismetaclass', 
+            'isclass', 'isobjclass', 'isobjinstance', 'isbaseobject', 'isimmutable', 'ishashable', 
+            'iscallable', 'isiterable', 'isgenerator', 'issequence', 'isindexable', 'iscompiledregex', 
+            'mro', 'dirdict', 'isbasemetaclass', 'canweakref', 'isbuiltin', 'numeric_methods')
 
 def isproperty(obj): #{{{
     return isinstance(obj, property)
@@ -61,7 +61,12 @@ def ismethod(obj): #{{{
 # End def #}}}
 
 def isclassmethod(obj): #{{{
-    return ismethod(obj) and isclass(getattr(obj, 'im_self', None))
+    return (isinstance(obj, classmethod) or 
+            ismethod(obj) and isclass(getattr(obj, 'im_self', None)))
+# End def #}}}
+
+def isstaticmethod(obj): #{{{
+    return isinstance(obj, staticmethod)
 # End def #}}}
 
 def isbmethod(obj): #{{{
@@ -123,7 +128,9 @@ def isimmutable(obj): #{{{
 ishashable = isimmutable
 
 def iscallable(obj): #{{{
-    return isfunction(obj) or ismethod(obj) or isclass(obj) or hasattr(obj, '__call__')
+    return bool(isinstance(obj, (function, bfunction, method, bmethod)) or
+                isclass(obj) or 
+                hasattr(obj, '__call__'))
 # End def #}}}
 
 def ismapping(obj): #{{{
@@ -136,7 +143,8 @@ def ismapping(obj): #{{{
 # End def #}}}
 
 def isiterable(obj): #{{{
-    return iscallable(getattr(obj, '__iter__', None))
+    return isinstance(obj, basestring) or (not isclass(obj) and 
+            iscallable(getattr(obj, '__iter__', None)))
 # End def #}}}
 
 def isgenerator(obj): #{{{

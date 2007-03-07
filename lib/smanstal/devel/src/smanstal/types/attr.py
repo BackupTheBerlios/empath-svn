@@ -70,3 +70,65 @@ class SetAttrOnce(object): #{{{
             object.__setattr__(self, '_count', c + 1)
     # End def #}}}
 # End class #}}}
+
+class Attributes(object): #{{{
+    __slots__ = ('_inst',)
+    def __init__(self, owner=None): #{{{
+        osetattr(self, '_inst', owner)
+    # End def #}}}
+
+    def __iter__(self): #{{{
+        if self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        return iter(self._inst._kwargs)
+    # End def #}}}
+
+    def iteritems(self): #{{{
+        if self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        return ((k, v()) for k, v in self._inst._kwargs.iteritems())
+    # End def #}}}
+
+    def iterkeys(self): #{{{
+        if self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        return iter(self._inst._kwargs)
+    # End def #}}}
+
+    def itervalues(self): #{{{
+        if self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        return (v() for v in self._inst._kwargs.itervalues())
+    # End def #}}}
+
+    def __getattr__(self, name): #{{{
+        if not isinstance(name, basestring):
+            raise TypeError('Tag attribute names must be strings: %s' %name.__class__.__name__)
+        elif self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        default = lambda: None
+        return self._inst._kwargs.get(name, default)()
+    # End def #}}}
+
+    def __setattr__(self, name, val): #{{{
+        if not isinstance(name, basestring):
+            raise TypeError('Tag attribute names must be strings: %s' %name.__class__.__name__)
+        elif self._inst is None:
+            raise TypeError("TagAttributes needs an owner")
+        isstr = isinstance(val, basestring)
+        if isinstance(val, basestring):
+            val = val.strip()
+        if val is None:
+            self._inst._kwargs.pop(name, None)
+        else:
+            self._inst._kwargs[name] = quote(val)
+    # End def #}}}
+
+    __getitem__ = __getattr__
+    __setitem__ = __setattr__
+
+    def __get__(self, inst, owner): #{{{
+        return self.__class__(inst)
+    # End def #}}}
+
+# End class #}}}
