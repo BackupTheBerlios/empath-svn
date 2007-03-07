@@ -110,12 +110,14 @@ class BaseSignal(object): #{{{
 
     def _init_calls(self, call_funclist): #{{{
         cleanlist = self._cleanlist
-        ldict, j = locals(), '_'.join
-        mkfunc = lambda n: (n, ldict[j(['call', n])])
-        call_funclist['before'].update(self._init_calls_before(cleanlist).iteritems())
-        call_funclist['replace'].update(self._init_calls_replace(cleanlist).iteritems())
-        call_funclist['around'].update(self._init_calls_around(cleanlist).iteritems())
-        call_funclist['after'].update(self._init_calls_after(cleanlist).iteritems())
+#        ldict, j = locals(), '_'.join
+#        mkfunc = lambda n: (n, ldict[j(['call', n])])
+        for cftype in ('before', 'replace', 'around', 'after'):
+            call_funclist[cftype].update(getattr(self, '_init_calls_%s' %cftype)(cleanlist).iteritems())
+#        call_funclist['before'].update(self._init_calls_before(cleanlist).iteritems())
+#        call_funclist['replace'].update(self._init_calls_replace(cleanlist).iteritems())
+#        call_funclist['around'].update(self._init_calls_around(cleanlist).iteritems())
+#        call_funclist['after'].update(self._init_calls_after(cleanlist).iteritems())
     # End def #}}}
 
     def _init_calls_before(self, cleanlist): #{{{
@@ -162,8 +164,7 @@ class BaseSignal(object): #{{{
 
     def _cleanlist(self, l): #{{{
         l = self._funclist[l]
-        llen = l.__len__()
-        i = 0
+        llen, i = len(l), 0
         while i < llen:
             func = l[i]
             if func.isdead:
