@@ -51,6 +51,8 @@ def callfunc(self, func, functype, pass_ret, ret, *args, **kwargs): #{{{
 # End def #}}}
 
 def func_ismethod(func, *args): #{{{
+    if not args:
+        return False
     s = args[0]
     sfunc = getattr(s, func.__name__, None)
     if sfunc:
