@@ -19,7 +19,7 @@ setup(
 #  ext-name = __name__.somemod:SomeCallable
 #  """
 
-#  package_data={'testme': 'data/somefile.dat'},
+#  package_data={'testme': ['data/somefile.dat']},
 
   packages=find_packages('src'),
   package_dir={'': 'src'}
