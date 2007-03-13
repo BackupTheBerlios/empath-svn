@@ -1,3 +1,4 @@
 commit[.]log
 [.].*[.]swp
 .*[.]pyc
+src[/]aossi.egg-info[/].*
