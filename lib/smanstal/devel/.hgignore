@@ -5,3 +5,4 @@ commit[.]log
 .coverage
 .*[.]vp
 .*[.]vs
+src[/].*[.]egg-info[/].*
