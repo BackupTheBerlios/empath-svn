@@ -8,7 +8,7 @@
 from aossi.signal import Signal
 from aossi.cwrapper import cid
 from inspect import isfunction as _isf, ismethod as _ism
-from aossi.util import cargdefstr, StopCascade, isiterable
+from aossi.util import cargdefstr, StopCascade, isiterable, isclassmethod, isstaticmethod
 
 from aossi.util.callobj import evalobj, q
 
@@ -374,7 +374,8 @@ def signal(**kwargs): #{{{
                 return signal(%s)
             """ %(defstr, callstr)
             exec compile(fstr.strip(), '<string>', 'exec') in locals()
-        d = wraps(func)(DecoSignalFunction)
+        d = DecoSignalFunction
+        d = wraps(func)(d)
         d.signal = signal
         for n in signal.decorators:
             setattr(d, n, getattr(signal, n))
