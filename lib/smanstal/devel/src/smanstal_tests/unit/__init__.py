@@ -16,20 +16,20 @@ from smanstal_tests.unit import egg
 
 @add_egg_test((req, egg.__file__))
 def suite(): #{{{
-    pass
-# End def #}}}
-
-def run_suite(): #{{{
     fs = resource_filename(req, 'smanstal_tests/unit/filesystem')
     sys.path = [op.dirname(fs)] + sys.path
     import filesystem as fs
 
     @addtest(fs.__file__)
     def all_suite(): #{{{
-        return suite()
+        pass
     # End def #}}}
 
-    TextTestRunner(verbosity=2).run(all_suite())
+    return all_suite()
+# End def #}}}
+
+def run_suite(): #{{{
+    TextTestRunner(verbosity=2).run(suite())
     cleanup_resources()
 # End def #}}}
 
