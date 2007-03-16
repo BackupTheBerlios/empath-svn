@@ -27,22 +27,22 @@ class Test_rootpackage(BaseUnitTest): #{{{
 
     def testPythonPackage(self): #{{{
         '''Python package returns root package'''
-        import smanstal.types as st
-        import smanstal
-        self.assertTrue(rootpackage(st) is smanstal)
+        import xml.sax.handler as xsh
+        import xml
+        self.assertTrue(rootpackage(xsh) is xml)
     # End def #}}}
 
     def testPythonModule(self): #{{{
         '''Python module returns root package'''
-        from smanstal.types import module
-        import smanstal
-        self.assertTrue(rootpackage(module) is smanstal)
+        import xml.sax as xsh
+        import xml
+        self.assertTrue(rootpackage(xsh) is xml)
     # End def #}}}
 
     def testRootPackage(self): #{{{
         '''Root package returns itself'''
-        import smanstal
-        self.assertTrue(rootpackage(smanstal) is smanstal)
+        import xml
+        self.assertTrue(rootpackage(xml) is xml)
     # End def #}}}
 
     def testDynamicModule(self): #{{{

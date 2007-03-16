@@ -38,16 +38,16 @@ class Test_parent(BaseUnitTest): #{{{
 
     def testPackage(self): #{{{
         '''Package returns parent'''
-        import smanstal.types as st
-        import smanstal as s
-        self.assertTrue(parent(st) is s)
+        import xml.sax as xs
+        import xml
+        self.assertTrue(parent(xs) is xml)
     # End def #}}}
 
     def testModule(self): #{{{
         '''Module returns parent'''
-        import smanstal.types.module as stm
-        import smanstal.types as st
-        self.assertTrue(parent(stm) is st)
+        import xml.sax as xs
+        import xml
+        self.assertTrue(parent(xs) is xml)
     # End def #}}}
 # End class #}}}
 

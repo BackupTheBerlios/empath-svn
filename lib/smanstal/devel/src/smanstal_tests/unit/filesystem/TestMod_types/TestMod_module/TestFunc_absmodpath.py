@@ -64,7 +64,7 @@ class Test_absmodpath(BaseUnitTest): #{{{
     def testPythonFile(self): #{{{
         '''Passing a python file'''
         f = op.abspath(__file__)
-        expected = 'smanstal_tests.unit.filesystem.TestMod_types.TestMod_module.TestFunc_absmodpath'
+        expected = __name__
         self.assertEqual(absmodpath(f), expected)
     # End def #}}}
 
@@ -72,7 +72,7 @@ class Test_absmodpath(BaseUnitTest): #{{{
         '''Passing a python package'''
         f = op.abspath(__file__)
         d = op.dirname(f)
-        expected = 'smanstal_tests.unit.filesystem.TestMod_types.TestMod_module'
+        expected = '.'.join(__name__.split('.')[:-1])
         self.assertEqual(absmodpath(d), expected)
     # End def #}}}
 # End class #}}}

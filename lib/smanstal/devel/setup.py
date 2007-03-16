@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
   name="smanstal",
-  version="0.1.2",
+  version="0.1.3-1",
   description="""A collection of python utility functions and objects""",
   author="Ariel De Ocampo",
   author_email = 'arieldeocampo@gmail.com',
@@ -21,7 +21,10 @@ setup(
 
 #  package_data={'testme': 'data/somefile.dat'},
 
+#  packages=find_packages('src', exclude=['smanstal_tests.unit.filesystem*']),
   packages=find_packages('src'),
-  package_dir={'': 'src'}
+  package_dir={'': 'src'},
+  package_data={'smanstal_tests': ['unit/filesystem*.*']},
+  exclude_package_data={'smanstal_tests': ['unit/*.py', 'unit/egg*']}
 )
 

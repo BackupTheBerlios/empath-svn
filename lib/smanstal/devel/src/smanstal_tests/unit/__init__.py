@@ -9,16 +9,27 @@ from smanstal.egg.tests import addtest as add_egg_test
 from smanstal.tests import addtest, mksuite
 from unittest import TextTestRunner
 from pkg_resources import resource_filename, Requirement, cleanup_resources
-import sys, os.path as op
+import sys, os.path as op, os
 
 req = Requirement.parse('smanstal')
 from smanstal_tests.unit import egg
 
 @add_egg_test((req, egg.__file__))
 def suite(): #{{{
+    cur = op.dirname(__file__)
     fs = resource_filename(req, 'smanstal_tests/unit/filesystem')
-    sys.path = [op.dirname(fs)] + sys.path
-    import filesystem as fs
+    dname = op.dirname(fs)
+    os.chdir(dname)
+    imp = ''
+    if not fs.startswith(cur) and not op.isdir('fstests'):
+        imp = 'fstests'
+        os.rename('filesystem', imp) 
+    sys.path = [dname] + sys.path
+    if imp:
+        fs = __import__(imp, level=0)
+    else:
+        import smanstal_tests.unit.filesystem as fs
+    print fs.__file__
 
     @addtest(fs.__file__)
     def all_suite(): #{{{
