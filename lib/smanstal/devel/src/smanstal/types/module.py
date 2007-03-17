@@ -10,17 +10,24 @@ import os, sys, re
 op = os.path
 
 from smanstal.types import isfilemodule, ispackage, ismodule
+from types import ModuleType as module
 
-__all__ = ('hasinit', 'absmodpath', 'rootpackage', 'pathmod', 'modpathmod', 'parent')
+__all__ = ('hasinit', 'absmodpath', 'rootpackage', 'pathmod', 'modpathmod', 
+            'parent', 'pkgdir', 'fromfile', 'isfindable')
 
 # =================================================
 # hasinit
 # =================================================
-def hasinit(dir): #{{{
+def hasinit(dir, source_first=True): #{{{
+    source_first = (lambda seq: seq) if source_first else reversed
     if isinstance(dir, basestring) and op.isdir(dir):
         path1 = op.join(dir, '__init__.py')
         path2, path3 = path1 + 'c', path1 + 'o'
-        return True in (op.isfile(p) for p in (path1, path2, path3))
+        for p in source_first((path1, path2, path3)):
+            if op.isfile(p):
+                return op.basename(p)
+        return ''
+#        return True in (op.isfile(p) for p in (path1, path2, path3))
     raise TypeError("'%s' is not a directory path string" %str(dir))
 # End def #}}}
 # =================================================
@@ -99,7 +106,6 @@ def pathmod(path): #{{{
 # =================================================
 # modpathmod
 # =================================================
-#@signal_settings(policy='first')
 def modpathmod(modpath): #{{{
     if not modpath:
         return None
@@ -108,13 +114,6 @@ def modpathmod(modpath): #{{{
     raise TypeError('Cannot retrieve module from %s object' %modpath.__class__.__name__)
 # End def #}}}
 
-#@modpathmod.match_value(None)
-#def _mpm_none(modpath): #{{{
-#    return None
-## End def #}}}
-
-#@modpathmod.match_type(basestring)
-#@signal_settings(globals=globals())
 _mpm_regex = re.compile(r'^([a-zA-Z_][a-zA-Z_0-9]*)([.][a-zA-Z_][a-zA-Z_0-9]*)*$')
 def _mpm_str(modpath): #{{{
     if not _mpm_regex.match(modpath.strip()):
@@ -125,30 +124,16 @@ def _mpm_str(modpath): #{{{
     if not root:
         return __import__(last)
     istr = "from %s import %s" %('.'.join(root), last)
+    print istr
     vars = {}
     exec compile(istr, '<string>', 'exec') in vars
     return vars[last]
 # End def #}}}
 
-#_mpm_regex = re.compile(r'^([a-zA-Z_][a-zA-Z_0-9]*)([.][a-zA-Z_][a-zA-Z_0-9]*)*$')
-#@_mpm_str.when("_mpm_regex.match(modpath.strip())")
-#def _mpm_restr(modpath): #{{{
-#    modpath = modpath.strip()
-#    p = modpath.split('.')
-#    root, last = p[:-1], p[-1]
-#    if not root:
-#        return __import__(last)
-#    istr = "from %s import %s" %('.'.join(root), last)
-#    vars = {}
-#    exec compile(istr, '<string>', 'exec') in vars
-#    return vars[last]
-## End def #}}}
-
 # =================================================
 # parent
 # =================================================
 
-#@signal_settings(globals=globals(), policy='first')
 def parent(module): #{{{
     if isfilemodule(module):
         p = absmodpath(module)
@@ -166,3 +151,65 @@ def parent(module): #{{{
 # End def #}}}
 
 
+# =================================================
+# pkgdir
+# =================================================
+def pkgdir(path): #{{{
+    pypath = absmodpath(path)
+    if not pypath:
+        raise TypeError("Not a valid python file: %s" %path)
+    mf = op.abspath(path)
+    magicdir = mf
+    if op.basename(mf) in ('__init__.py%s' %s for s in ('', 'c', 'o')):
+        magicdir = op.dirname(mf)
+    pypath = absmodpath(mf).split('.')
+    rootfile = op.join(os.sep, *magicdir.split(os.sep)[:(-1*len(pypath))])
+    return rootfile
+# End def #}}}
+# =================================================
+# fromfile
+# =================================================
+
+def fromfile(path): #{{{
+    pypath = absmodpath(path)
+    if not pypath:
+        raise TypeError("Not a valid python file: %s" %path)
+    mod, isdir = None, op.isdir
+    rootdir, osj, j = pkgdir(path), op.join, '.'.join
+    path_isdir = isdir(path)
+    pypath_list = pypath.split('.')
+    maxlen = len(pypath_list)
+    if path_isdir:
+        path = osj(path, hasinit(path))
+    elif op.basename(path) in ('__init__.py%s' %s for s in ('', 'c', 'o')):
+        path_isdir = True
+    sysmod = sys.modules
+    mod = sysmod.get(pypath)
+    if mod and mod.__file__ == path:
+        return mod
+    for ind in xrange(1, maxlen+1):
+        cur = pypath_list[:ind]
+        ospath, name = osj(rootdir, *cur), j(cur)
+        filename = path if ind == maxlen else osj(ospath, hasinit(ospath))
+        mod = sysmod.get(name)
+        if mod and mod.__file__ == filename:
+            continue
+        mod = module(name)
+        mod.__file__ = filename
+        execfile(filename, mod.__dict__)
+        sysmod[name] = mod
+        if ind < maxlen or path_isdir:
+            mod.__path__ = [ospath]
+    return mod
+# End def #}}}
+
+# =================================================
+# isfindable
+# =================================================
+def isfindable(path): #{{{
+    try:
+        sysp = pkgdir(path)
+    except TypeError:
+        return False
+    return (sysp in sys.path)
+# End def #}}}
