@@ -1,1 +1,2 @@
 prune .hg
+recursive-include doc *.rst
