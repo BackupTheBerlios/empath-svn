@@ -7,8 +7,14 @@
 
 import unittest
 from smanstal.tests import BaseUnitTest, addtest, mksuite
+from smanstal.types.module import fromfile
 
 # All tests go here
+from os.path import abspath, sep, join as joinpath
+testpkg = joinpath(sep.join(abspath(__file__).split(sep)[:-2]), 'unit', '__init__.py')
+
+mod = fromfile(testpkg)
+TestUnitTests = mod.suite()
 
 # EXAMPLE:
 # from anyall.tests import suite as anyall_testsuite
