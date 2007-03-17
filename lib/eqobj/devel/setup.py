@@ -12,6 +12,7 @@ setup(
   description="""SkeletonEgg""",
   author="Ariel De Ocampo",
   author_email = 'arieldeocampo@gmail.com',
+  license = 'MIT',
 
 
 #  entry_points="""
