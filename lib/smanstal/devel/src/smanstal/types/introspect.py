@@ -65,8 +65,10 @@ def isclassmethod(obj): #{{{
             ismethod(obj) and isclass(getattr(obj, 'im_self', None)))
 # End def #}}}
 
-def isstaticmethod(obj): #{{{
-    return isinstance(obj, staticmethod)
+def isstaticmethod(cls, attr): #{{{
+    if not isclass(cls):
+        raise TypeError("%s object is not a class" %cls.__class__.__name__)
+    return isfunction(getattr(cls, attr))
 # End def #}}}
 
 def isbmethod(obj): #{{{
