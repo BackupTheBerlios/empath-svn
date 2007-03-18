@@ -10,7 +10,7 @@ from smanstal.tests import addtest, mkdocsuite
 
 # All tests go here
 from os.path import abspath, sep, join as joinpath
-apidocdir = joinpath(sep.join(abspath(__file__).split(sep)[:-2]), 'doc', 'api')
+apidocdir = joinpath(sep.join(abspath(__file__).split(sep)[:-3]), 'doc', 'api')
 
 # Create suite function for this module
 suite = addtest(mkdocsuite(apidocdir, recurse=True))
