@@ -10,7 +10,6 @@ from types import (FunctionType as function, BuiltinFunctionType as bfunction,
         MethodType as method, BuiltinMethodType as bmethod, ModuleType, ClassType,
         GeneratorType)
 from weakref import ref
-import inspect as i
 import os.path as op
 import re
 _CompiledRegex = type(re.compile(''))
