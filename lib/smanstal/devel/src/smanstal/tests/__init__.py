@@ -15,7 +15,10 @@ from smanstal.types import (absmodpath, modpathmod, pathmod, hasinit,
         fromfile, isfindable)
 from smanstal.util.py import iff
 
-__all__ = ('testmodules', 'testsuites', 'alltestnames', 'alltestobjects', 'addtest', 'BaseUnitTest')
+__all__ = ('testmodules', 'testsuites', 'alltestnames', 
+            'alltestobjects', 'addtest', 'BaseUnitTest', 
+            'mksuite', 'allrstfiles', 'mkdocsuite',
+            'run_doc_suite')
 
 _REType = type(re.compile(''))
 _DefaultModNameRegex = re.compile(r'[Tt]est')
@@ -267,6 +270,9 @@ def mksuite(magicfile, ignore=None): #{{{
 # =================================================
 def allrstfiles(dir): #{{{
     if not op.isdir(dir):
+        if op.isfile(dir) and dir.endswith('.rst'):
+            yield op.basename(dir)
+            return
         raise OSError("No such directory: %s" %dir)
     for root, dirs, files in os.walk(dir):
         for f in files:
@@ -282,7 +288,8 @@ def mkdocsuite(dir, recurse=True): #{{{
     def suite(): #{{{
         test = TestSuite()
         for f in allrstfiles(dir):
-            test.addTest(doctest.DocFileSuite(op.join(dir, f), module_relative=False))
+            path = dir if op.isfile(dir) else op.join(dir, f)
+            test.addTest(doctest.DocFileSuite(path, module_relative=False))
         if recurse:
             for curdir, subdir, files in os.walk(dir):
                 for d in subdir:
@@ -294,6 +301,18 @@ def mkdocsuite(dir, recurse=True): #{{{
     return suite
 # End def #}}}
 
+# =================================================
+# run_doc_suite
+# =================================================
+def run_doc_suite(suite, recurse=False, runner=TextTestRunner, **runner_args): #{{{
+    if isinstance(suite, basestring):
+        s = addtest(mkdocsuite(suite, recurse))()
+    runner(**runner_args).run(s)
+# End def #}}}
+
+# =================================================
+
+# =================================================
 @addtest(__file__)
 def suite(): #{{{
     pass
