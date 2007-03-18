@@ -40,3 +40,12 @@ True
 >>> ismethod(property)
 False
 
+Note that classmethods are also pure methods:
+
+>>> class Test(object):
+...     @classmethod
+...     def test(cls): pass
+...
+>>> ismethod(Test.test)
+True
+
