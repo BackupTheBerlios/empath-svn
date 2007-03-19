@@ -366,6 +366,10 @@ class _mset_common(object): #{{{
     def __init__(self, iter=()): #{{{
         super(_mset_common, self).__init__(iter, dictcls=dict)
     # End def #}}}
+
+    def new(self, iter=()): #{{{
+        return self.__class__(iter)
+    # End def #}}}
 # End class #}}}
 
 class mappingset(_mset_common, MappingSetType): #{{{
