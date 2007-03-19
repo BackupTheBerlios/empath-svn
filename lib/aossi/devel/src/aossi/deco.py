@@ -109,7 +109,8 @@ class DecoSignal(Signal): #{{{
         if not isinstance(kwargs, dict):
             raise TypeError('connect_settings attribute must be a dict')
         expected = ('clear', 'weak', 'weakcondf', 'globals', 'chooser', 'return_chooser', 
-                    'policy', 'return_policy', 'priority', 'ismethod', 'callmethod')
+                    'policy', 'return_policy', 'priority', 'ismethod', 'callmethod',
+                    'MAKE_SIGNAL')
         exp_startswith = ('margs_', 'mkw_', 'match_')
         startswith = lambda x: True in (x.startswith(s) for s in exp_startswith)
         if any(i for i in kwargs if i not in expected and not startswith(i)):
@@ -129,6 +130,7 @@ class DecoSignal(Signal): #{{{
     # End def #}}}
 
     def _func_settings(self, func): #{{{
+        mk_sig = self._vars['global_settings'].pop('MAKE_SIGNAL', 0)
         s = self._csettings()
         block = set(['ismethod', 'callmethod'])
         news = dict((k, v) for k, v in s.iteritems() if k not in block)
@@ -139,11 +141,15 @@ class DecoSignal(Signal): #{{{
         # conditional callables and target callables
         if ism:
             callmeth = bool(s.get('callmethod', False))
-            if callmeth:
-                name = func.__name__
-                def f(*args, **kwargs): #{{{
-                    return getattr(args[0], name)(*args[1:], **kwargs)
-                # End def #}}}
+            if callmeth and not mk_sig:
+                name, vardict = func.__name__, dict()
+                defstr, callstr = cargdefstr(func)
+                fstr = """
+                def f(%s):
+                    return getattr(%s, '%s')(%s)
+                """ %(defstr, defstr.split(',')[0], name, callstr)
+                exec compile(fstr.strip(), '<string>', 'exec') in vardict
+                f = vardict['f']
                 func = (func[0], f) if istup else f
             if istup:
                 for f in func:
@@ -368,6 +374,7 @@ def signal(**kwargs): #{{{
         d.signal = signal
         for n in signal.decorators:
             setattr(d, n, getattr(signal, n))
+        kwargs['MAKE_SIGNAL'] = 1
         return global_settings(d, **kwargs)(d)
     # End def #}}}
     return settings
