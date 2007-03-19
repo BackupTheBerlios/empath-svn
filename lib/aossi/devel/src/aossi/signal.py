@@ -97,14 +97,15 @@ class Signal(BaseSignal): #{{{
     __slots__ = ()
     def __init__(self, signal, **kwargs): #{{{
         self._vars = getattr(self, '_vars', dict())
-        self._vars.update(chooser=ChooseCallable, return_chooser=ChooseCallable,
-                choosepolicy=None, chooseretpolicy=None)
+        self._vars.update(choosepolicy=None, chooseretpolicy=None)
         super(Signal, self).__init__(signal, **kwargs)
+        self.chooser = ChooseCallable
+        self.return_chooser = ChooseCallable
     # End def #}}}
 
     def _init_functions(self, funclist): #{{{
         super(Signal, self)._init_functions(funclist)
-        init = ('around', 'onreturn', 'choose', 'choosereturn', 'stream', 'replace')
+        init = ('around', 'onreturn', 'choose', 'choosereturn', 'streamin', 'stream', 'replace')
         funclist.update((name, []) for name in init)
     # End def #}}}
 
@@ -166,6 +167,13 @@ class Signal(BaseSignal): #{{{
     # End def #}}}
 
     def _init_calls_after(self, cleanlist): #{{{
+        def call_streamin(self, cw, func, ret, args, kwargs): #{{{
+            args = list(args)
+            callfunc = self.caller
+            for sfunc, t in cleanlist('streamin'):
+                ret = callfunc(self, sfunc, 'streamin', False, ret, args, kwargs)
+            return ret
+        # End def #}}}
         def call_stream(self, cw, func, ret, args, kwargs): #{{{
             callfunc = self.caller
             for sfunc, t in cleanlist('stream'):
@@ -180,6 +188,7 @@ class Signal(BaseSignal): #{{{
         # End def #}}}
         sup = super(Signal, self)._init_calls_after(cleanlist)
         ret = odict()
+        ret['streamin'] = call_streamin
         ret['stream'] = call_stream
         ret.update(sup.iteritems())
         ret['onreturn'] = call_onreturn
@@ -188,7 +197,7 @@ class Signal(BaseSignal): #{{{
 
     def _init_connections(self, connections): #{{{
         super(Signal, self)._init_connections(connections)
-        init = ('stream', 'onreturn', 'around', 'replace')
+        init = ('streamin', 'stream', 'onreturn', 'around', 'replace')
         connections.update((n, (connect_func, disconnect_func)) for n in init)
         init = ('choose', 'choosereturn')
         connections.update((n, (connect_choosefunc, disconnect_choosefunc)) for n in init)
