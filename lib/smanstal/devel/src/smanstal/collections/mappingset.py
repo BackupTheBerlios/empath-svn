@@ -35,7 +35,7 @@ class BaseMappingSetType(object): #{{{
     # End def #}}}
 
     def __eq__(self, obj): #{{{
-        return self._dict.__eq__(obj)
+        return set(self._dict) == set(obj)
 #        try:
 #            lobj = len(obj)
 #        except:
@@ -132,7 +132,7 @@ class BaseMappingSetType(object): #{{{
     # End def #}}}
 
     def __rand__(self, obj): #{{{
-        return self.new(obj).__and__(self)
+        return self.__and__(obj)
     # End def #}}}
     def __ror__(self, obj): #{{{
         return self.new(obj).__or__(self)
@@ -352,8 +352,8 @@ class MappingSetType(BaseMappingSetType): #{{{
 
     def semifreeze(self): #{{{
         class semifrozen(FrozenMappingSetType): #{{{
-            def __init__(self): #{{{
-                FrozenMappingSetType.__init__(self, ())
+            def __init__(self, iter=(), **opts): #{{{
+                FrozenMappingSetType.__init__(self, iter, **opts)
             # End def #}}}
         # End class #}}}
         f = semifrozen()
