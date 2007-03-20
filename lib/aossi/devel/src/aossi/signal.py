@@ -168,10 +168,10 @@ class Signal(BaseSignal): #{{{
 
     def _init_calls_after(self, cleanlist): #{{{
         def call_streamin(self, cw, func, ret, args, kwargs): #{{{
-            args = list(args)
             callfunc = self.caller
+            args = args + (kwargs,)
             for sfunc, t in cleanlist('streamin'):
-                ret = callfunc(self, sfunc, 'streamin', False, ret, args, kwargs)
+                callfunc(self, sfunc, 'streamin', False, ret, *args)
             return ret
         # End def #}}}
         def call_stream(self, cw, func, ret, args, kwargs): #{{{
