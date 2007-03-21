@@ -6,3 +6,4 @@ commit[.]log
 .*[.]vp
 .*[.]vs
 src[/].*[.]egg-info[/].*
+([^/]*[/])*[.]svn
