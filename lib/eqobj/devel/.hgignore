@@ -3,3 +3,4 @@ commit[.]log
 .*[.]pyc
 .*[.].*~
 ([^/]*[/])*[.]svn
+src[/].*[.]egg-info[/].*
