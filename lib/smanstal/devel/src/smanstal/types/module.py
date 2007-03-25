@@ -123,11 +123,14 @@ def _mpm_str(modpath): #{{{
     root, last = p[:-1], p[-1]
     if not root:
         return __import__(last)
-    istr = "from %s import %s" %('.'.join(root), last)
-    print istr
-    vars = {}
-    exec compile(istr, '<string>', 'exec') in vars
-    return vars[last]
+    # Is the assumption that all modules imported by __import__
+    # are placed into sys.modules correct?
+    __import__(modpath)
+    return sys.modules[modpath]
+#    vars = {}
+#    istr = "from %s import %s" %('.'.join(root), last)
+#    exec compile(istr, '<string>', 'exec') in vars
+#    return vars[last]
 # End def #}}}
 
 # =================================================
