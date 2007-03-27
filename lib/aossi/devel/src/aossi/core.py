@@ -9,10 +9,12 @@ from warnings import warn
 
 from aossi.cwrapper import CallableWrapper, cid
 from aossi.util import iscallable, ChooseCallable, ChoiceObject
+from aossi.util.introspect import ismethod
 
 from aossi.util.odict import odict
 
-__all__ = ('BaseSignal', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func')
+__all__ = ('BaseSignal', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func',
+            'getsignal')
 # ==================================================================================
 # General Helpers
 # ==================================================================================
@@ -292,3 +294,14 @@ class BaseSignal(object): #{{{
     original = property(lambda s: s._func.original)
     # End properties #}}}
 # End class #}}}
+
+def getsignal(obj): #{{{
+    if isinstance(obj, BaseSignal):
+        return obj
+    sig = getattr(obj, 'signal', None)
+    if sig:
+        sig = getsignal(sig)
+    elif ismethod(obj):
+        sig = getsignal(obj.im_func)
+    return sig
+# End def #}}}
