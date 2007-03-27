@@ -4,3 +4,4 @@ commit[.]log
 .*[.].*~
 ([^/]*[/])*[.]svn
 src[/].*[.]egg-info[/].*
+docs[/]html[/].*
