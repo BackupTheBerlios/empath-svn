@@ -4,7 +4,8 @@
 #
 # This module is part of the <WHAT-HAVE-YOU> project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
-from smanstal.types.introspect import ismapping, isclass, mro
+from smanstal.types.introspect import ismapping, isclass, mro, isbuiltin
+import __builtin__
 
 __all__ = ('attrdict',)
 
@@ -28,10 +29,11 @@ class attrdict(dict): #{{{
         cls = obj if is_cls else obj.__class__
         names = set(cls.__dict__.iterkeys())
         if not is_cls:
-            slots = getattr(cls, '__slots__', ())
             names.update(n for n in get_slots(cls))
-            if not slots:
-                names.update(obj.__dict__.iterkeys())
+            try:
+                slots = getattr(cls, '__slots__')
+            except AttributeError:
+                names.update(getattr(obj, '__dict__', {}).iterkeys())
         return (n for n in names if hasattr(obj, n))
     # End def #}}}
 
@@ -92,9 +94,10 @@ class attrdict(dict): #{{{
         cls = obj if is_cls else obj.__class__
         names = set(k for k in get_clsnames(cls))
         if not is_cls:
-            slots = getattr(cls, '__slots__', ())
-            if not slots:
-                names.update(obj.__dict__.iterkeys())
+            try:
+                slots = getattr(cls, '__slots__')
+            except AttributeError:
+                names.update(getattr(obj, '__dict__', {}).iterkeys())
         return (n for n in names if hasattr(obj, n))
     # End def #}}}
 
@@ -210,6 +213,8 @@ class attrdict(dict): #{{{
             ret = d[0]
         return dict((k, ret) for k in self)
     # End def #}}}
+
+    original = property(lambda s: s._obj)
 # End class #}}}
 
 
