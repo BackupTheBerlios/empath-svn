@@ -331,8 +331,9 @@ class MappingSetType(BaseMappingSetType): #{{{
             raise NotImplementedError("MappingSetType is an abstract class")
         self._dictcls = opts.get('dictcls', dict)
         super(MappingSetType, self).__init__(iter, **opts)
+        self._dict = mapdict = self.dictcls()
         akey = self._adaptkey
-        self._dict = self.dictcls(akey(k) for k in iter)
+        mapdict.update(akey(k) for k in iter)
     # End def #}}}
 
     #==============================
@@ -481,7 +482,7 @@ class MappingSetType(BaseMappingSetType): #{{{
         self.pop(el)
     # End def #}}}
 
-    def semifreeze(self): #{{{
+    def freeze(self): #{{{
         return create_frozen_type(self._dict)()
     # End def #}}}
 
