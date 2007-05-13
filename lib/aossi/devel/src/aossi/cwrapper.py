@@ -130,6 +130,13 @@ class CallableWrapper(object): #{{{
         return self._getcallable() is None
     # End def #}}}
 
+    def _getref(self): #{{{
+        sobj, sfun = self._object, self._function
+        if sobj is None:
+            return sfun
+        return sobj
+    # End def #}}}
+
     def _getcallable(self): #{{{
         sobj, sfun = self._object, self._function
         if sobj is None:
@@ -167,6 +174,7 @@ class CallableWrapper(object): #{{{
     numargs = property(lambda s: s._numargs)
     maxargs = property(lambda s: s._maxargs)
     isdead = property(lambda s: s._isdead())
+    isweak = property(lambda s: s._getref().isweak)
     callable = property(lambda s: s._getcallable())
     cid = property(lambda s: s._funcid)
     original = property(lambda s: s._get_original())
