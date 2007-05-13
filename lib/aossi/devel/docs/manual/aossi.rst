@@ -2,6 +2,12 @@
 AOSSI Manual
 ==============
 
+:Author: Ariel De Ocampo <arieldeocampo@gmail.com>
+:Version: 0.1.0
+:Date: 2007-05-13
+
+Copyright (C) 2007 Ariel De Ocampo <arieldeocampo@gmail.com>
+
 Abstract
 =========
 This manual describes the purpose and usage of the aossi python utility
