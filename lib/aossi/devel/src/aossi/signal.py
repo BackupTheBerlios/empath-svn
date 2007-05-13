@@ -4,6 +4,8 @@
 #
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
+from smanstal.util.misc import deprecated
+deprecated("aossi.signal is deprecated: please use aossi.signals")
 
 from aossi.core import *
 from aossi.cwrapper import CallableWrapper, cid
@@ -104,10 +106,12 @@ class Signal(BaseSignal): #{{{
         self.return_chooser = ChooseCallable
     # End def #}}}
 
-    def _init_functions(self, funclist): #{{{
-        super(Signal, self)._init_functions(funclist)
+    def _init_funclist_names(self): #{{{
+        for n in super(Signal, self)._init_funclist_names():
+            yield n
         init = ('around', 'onreturn', 'choose', 'choosereturn', 'streamin', 'stream', 'replace')
-        funclist.update((name, []) for name in init)
+        for n in init:
+            yield n
     # End def #}}}
 
     def _init_calls_replace(self, cleanlist): #{{{
