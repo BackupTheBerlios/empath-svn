@@ -1,5 +1,5 @@
 ==========================================
-Interpreting the TestRun version string
+Interpreting the __name__ version string
 ==========================================
 To accomodate both the conventions for version strings expected
 by the setuptools package.
