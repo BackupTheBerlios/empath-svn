@@ -13,6 +13,8 @@ from aossi.util.introspect import ismethod
 
 from aossi.util.odict import odict
 
+from smanstal.decorators import property_
+
 __all__ = ('BaseSignal', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func',
             'getsignal')
 # ==================================================================================
@@ -61,13 +63,13 @@ def connect_func(self, listname, slots): #{{{
 # End def #}}}
 
 def disconnect_func(self, listname, slots): #{{{
-    l, vals = self._funclist[listname], slots.get(listname, ())
+    l = self._funclist[listname]
     delall = bool(slots.get('deleteall', False))
-    if delall and not vals:
+    if delall and (not (len(slots)-1) or listname in slots):
         while l:
             l.pop()
         return
-    for f in vals:
+    for f in slots.get(listname, ()):
         found = self._find(f, listname)
         if found:
             del l[found[0]]
@@ -172,7 +174,7 @@ class BaseSignal(object): #{{{
     def _cleanlist(self, l): #{{{
         # If everything is being deleted e.g. program termination
         # don't do anything and just return
-        if not dir(self):
+        if not hasattr(self, '_funclist'):
             return
         l = self._funclist[l]
         llen, i = len(l), 0
@@ -265,9 +267,11 @@ class BaseSignal(object): #{{{
 
     def disconnect(self, *after, **other_slots): #{{{
         osg = other_slots.get
-        other_slots['after'] = list(after) + list(osg('after', []))
+        if after or 'after' in other_slots:
+            other_slots['after'] = list(after) + list(osg('after', []))
         no_slots = not any(osg(name, None) for name in self._funclist)
-        other_slots['deleteall'] = no_slots
+        if 'deleteall' not in other_slots:
+            other_slots['deleteall'] = no_slots
 
         for name, (_, dfunc) in self._connections.iteritems():
             dfunc(self, name, other_slots)
@@ -308,6 +312,22 @@ class BaseSignal(object): #{{{
     caller = property(lambda s: s._vars['caller'], lambda s, c: s._setcaller(c))
     original = property(lambda s: s._func.original)
     # End properties #}}}
+
+    @property_
+    def after(): #{{{
+        def fget(self): #{{{
+            return (f for f, _ in self._cleanlist('after'))
+        # End def #}}}
+        return locals()
+    # End def #}}}
+
+    @property_
+    def before(): #{{{
+        def fget(self): #{{{
+            return (f for f, _ in self._cleanlist('before'))
+        # End def #}}}
+        return locals()
+    # End def #}}}
 # End class #}}}
 
 def getsignal(obj): #{{{
