@@ -2,3 +2,4 @@ commit[.]log
 [.].*[.]sw[po]
 .*[.]pyc
 src[/]aossi.egg-info[/].*
+tests[/]profile[/]data[/].*
