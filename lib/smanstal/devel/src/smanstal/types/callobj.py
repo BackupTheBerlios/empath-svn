@@ -78,7 +78,7 @@ class callcallable(callobj): #{{{
             return c(*args, **kwargs)
         except:
             raise
-            raise Exception(kwargs)
+            raise Exception(args, kwargs)
     # End def #}}}
 
     def _set_args(self, val): #{{{
@@ -93,8 +93,8 @@ class callcallable(callobj): #{{{
     # End def #}}}
 
     # Properties #{{{
-    args = property(lambda s: s._args, lambda s, v: s._set_args(v))
-    kwargs = property(lambda s: dict(s._kwargs), lambda s, v: s._set_kwargs(v))
+    args = property(lambda s: (a() for a in s._args), lambda s, v: s._set_args(v))
+    kwargs = property(lambda s: ((k, v()) for k, v in s._kwargs.iteritems()), lambda s, v: s._set_kwargs(v))
     callable = property(lambda s: s._callable)
     # End properties #}}}
 # End class #}}}
