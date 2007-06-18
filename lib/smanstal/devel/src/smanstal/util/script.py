@@ -39,8 +39,10 @@ class makecmd(object): #{{{
 cmdname = makecmd()
 
 class cmd(callcallable): #{{{
-    def __init__(self, *args): #{{{
-        super(cmd, self).__init__(Popen, args, **dict(stdout=PIPE, env=ENV))
+    def __init__(self, *args, **opts): #{{{
+        kw = dict(stdout=PIPE, env=ENV)
+        kw.update(opts)
+        super(cmd, self).__init__(Popen, args, **kw)
         self._retcode = lambda: None
     # End def #}}}
 
