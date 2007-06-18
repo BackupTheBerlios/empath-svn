@@ -1,2 +1,4 @@
 prune .hg
 recursive-include doc *.rst
+recursive-include tests/unit/data *
+recursive-include tests/unit/data *.*

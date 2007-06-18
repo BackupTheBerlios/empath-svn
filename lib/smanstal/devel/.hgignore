@@ -7,3 +7,4 @@ commit[.]log
 .*[.]vs
 src[/].*[.]egg-info[/].*
 ([^/]*[/])*[.]svn
+tests[/]unit[/]data[/].*
