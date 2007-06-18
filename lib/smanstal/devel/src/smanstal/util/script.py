@@ -41,6 +41,7 @@ cmdname = makecmd()
 class cmd(callcallable): #{{{
     def __init__(self, *args): #{{{
         super(cmd, self).__init__(Popen, args, **dict(stdout=PIPE, env=ENV))
+        self._retcode = lambda: None
     # End def #}}}
 
     def __or__(self, dest): #{{{
@@ -55,7 +56,9 @@ class cmd(callcallable): #{{{
         command = super(cmd, self).__call__()
         if buffer:
             ret = command.communicate()
+            self._retcode = lambda: command.returncode
         else:
+            self._retcode = lambda: command.poll()
             ret = [command.stdout, command.stderr]
         if output == CMD_BOTH:
             return ret
@@ -66,6 +69,10 @@ class cmd(callcallable): #{{{
     def name(cls, name): #{{{
         return getattr(cmdname, name)
     # End def #}}}
+
+    # Properties #{{{
+    returncode = property(lambda s: s._retcode())
+    # End properties #}}}
 # End class #}}}
 
 class cmdpipe(cmd): #{{{
