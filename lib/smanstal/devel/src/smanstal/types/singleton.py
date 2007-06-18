@@ -6,6 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from types import FunctionType as function
+from operator import itemgetter
 from smanstal.types.introspect import ismagicname
 
 __all__ = ('Singleton', 'Namespace', 'ACLNamespace')
@@ -57,15 +58,35 @@ class ACLNamespaceType(NamespaceType): #{{{
         type.__setattr__(cls, k, v)
     # End def #}}}
 
+    def __init__(cls, classname, bases, clsdict): #{{{
+        for k, v in clsdict.iteritems():
+            if not isinstance(v, property):
+                continue
+            setattr(cls, k, v.__get__(cls, cls.__class__))
+    # End def #}}}
+
     def __new__(ronst, classname, bases, clsdict): #{{{
         vals, pop = {}, clsdict.pop
         getvals, setvals, delvals = vals.__getitem__, vals.__setitem__, vals.__delitem__
-        read = frozenset(clsdict.pop('__getprop__', ()))
-        write = frozenset(clsdict.pop('__setprop__', ()))
-        delete = frozenset(clsdict.pop('__delprop__', ()))
-        setattr(ronst, '__getprop__', property(lambda s: read))
-        setattr(ronst, '__setprop__', property(lambda s: write))
-        setattr(ronst, '__delprop__', property(lambda s: delete))
+#        read = frozenset(pop('__getprop__', ()))
+#        write = frozenset(pop('__setprop__', ()))
+#        delete = frozenset(pop('__delprop__', ()))
+
+        read, write, delete = set(), set(), set()
+        def mkprop(val): #{{{
+            return lambda s: val
+        # End def #}}}
+
+        names = {'read': '__getprop__', 'write': '__setprop__', 'delete': '__delprop__'}
+        for fname, attr in names.iteritems():
+            cur = set(pop(attr, ())) | set(getattr(ronst, attr, ()))
+            locals()[fname].update(cur)
+            clsdict[attr] = property(mkprop(cur))
+        read, write, delete = frozenset(read), frozenset(write), frozenset(delete)
+        del names
+#        setattr(ronst, '__getprop__', property(lambda s: read))
+#        setattr(ronst, '__setprop__', property(lambda s: write))
+#        setattr(ronst, '__delprop__', property(lambda s: delete))
         def mkread(k): #{{{
             if (not read and not write and not delete) or k in read:
                 def _(s): #{{{
@@ -97,7 +118,8 @@ class ACLNamespaceType(NamespaceType): #{{{
             if not ismagicname(k):
                 vals[k] = pop(k)
                 args = [mkread(k), mkwrite(k, v), mkdel(k)]
-                setattr(ronst, k, property(*args))
+                clsdict[k] = property(*args)
+#                setattr(ronst, k, property(*args))
         return type.__new__(ronst, classname, bases, clsdict)
     # End def #}}}
 # End class #}}}
