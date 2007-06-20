@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
   name="smanstal",
-  version="0.1.7-1",
+  version="0.2.0-1",
   description="""A collection of python utility functions and objects""",
   author="Ariel De Ocampo",
   author_email = 'arieldeocampo@gmail.com',
