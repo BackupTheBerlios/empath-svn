@@ -8,10 +8,10 @@
 __all__ = ('EqObj',)
 
 class EqObj(object): #{{{
-    __slots__ = ('_EqObj__initobj',)
+    __slots__ = ('_initobj',)
 
     def __init__(self, obj=None): #{{{
-        self.__initobj = obj
+        self._initobj = obj
     # End def #}}}
 
     def __transform__(self, obj): #{{{
@@ -23,7 +23,7 @@ class EqObj(object): #{{{
     # End def #}}}
 
     def __call__(self, *args): #{{{
-        obj = self.__initobj
+        obj = self._initobj
         if len(args) > 1:
             raise TypeError("EqObj callables only accepts one argument")
         if args:
