@@ -50,6 +50,12 @@ class EqObj(object): #{{{
 # End class #}}}
 
 class Invert(EqObj): #{{{
+    def __init__(self, obj): #{{{
+        if not hasattr(obj, '__eq__'):
+            raise TypeError("Invert only supports objects that have a __eq__ method")
+        super(Invert, self).__init__(obj)
+    # End def #}}}
+
     def __eq__(self, obj): #{{{
         return not self._initobj.__eq__(obj)
     # End def #}}}
