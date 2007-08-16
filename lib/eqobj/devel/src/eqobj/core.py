@@ -53,7 +53,7 @@ class EqObj(object): #{{{
 
 class Invert(EqObj): #{{{
     def __getattribute__(self, name): #{{{
-        if name in ('__init__', '__eq__'):
+        if name in ('__init__', '__eq__', '_initobj'):
             return _obj_getattr(self, name)
         return getattr(self._initobj, name)
     # End def #}}}
