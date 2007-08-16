@@ -36,6 +36,10 @@ class EqObj(object): #{{{
         return self.__compare__(obj)
     # End def #}}}
 
+    def __ne__(self, obj): #{{{
+        return not(self.__eq__)
+    # End def #}}}
+
     def __nonzero__(self): #{{{
         return self()
     # End def #}}}
