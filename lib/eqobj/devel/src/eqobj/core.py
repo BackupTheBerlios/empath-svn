@@ -37,10 +37,20 @@ class EqObj(object): #{{{
     # End def #}}}
 
     def __ne__(self, obj): #{{{
-        return not(self.__eq__)
+        return not self.__eq__
+    # End def #}}}
+
+    def __invert__(self): #{{{
+        return Invert(self)
     # End def #}}}
 
     def __nonzero__(self): #{{{
         return self()
+    # End def #}}}
+# End class #}}}
+
+class Invert(EqObj): #{{{
+    def __eq__(self, obj): #{{{
+        return not self._initobj.__eq__(obj)
     # End def #}}}
 # End class #}}}
