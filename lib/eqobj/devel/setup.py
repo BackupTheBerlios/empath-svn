@@ -7,9 +7,9 @@
 from setuptools import setup, find_packages
 
 setup(
-  name="SkeletonEgg",
+  name="EqObj",
   version="0.0.1",
-  description="""SkeletonEgg""",
+  description="""Provides objects to be used in testing equivalency""",
   author="Ariel De Ocampo",
   author_email = 'arieldeocampo@gmail.com',
   license = 'MIT',
