@@ -5,7 +5,7 @@
 # This module is part of the eqobj project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-__all__ = ('EqObj',)
+__all__ = ('EqObj', 'Invert')
 
 class EqObj(object): #{{{
     __slots__ = ('_initobj',)
