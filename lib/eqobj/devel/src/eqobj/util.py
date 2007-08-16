@@ -7,6 +7,8 @@
 
 from eqobj.core import EqObj
 
+__all__ = ('AlwaysTrue', 'AlwaysFalse', 'EqObjOptions', 'EqObjWritableOptions')
+
 class AlwaysTrue(EqObj): #{{{
     def __compare__(self, obj): #{{{
         return True
@@ -16,5 +18,29 @@ class AlwaysTrue(EqObj): #{{{
 class AlwaysFalse(EqObj): #{{{
     def __compare__(self, obj): #{{{
         return False
+    # End def #}}}
+# End class #}}}
+
+class EqObjOptions(object): #{{{
+    def __get__(self, inst, owner): #{{{
+        self._options = inst._options
+        return self
+    # End def #}}}
+
+    def __getattr__(self, name): #{{{
+        try:
+            return self._options[name]
+        except KeyError:
+            raise AttributeError("%s object has no attribute '%s'" %(self.__class__.__name__, name))
+    # End def #}}}
+
+    def __getitem__(self, name): #{{{
+        return self._options[name]
+    # End def #}}}
+# End class #}}}
+
+class EqObjWritableOptions(EqObjOptions): #{{{
+    def __setitem__(self, name, val): #{{{
+        self._option[name] = val
     # End def #}}}
 # End class #}}}
