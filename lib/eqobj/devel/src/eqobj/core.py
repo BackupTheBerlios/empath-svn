@@ -7,6 +7,8 @@
 
 __all__ = ('EqObj', 'Invert')
 
+_obj_getattr = object.__getattribute__
+
 class EqObj(object): #{{{
     __slots__ = ('_initobj',)
 
@@ -50,6 +52,12 @@ class EqObj(object): #{{{
 # End class #}}}
 
 class Invert(EqObj): #{{{
+    def __getattribute__(self, name): #{{{
+        if name in ('__init__', '__eq__'):
+            return _obj_getattr(self, name)
+        return getattr(self._initobj, name)
+    # End def #}}}
+
     def __init__(self, obj): #{{{
         if not hasattr(obj, '__eq__'):
             raise TypeError("Invert only supports objects that have a __eq__ method")
