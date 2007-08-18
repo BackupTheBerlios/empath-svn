@@ -7,7 +7,7 @@
 
 from eqobj.core import EqObj
 
-__all__ = ('AlwaysTrue', 'AlwaysFalse', 'EqObjOptions', 'EqObjWritableOptions')
+__all__ = ('AlwaysTrue', 'AlwaysFalse', 'EqObjOptions', 'EqObjWritableOptions', 'MaxCount')
 
 class AlwaysTrue(EqObj): #{{{
     def __compare__(self, obj): #{{{
@@ -22,9 +22,14 @@ class AlwaysFalse(EqObj): #{{{
 # End class #}}}
 
 class EqObjOptions(object): #{{{
+    __slots__ = ('_options',)
+    def __init__(self, inst=None): #{{{
+        if inst:
+            self._options = inst._options
+    # End def #}}}
+
     def __get__(self, inst, owner): #{{{
-        self._options = inst._options
-        return self
+        return self.__class__(inst)
     # End def #}}}
 
     def __getattr__(self, name): #{{{
@@ -40,7 +45,19 @@ class EqObjOptions(object): #{{{
 # End class #}}}
 
 class EqObjWritableOptions(EqObjOptions): #{{{
+    __slots__ = ()
     def __setitem__(self, name, val): #{{{
         self._option[name] = val
     # End def #}}}
+
+    def __setattr__(self, name, val): #{{{
+        self._option[name] = val
+    # End def #}}}
 # End class #}}}
+
+class MaxCountType(object): #{{{
+    __slots__ = ()
+# End class #}}}
+
+MaxCount = MaxCountType()
+
