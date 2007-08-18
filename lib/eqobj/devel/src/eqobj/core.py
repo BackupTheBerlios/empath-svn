@@ -33,6 +33,22 @@ class EqObj(object): #{{{
         return self.__eq__(obj)
     # End def #}}}
 
+    def __or__(self, obj): #{{{
+        return OrObj(self, obj)
+    # End def #}}}
+
+    def __and__(self, obj): #{{{
+        return AndObj(self, obj)
+    # End def #}}}
+
+    def __ror__(self, obj): #{{{
+        return OrObj(obj, self)
+    # End def #}}}
+
+    def __rand__(self, obj): #{{{
+        return AndObj(obj, self)
+    # End def #}}}
+
     def __eq__(self, obj): #{{{
         obj = self.__transform__(obj)
         return self.__compare__(obj)
@@ -48,6 +64,27 @@ class EqObj(object): #{{{
 
     def __nonzero__(self): #{{{
         return self()
+    # End def #}}}
+# End class #}}}
+
+class BooleanOperation(EqObj): #{{{
+    def __init__(self, l, r): #{{{
+        obj = (l, r)
+        super(BooleanOperation, self).__init__(obj)
+    # End def #}}}
+# End class #}}}
+
+class OrObj(BooleanOperation): #{{{
+    def __compare__(self, obj): #{{{
+        s1, s2 = self._initobj
+        return (s1(obj) or s2(obj))
+    # End def #}}}
+# End class #}}}
+
+class AndObj(BooleanOperation): #{{{
+    def __compare__(self, obj): #{{{
+        s1, s2 = self._initobj
+        return (s1(obj) and s2(obj))
     # End def #}}}
 # End class #}}}
 
