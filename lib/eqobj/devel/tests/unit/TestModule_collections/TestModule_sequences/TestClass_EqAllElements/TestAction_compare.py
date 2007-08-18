@@ -8,7 +8,7 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.collections.sequences import AllElements
+from eqobj.collections.sequences import AllElements, MaxCount
 
 class Test_compare(BaseUnitTest): #{{{
     def setUp(self): #{{{
@@ -20,10 +20,10 @@ class Test_compare(BaseUnitTest): #{{{
     # End def #}}}
 
     def test_count_option(self): #{{{
-        '''count option is always the length of _initobj'''
+        '''count option is always the MaxCount object'''
         v = range(10)
         a = AllElements(v)
-        self.assertEqual(a.options.count, 10)
+        self.assertEqual(a.options.count, MaxCount)
     # End def #}}}
 
     def test_pre_cmp(self): #{{{

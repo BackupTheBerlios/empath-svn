@@ -74,7 +74,7 @@ class Test_compare(BaseUnitTest): #{{{
     # End def #}}}
 
     def test_default_cmp_count_exceed(self): #{{{
-        '''Default cmp: If count and there are more matches than count, return False'''
+        '''Default cmp: If count and there are more matches than count, return True'''
         class Test(AnyElement): #{{{
             def _post_cmp(self, val, count): #{{{
                 raise NotImplementedError
@@ -82,7 +82,7 @@ class Test_compare(BaseUnitTest): #{{{
         # End class #}}}
         a = Test(self.c._initobj, count=2)
         try:
-            self.assertFalse(a == range(1, 10))
+            self.assertTrue(a == range(1, 10))
         except:
             self.assertTrue(False)
     # End def #}}}
@@ -97,12 +97,19 @@ class Test_compare(BaseUnitTest): #{{{
     # End def #}}}
     
     def test_default_post_cmp_match(self): #{{{
-        '''Default post_cmp: If there are exactly count matches, return False'''
+        '''Default post_cmp: If there are exactly count matches, return True'''
         try:
             a = AnyElement(self.c._initobj, count=3)
         except:
             self.assertTrue(False)
         self.assertTrue(a == range(1, 10))
+    # End def #}}}
+
+    def test_emptyself_nonempty_nocount(self): #{{{
+        '''Empty self, nonempty obj, nocount, return True'''
+        a = AnyElement()
+        for i in xrange(10):
+            self.assertEquals(a, range(i))
     # End def #}}}
 # End class #}}}
 
