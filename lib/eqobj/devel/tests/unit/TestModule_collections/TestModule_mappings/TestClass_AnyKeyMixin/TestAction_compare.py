@@ -45,6 +45,12 @@ class Test_compare(BaseUnitTest): #{{{
         self.assertTrue(a(zip(range(5), range(5))))
     # End def #}}}
 
+    def test_noself_noobj_nocount(self): #{{{
+        '''No self, no obj, no count, returns True'''
+        a = AnyKey()
+        self.assertTrue(a(()))
+    # End def #}}}
+
 # End class #}}}
 
 # Create suite function for this module
