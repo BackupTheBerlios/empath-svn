@@ -6,48 +6,13 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from eqobj.core import EqObj
+from eqobj.collections import CollectionMixin
 from eqobj.util import EqObjOptions, MaxCount
 
 __all__ = ('MaxCount', 'AnyElementMixin', 'AnyElement', 'AllElementsMixin', 'AllElements', 
             'ExtrapolateOption')
 
-class SequenceMixin(object): #{{{
-    __slots__ = ()
-    def __init__(self, obj=(), **kwargs): #{{{
-        self._options = self._check_options(kwargs)
-        super(SequenceMixin, self).__init__(self.__transform__(obj))
-    # End def #}}}
-
-    def _check_options(self, opt, expected=()): #{{{
-        expected = frozenset(['count']) | frozenset(expected)
-        got = frozenset(opt)
-        if not expected.issuperset(got):
-            raise TypeError("Detected unknown keyword arguments: %s" %", ".join(got - expected))
-        return opt
-    # End def #}}}
-
-    def __transform__(self, obj): #{{{
-        return tuple(obj)
-    # End def #}}}
-
-    def _pre_cmp(self, s, obj, target, options): #{{{
-        raise NotImplementedError
-    # End def #}}}
-
-    def _cmp(self, s, obj, val, target, options): #{{{
-        raise NotImplementedError
-    # End def #}}}
-
-    def _post_cmp(self, s, obj, val, target, options): #{{{
-        raise NotImplementedError
-    # End def #}}}
-
-    def _cmp_loop(self, s, obj, target, options): #{{{
-        raise NotImplementedError
-    # End def #}}}
-# End class #}}}
-
-class AnyElementMixin(SequenceMixin): #{{{
+class AnyElementMixin(CollectionMixin): #{{{
     __slots__ = ()
     def _pre_cmp(self, s, obj, target, options): #{{{
         if not s:
@@ -87,17 +52,6 @@ class AnyElementMixin(SequenceMixin): #{{{
         return self._post_cmp(s, obj, count, target, options)
     # End def #}}}
 
-    def __compare__(self, s, obj, **override): #{{{
-        options = dict(self._options)
-        options.update(override)
-        target = options.get('count', None)
-        if target is not None and target != MaxCount:
-            target = int(target)
-            if target < 0:
-                raise ValueError("count option must be >= 0: %i" %target)
-        return self._cmp_loop(s, obj, target, options)
-    # End def #}}}
-
     options = EqObjOptions()
 # End class #}}}
 
@@ -118,8 +72,8 @@ class AllElementsMixin(AnyElementMixin): #{{{
 class SequenceOptionMixin(object): #{{{
     __slots__ = ()
     def __init__(self, *args, **kwargs): #{{{
-        if not isinstance(self, SequenceMixin):
-            raise TypeError("SequenceOptionMixin can only be used with SequenceMixin objects")
+        if not isinstance(self, CollectionMixin):
+            raise TypeError("SequenceOptionMixin can only be used with CollectionMixin objects")
         super(SequenceOptionMixin, self).__init__(*args, **kwargs)
     # End def #}}}
 # End class #}}}
