@@ -12,6 +12,7 @@ __all__ = ('MaxCount', 'AnyElementMixin', 'AnyElement', 'AllElementsMixin', 'All
             'ExtrapolateOption')
 
 class SequenceMixin(object): #{{{
+    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         self._options = self._check_options(kwargs)
         super(SequenceMixin, self).__init__(self.__transform__(obj))
@@ -47,6 +48,7 @@ class SequenceMixin(object): #{{{
 # End class #}}}
 
 class AnyElementMixin(SequenceMixin): #{{{
+    __slots__ = ()
     def _pre_cmp(self, s, obj, target, options): #{{{
         if not s:
             return not target
@@ -99,9 +101,12 @@ class AnyElementMixin(SequenceMixin): #{{{
     options = EqObjOptions()
 # End class #}}}
 
-class AnyElement(AnyElementMixin, EqObj): pass
+class AnyElement(AnyElementMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
 
 class AllElementsMixin(AnyElementMixin): #{{{
+    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         kwargs.pop('count', None)
         super(AllElementsMixin, self).__init__(obj, **kwargs)
@@ -114,9 +119,12 @@ class AllElementsMixin(AnyElementMixin): #{{{
     # End def #}}}
 # End class #}}}
 
-class AllElements(AllElementsMixin, EqObj): pass
+class AllElements(AllElementsMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
 
 class SequenceOptionMixin(object): #{{{
+    __slots__ = ()
     def __init__(self, *args, **kwargs): #{{{
         if not isinstance(self, SequenceMixin):
             raise TypeError("SequenceOptionMixin can only be used with SequenceMixin objects")
@@ -125,6 +133,7 @@ class SequenceOptionMixin(object): #{{{
 # End class #}}}
 
 class TrimOption(SequenceOptionMixin): #{{{
+    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
         expected = ('trim_head', 'trim_tail', 'trim') + expected
         optget = opt.get
@@ -175,6 +184,7 @@ class TrimOption(SequenceOptionMixin): #{{{
 # End class #}}}
 
 class MissingOption(TrimOption): #{{{
+    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
         expected = ('missing_head', 'missing_tail', 'missing') + expected
         optget = opt.get
@@ -206,6 +216,7 @@ class MissingOption(TrimOption): #{{{
 # End class #}}}
 
 class ExtrapolateOption(SequenceOptionMixin): #{{{
+    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
         expected = ('extrapolate',) + expected
         return super(ExtrapolateOption, self)._check_options(opt, expected)

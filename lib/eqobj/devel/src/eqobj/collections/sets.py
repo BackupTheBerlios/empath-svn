@@ -14,21 +14,39 @@ __all__ = ('MappingMixin', 'AnyKeyMixin', 'AnyKey', 'AllKeysMixin', 'AllKeys', '
             'TrimOption', 'MissingOption')
 
 class SetMixin(object): #{{{
+    __slots__ = ()
     def __transform__(self, obj): #{{{
         return set(obj)
     # End def #}}}
 # End class #}}}
 
-class AnySetElementMixin(SetMixin, AnyKeyMixin): pass
-class AnySetElement(AnySetElementMixin, EqObj): pass
-class AllSetElementsMixin(SetMixin, AllKeysMixin): pass
-class AllSetElements(AllSetElementsMixin, EqObj): pass
+class AnySetElementMixin(SetMixin, AnyKeyMixin): #{{{
+    __slots__ = ()
+# End class #}}}
+
+class AnySetElement(AnySetElementMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
+
+class AllSetElementsMixin(SetMixin, AllKeysMixin): #{{{
+    __slots__ = ()
+# End class #}}}
+
+class AllSetElements(AllSetElementsMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
 
 class SetOptionMixin(MappingOptionMixin): #{{{
+    __slots__ = ()
     def _rmfunc(self, obj): #{{{
         return obj.remove
     # End def #}}}
 # End class #}}}
 
-class TrimOption(SetOptionMixin, TrimMapOption): pass
-class MissingOption(SetOptionMixin, MissingMapOption): pass
+class TrimOption(SetOptionMixin, TrimMapOption): #{{{
+    __slots__ = ()
+
+class MissingOption(SetOptionMixin, MissingMapOption): #}}}
+    __slots__ = ()
+    pass
+# End class #}}}

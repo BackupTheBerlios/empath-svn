@@ -68,6 +68,7 @@ class EqObj(object): #{{{
 # End class #}}}
 
 class BooleanOperation(EqObj): #{{{
+    __slots__ = ()
     def __init__(self, l, r): #{{{
         obj = (l, r)
         super(BooleanOperation, self).__init__(obj)
@@ -75,6 +76,7 @@ class BooleanOperation(EqObj): #{{{
 # End class #}}}
 
 class OrObj(BooleanOperation): #{{{
+    __slots__ = ()
     def __compare__(self, s, obj): #{{{
         s1, s2 = s
         return (s1(obj) or s2(obj))
@@ -82,6 +84,7 @@ class OrObj(BooleanOperation): #{{{
 # End class #}}}
 
 class AndObj(BooleanOperation): #{{{
+    __slots__ = ()
     def __compare__(self, s, obj): #{{{
         s1, s2 = s
         return (s1(obj) and s2(obj))
@@ -89,6 +92,7 @@ class AndObj(BooleanOperation): #{{{
 # End class #}}}
 
 class Invert(EqObj): #{{{
+    __slots__ = ()
     def __getattribute__(self, name): #{{{
         if name in ('__init__', '__eq__', '_initobj'):
             return _obj_getattr(self, name)

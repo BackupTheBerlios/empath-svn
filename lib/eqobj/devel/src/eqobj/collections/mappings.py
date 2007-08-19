@@ -12,6 +12,7 @@ __all__ = ('MappingMixin', 'AnyKeyMixin', 'AnyKey', 'AllKeysMixin', 'AllKeys', '
             'TrimOption', 'MissingOption')
 
 class MappingMixin(object): #{{{
+    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         self._options = self._check_options(kwargs)
         super(MappingMixin, self).__init__(self.__transform__(obj))
@@ -50,6 +51,7 @@ class MappingMixin(object): #{{{
 # End class #}}}
 
 class AnyKeyMixin(MappingMixin): #{{{
+    __slots__ = ()
     def _cmp(self, s, obj, val, target, options): #{{{
         if target is None:
             return bool(val)
@@ -67,9 +69,12 @@ class AnyKeyMixin(MappingMixin): #{{{
     # End def #}}}
 # End class #}}}
 
-class AnyKey(AnyKeyMixin, EqObj): pass
+class AnyKey(AnyKeyMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
 
 class AllKeysMixin(AnyKeyMixin): #{{{
+    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         kwargs.pop('count', None)
         super(AllKeysMixin, self).__init__(obj, **kwargs)
@@ -83,9 +88,12 @@ class AllKeysMixin(AnyKeyMixin): #{{{
     # End def #}}}
 # End class #}}}
 
-class AllKeys(AllKeysMixin, EqObj): pass
+class AllKeys(AllKeysMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
 
 class AnyValueMixin(MappingMixin): #{{{
+    __slots__ = ()
     def _pre_cmp(self, s, obj, common, target, options): #{{{
         if not s:
             return not target
@@ -128,6 +136,7 @@ class AnyValueMixin(MappingMixin): #{{{
 class AnyValue(AnyValueMixin, EqObj): pass
 
 class AllValuesMixin(AnyValueMixin): #{{{
+    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         kwargs.pop('count', None)
         super(AllValuesMixin, self).__init__(obj, **kwargs)
@@ -143,6 +152,7 @@ class AllValuesMixin(AnyValueMixin): #{{{
 class AllValues(AllValuesMixin, EqObj): pass
 
 class MappingOptionMixin(object): #{{{
+    __slots__ = ()
     def __init__(self, *args, **kwargs): #{{{
         if not isinstance(self, MappingMixin):
             raise TypeError("MappingOptionMixin can only be used with MappingMixin objects")
@@ -155,6 +165,7 @@ class MappingOptionMixin(object): #{{{
 # End class #}}}
 
 class TrimOption(MappingOptionMixin): #{{{
+    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
         expected = ('trim',) + tuple(expected)
         return super(TrimOption, self)._check_options(opt, expected)
@@ -172,6 +183,7 @@ class TrimOption(MappingOptionMixin): #{{{
 # End class #}}}
 
 class MissingOption(MappingOptionMixin): #{{{
+    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
         expected = ('missing',) + tuple(expected)
         return super(MissingOption, self)._check_options(opt, expected)
