@@ -7,7 +7,7 @@
 
 from eqobj.core import EqObj
 from eqobj.util import EqObjOptions, MaxCount
-from eqobj.collections.mappings import (AnyKeyMixin, AllKeysMixin, 
+from eqobj.collections.mappings import (AnyKeyMixin, AllKeysMixin, MappingOptionMixin,
         TrimOption as TrimMapOption, MissingOption as MissingMapOption)
 
 __all__ = ('MappingMixin', 'AnyKeyMixin', 'AnyKey', 'AllKeysMixin', 'AllKeys', 'MappingOptionMixin', 
@@ -22,7 +22,7 @@ class SetMixin(object): #{{{
 class AnySetElementMixin(SetMixin, AnyKeyMixin): pass
 class AnySetElement(AnySetElementMixin, EqObj): pass
 class AllSetElementsMixin(SetMixin, AllKeysMixin): pass
-class AllSetElements(AllSetElements, EqObj): pass
+class AllSetElements(AllSetElementsMixin, EqObj): pass
 
 class SetOptionMixin(MappingOptionMixin): #{{{
     def _rmfunc(self, obj): #{{{
