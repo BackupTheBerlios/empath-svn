@@ -20,7 +20,7 @@ class EqObj(object): #{{{
         return obj
     # End def #}}}
 
-    def __compare__(self, obj): #{{{
+    def __compare__(self, s, obj): #{{{
         raise NotImplementedError
     # End def #}}}
 
@@ -51,7 +51,7 @@ class EqObj(object): #{{{
 
     def __eq__(self, obj): #{{{
         obj = self.__transform__(obj)
-        return self.__compare__(obj)
+        return self.__compare__(self._initobj, obj)
     # End def #}}}
 
     def __ne__(self, obj): #{{{
@@ -75,15 +75,15 @@ class BooleanOperation(EqObj): #{{{
 # End class #}}}
 
 class OrObj(BooleanOperation): #{{{
-    def __compare__(self, obj): #{{{
-        s1, s2 = self._initobj
+    def __compare__(self, s, obj): #{{{
+        s1, s2 = s
         return (s1(obj) or s2(obj))
     # End def #}}}
 # End class #}}}
 
 class AndObj(BooleanOperation): #{{{
-    def __compare__(self, obj): #{{{
-        s1, s2 = self._initobj
+    def __compare__(self, s, obj): #{{{
+        s1, s2 = s
         return (s1(obj) and s2(obj))
     # End def #}}}
 # End class #}}}

@@ -18,8 +18,8 @@ class CheckObjectType(EqObj): #{{{
         return check
     # End def #}}}
 
-    def __compare__(self, obj): #{{{
-        return obj(self._initobj)
+    def __compare__(self, s, obj): #{{{
+        return obj(s)
     # End def #}}}
 # End class #}}}
 

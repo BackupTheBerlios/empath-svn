@@ -10,13 +10,13 @@ from eqobj.core import EqObj
 __all__ = ('AlwaysTrue', 'AlwaysFalse', 'EqObjOptions', 'EqObjWritableOptions', 'MaxCount')
 
 class AlwaysTrue(EqObj): #{{{
-    def __compare__(self, obj): #{{{
+    def __compare__(self, s, obj): #{{{
         return True
     # End def #}}}
 # End class #}}}
 
 class AlwaysFalse(EqObj): #{{{
-    def __compare__(self, obj): #{{{
+    def __compare__(self, s, obj): #{{{
         return False
     # End def #}}}
 # End class #}}}

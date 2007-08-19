@@ -13,7 +13,7 @@ from eqobj.core import EqObj
 class UnitTestTemplate(BaseUnitTest): #{{{
     def setUp(self): #{{{
         class AlwaysTrue(EqObj): #{{{
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 return True
             # End def #}}}
         # End class #}}}

@@ -11,13 +11,13 @@ from smanstal.tests import BaseUnitTest, addtest, mksuite
 from eqobj.core import EqObj, OrObj, AndObj, BooleanOperation
 
 class Max10(EqObj): #{{{
-    def __compare__(self, obj): #{{{
+    def __compare__(self, s, obj): #{{{
         return obj <= 10
     # End def #}}}
 # End class #}}}
 
 class Max20(EqObj): #{{{
-    def __compare__(self, obj): #{{{
+    def __compare__(self, s, obj): #{{{
         return obj <= 20
     # End def #}}}
 # End class #}}}

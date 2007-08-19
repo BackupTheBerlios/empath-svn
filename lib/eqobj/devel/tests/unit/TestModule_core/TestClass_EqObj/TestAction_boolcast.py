@@ -13,13 +13,13 @@ from eqobj.core import EqObj
 class Test_boolcast(BaseUnitTest): #{{{
     def setUp(self): #{{{
         class MyTrue(EqObj): #{{{
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 return 1
             # End def #}}}
         # End class #}}}
 
         class MyFalse(EqObj): #{{{
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 return 0
             # End def #}}}
         # End class #}}}
@@ -44,7 +44,7 @@ class Test_boolcast(BaseUnitTest): #{{{
     def test_workflow(self): #{{{
         '''Test expected usage of boolean casting'''
         class AlwaysTrue(EqObj): #{{{
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 return True
             # End def #}}}
         # End class #}}}

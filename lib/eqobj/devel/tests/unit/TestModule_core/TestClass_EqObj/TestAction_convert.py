@@ -16,7 +16,7 @@ class Test_convert(BaseUnitTest): #{{{
             def __transform__(self, obj): #{{{
                 return str(obj).lower()
             # End def #}}}
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 return self._initobj == obj
             # End def #}}}
         # End class #}}}

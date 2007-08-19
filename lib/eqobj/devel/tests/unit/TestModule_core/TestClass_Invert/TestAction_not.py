@@ -13,7 +13,7 @@ from eqobj.core import EqObj, Invert
 class Test_not(BaseUnitTest): #{{{
     def setUp(self): #{{{
         class LessThanTen(EqObj): #{{{
-            def __compare__(self, obj): #{{{
+            def __compare__(self, s, obj): #{{{
                 if not isinstance(obj, int):
                     return False
                 return (obj < 10)

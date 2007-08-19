@@ -85,7 +85,7 @@ class AnyElementMixin(SequenceMixin): #{{{
         return self._post_cmp(s, obj, count, target, options)
     # End def #}}}
 
-    def __compare__(self, obj, **override): #{{{
+    def __compare__(self, s, obj, **override): #{{{
         options = dict(self._options)
         options.update(override)
         target = options.get('count', None)
@@ -93,7 +93,6 @@ class AnyElementMixin(SequenceMixin): #{{{
             target = int(target)
             if target < 0:
                 raise ValueError("count option must be >= 0: %i" %target)
-        s = self._initobj
         return self._cmp_loop(s, obj, target, options)
     # End def #}}}
 
