@@ -54,7 +54,7 @@ class AnyKeyMixin(MappingMixin): #{{{
     __slots__ = ()
     def _cmp(self, s, obj, val, target, options): #{{{
         if target is None:
-            return bool(val) or (not s and not obj)
+            return bool(val) or not s
         elif target == MaxCount:
             return val == len(s)
         else:

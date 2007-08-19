@@ -48,7 +48,13 @@ class Test_compare(BaseUnitTest): #{{{
     def test_noself_noobj_nocount(self): #{{{
         '''No self, no obj, no count, returns True'''
         a = AnyKey()
-        self.assertTrue(a(()))
+        self.assertTrue(a({}))
+    # End def #}}}
+
+    def test_noself_obj_nocount(self): #{{{
+        '''No self, obj, no count, returns True'''
+        a = AnyKey()
+        self.assertTrue(a(enumerate('abcde')))
     # End def #}}}
 
 # End class #}}}
