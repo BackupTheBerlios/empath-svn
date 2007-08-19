@@ -12,7 +12,11 @@ from eqobj.util import EqObjOptions, MaxCount
 __all__ = ('MaxCount', 'AnyElementMixin', 'AnyElement', 'AllElementsMixin', 'AllElements', 
             'ExtrapolateOption')
 
-class AnyElementMixin(CollectionMixin): #{{{
+class SequenceMixin(CollectionMixin): #{{{
+    __slots__ = ()
+# End class #}}}
+
+class AnyElementMixin(SequenceMixin): #{{{
     __slots__ = ()
     def _pre_cmp(self, s, obj, target, options): #{{{
         if not s:
@@ -72,8 +76,8 @@ class AllElementsMixin(AnyElementMixin): #{{{
 class SequenceOptionMixin(object): #{{{
     __slots__ = ()
     def __init__(self, *args, **kwargs): #{{{
-        if not isinstance(self, CollectionMixin):
-            raise TypeError("SequenceOptionMixin can only be used with CollectionMixin objects")
+        if not isinstance(self, SequenceMixin):
+            raise TypeError("SequenceOptionMixin can only be used with SequenceMixin objects")
         super(SequenceOptionMixin, self).__init__(*args, **kwargs)
     # End def #}}}
 # End class #}}}
