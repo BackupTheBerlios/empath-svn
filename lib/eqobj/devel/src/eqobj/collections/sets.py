@@ -24,20 +24,18 @@ class AnySetElementMixin(SetMixin, AnyKeyMixin): #{{{
     __slots__ = ()
 # End class #}}}
 
-class AnySetElement(AnySetElementMixin, EqObj): #{{{
-    __slots__ = ('_options',)
-# End class #}}}
-
 class AllSetElementsMixin(SetMixin, AllKeysMixin): #{{{
     __slots__ = ()
 # End class #}}}
 
-class AllSetElements(AllSetElementsMixin, EqObj): #{{{
-    __slots__ = ('_options',)
-# End class #}}}
-
 class SetOptionMixin(MappingOptionMixin): #{{{
     __slots__ = ()
+    def __init__(self, *args, **kwargs): #{{{
+        if not isinstance(self, SetMixin):
+            raise TypeError("SetOptionMixin can only be used with SetMixin objects")
+        super(MappingOptionMixin, self).__init__(*args, **kwargs)
+    # End def #}}}
+
     def _rmfunc(self, obj): #{{{
         return obj.remove
     # End def #}}}
@@ -48,5 +46,17 @@ class TrimOption(SetOptionMixin, TrimMapOption): #{{{
 
 class MissingOption(SetOptionMixin, MissingMapOption): #}}}
     __slots__ = ()
-    pass
 # End class #}}}
+
+class AllOptions(TrimOption, MissingOption): #{{{
+    __slots__ = ()
+# End class #}}}
+
+class AnySetElement(AllOptions, AnySetElementMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
+
+class AllSetElements(AllOptions, AllSetElementsMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
+

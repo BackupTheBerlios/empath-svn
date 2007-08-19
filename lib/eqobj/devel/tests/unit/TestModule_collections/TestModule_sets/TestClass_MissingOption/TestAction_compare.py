@@ -8,9 +8,10 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.collections.sets import AllSetElements, MissingOption
+from eqobj.core import EqObj
+from eqobj.collections.sets import AllSetElementsMixin, MissingOption
 
-class TestMissing(MissingOption, AllSetElements): pass
+class TestMissing(MissingOption, AllSetElementsMixin, EqObj): pass
 
 class Test_missingoption(BaseUnitTest): #{{{
     def setUp(self): #{{{

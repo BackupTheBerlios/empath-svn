@@ -134,7 +134,6 @@ class AnyValueMixin(MappingMixin): #{{{
     # End def #}}}
 # End class #}}}
 
-class AnyValue(AnyValueMixin, EqObj): pass
 
 class AllValuesMixin(AnyValueMixin): #{{{
     __slots__ = ()
@@ -149,8 +148,6 @@ class AllValuesMixin(AnyValueMixin): #{{{
             return False
     # End def #}}}
 # End class #}}}
-
-class AllValues(AllValuesMixin, EqObj): pass
 
 class MappingOptionMixin(object): #{{{
     __slots__ = ()
@@ -200,3 +197,13 @@ class MissingOption(MappingOptionMixin): #{{{
         return super(MissingOption, self)._cmp_map(s, obj, target, options)
     # End def #}}}
 # End class #}}}
+
+class AllOptions(TrimOption, MissingOption): #{{{
+    __slots__ = ()
+# End class #}}}
+
+class AnyValue(AllOptions, AnyValueMixin, EqObj): 
+    __slots__ = ('_options',)
+class AllValues(AllOptions, AllValuesMixin, EqObj): 
+    __slots__ = ('_options',)
+

@@ -101,10 +101,6 @@ class AnyElementMixin(SequenceMixin): #{{{
     options = EqObjOptions()
 # End class #}}}
 
-class AnyElement(AnyElementMixin, EqObj): #{{{
-    __slots__ = ('_options',)
-# End class #}}}
-
 class AllElementsMixin(AnyElementMixin): #{{{
     __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
@@ -117,10 +113,6 @@ class AllElementsMixin(AnyElementMixin): #{{{
         if len(s) != len(obj):
             return False
     # End def #}}}
-# End class #}}}
-
-class AllElements(AllElementsMixin, EqObj): #{{{
-    __slots__ = ('_options',)
 # End class #}}}
 
 class SequenceOptionMixin(object): #{{{
@@ -257,3 +249,16 @@ class ExtrapolateOption(SequenceOptionMixin): #{{{
         return cmp_loop(s, obj, target, options)
     # End def #}}}
 # End class #}}}
+
+class AllOptions(object): #{{{
+    pass
+# End class #}}}
+
+class AnyElement(AnyElementMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
+
+class AllElements(AllElementsMixin, EqObj): #{{{
+    __slots__ = ('_options',)
+# End class #}}}
+

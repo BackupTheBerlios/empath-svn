@@ -8,9 +8,10 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.collections.sets import AllSetElements, TrimOption
+from eqobj.core import EqObj
+from eqobj.collections.sets import AllSetElementsMixin, TrimOption
 
-class TestTrim(TrimOption, AllSetElements): pass
+class TestTrim(TrimOption, AllSetElementsMixin, EqObj): pass
 
 class Test_trimoption(BaseUnitTest): #{{{
     def setUp(self): #{{{
