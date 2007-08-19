@@ -62,9 +62,10 @@ class AnyKeyMixin(MappingMixin): #{{{
     # End def #}}}
 
     def _cmp_map(self, s, obj, target, options): #{{{
-        s_set, o_set = set(s), set(obj)
-        common = s_set & o_set
-        c_len = len(common)
+        c_len = 0
+        for el in s:
+            if el in obj:
+                c_len += 1
         return self._cmp(s, obj, c_len, target, options)
     # End def #}}}
 # End class #}}}
