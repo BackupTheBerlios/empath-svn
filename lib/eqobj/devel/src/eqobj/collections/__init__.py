@@ -9,7 +9,7 @@ class CollectionMixin(object): #{{{
     __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
         self._options = self._check_options(kwargs)
-        super(SequenceMixin, self).__init__(self.__transform__(obj))
+        super(CollectionMixin, self).__init__(self.__transform__(obj))
     # End def #}}}
 
     def _check_options(self, opt, expected=()): #{{{
