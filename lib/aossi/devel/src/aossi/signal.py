@@ -4,7 +4,7 @@
 #
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
-from smanstal.util.misc import deprecated
+from aossi.util import deprecated
 deprecated("aossi.signal is deprecated: please use aossi.signals")
 
 from aossi.core import *
