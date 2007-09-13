@@ -3,3 +3,4 @@ commit[.]log
 .*[.]pyc
 src[/]aossi.egg-info[/].*
 tests[/]profile[/]data[/].*
+screenrc
