@@ -71,7 +71,7 @@ To use this extension, we need to mix the above class into a subclass of
 Callables that get used in the ``around`` slot require a specific syntax:
 
 >>> def simple_around(func):
-...     def wrap(sig, l):
+...     def wrap(cw, l):
 ...             l.append('around_before')
 ...             ret = func(l)
 ...             l.append('around_after')
