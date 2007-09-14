@@ -1,0 +1,15 @@
+====================
+4.2.1 Cake and Pie
+====================
+
+Being able to define signals and connect callables to slots that run before
+or after the signal runs is useful if not exactly flexible. Wouldn't it be
+nice if there was some way to extend the functionality of ``BaseSignal``?
+
+This is where the ``aossi.signals`` module comes in. It defines the base
+``SignalExtension`` class from which all other signal extensions derives as
+well as a handful of interesting extensions. It wraps up all these
+extensions into a single ``Signal`` class which is a subclass of
+``BaseSignal``. The rest of this chapter will implement each of the
+extensions found in the ``aossi.signals`` module to illustrate and provide
+the necessary knowledge required to create signal extensions.
