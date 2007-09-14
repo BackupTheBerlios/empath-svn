@@ -48,7 +48,7 @@ class Test_simple(BaseUnitTest): #{{{
         ret = self.signal(l)
         self.assertTrue(isinstance(ret, list))
         self.assertTrue(ret is l)
-        self.assertEqual(ret, ['signal', 'streamin', 'stream', 'after'])
+        self.assertEqual(ret, ['streamin', 'signal', 'stream', 'after'])
     # End def #}}}
 
     def testConnectedFunctions(self): #{{{
