@@ -24,10 +24,19 @@ class Test_num_static_args(BaseUnitTest): #{{{
         self.assertEqual(nsa(1), (-1, None))
     # End def #}}}
 
+    def testClass(self): #{{{
+        '''Class objects are valid callables'''
+        class _(object): 
+            def __init__(self):
+                pass
+        self.assertEqual(nsa(_), (0, 0))
+    # End def #}}}
+
     def testNonCallableObject(self): #{{{
         '''Object with non-method __call__'''
-        class _(object): pass
-        self.assertEqual(nsa(_), (-1, None))
+        class _(object): 
+            __call__ = 1
+        self.assertEqual(nsa(_()), (-1, None))
     # End def #}}}
 
     def testCallableWrapper(self): #{{{

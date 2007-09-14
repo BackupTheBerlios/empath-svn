@@ -48,7 +48,7 @@ class Test_needs_wrapping(BaseUnitTest): #{{{
         class _(object): #{{{
             pass
         # End class #}}}
-        self.assertTrue(needs_wrapping(_))
+        self.assertFalse(needs_wrapping(_))
     # End def #}}}
 
     def testNeedsWrapping(self): #{{{
