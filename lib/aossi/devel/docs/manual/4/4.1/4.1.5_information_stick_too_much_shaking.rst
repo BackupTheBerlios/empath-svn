@@ -139,3 +139,33 @@ that of the callable it is based on:
 False
 >>> print cid(test) == cid(signal.func)
 True
+
+``getsignal()``
+----------------
+
+When decorating functions that are part of a class body, they are normally
+wrapped in a method instance on class object creation. This means that the
+signal is *hidden* one level deep somewhere in the internals of the method
+object. The ``getsignal()`` function recursively looks for the signal
+instance within any type of wrapped function. Following examples
+demonstrates this function's behaviour:
+
+>>> from types import MethodType as method
+>>> from aossi.core import getsignal
+>>> from aossi.decorators import signal as sigdeco
+>>> getsignal(signal) is signal
+True
+>>> class Test(object):
+...   @sigdeco()
+...   def test(self): pass
+...
+>>> print isinstance(Test.test, BaseSignal)
+False
+>>> print isinstance(getsignal(Test.test), BaseSignal)
+True
+>>> Test.test2 = method(BaseSignal(lambda s: None, weak=False), None, Test)
+>>> print isinstance(Test.test2, BaseSignal)
+False
+>>> print isinstance(getsignal(Test.test2), BaseSignal)
+True
+
