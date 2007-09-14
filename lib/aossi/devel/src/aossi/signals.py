@@ -168,24 +168,40 @@ class StreamExtension(SignalExtension): #{{{
         yield 'stream'
     # End def #}}}
 
-    def _init_calls_after(self, cleanlist): #{{{
-        def call_streamin(self, cw, func, ret, args, kwargs): #{{{
-            callfunc, cnam, sig, signame = self.caller, 'streamin', None, cw.__name__
-            if args:
-                for cls in mro(args[0].__class__):
-                    sig = getsignal(getattr(cls, signame, None))
-                    if sig and cw is sig.func:
-                        break
-                else:
-                    sig = None
-            if sig:
-                args = (args[0], list(args[1:]), kwargs)
-            else:
-                args = (list(args), kwargs)
-            for sfunc, t in cleanlist(cnam):
-                callfunc(self, sfunc, cnam, False, ret, *args)
-            return ret
+    def _init_calls_around(self, cleanlist): #{{{
+        def call_streamin(self): #{{{
+            def streamin_wrap(func): #{{{
+                def wrap(cw, *args, **kwargs): #{{{
+                    sig, signame = None, cw.__name__
+                    if args:
+                        for cls in mro(args[0].__class__):
+                            sig = getsignal(getattr(cls, signame, None))
+                            if sig and cw is sig.func:
+                                break
+                        else:
+                            sig = None
+                    if sig:
+                        args = (args[0], list(args[1:]), kwargs)
+                    else:
+                        args = (list(args), kwargs)
+                    callfunc = self.caller
+                    for sfunc, t in cleanlist('streamin'):
+                        callfunc(self, sfunc, 'streamin', False, None, *args, **kwargs)
+                    args, kwargs = args
+                    return func(*args, **kwargs)
+                # End def #}}}
+                return wrap
+            # End def #}}}
+            yield streamin_wrap
         # End def #}}}
+        sup = super(StreamExtension, self)._init_calls_around(cleanlist)
+        ret = odict()
+        ret['streamin'] = call_streamin
+        ret.update(sup.iteritems())
+        return ret
+    # End def #}}}
+
+    def _init_calls_after(self, cleanlist): #{{{
         def call_stream(self, cw, func, ret, args, kwargs): #{{{
             callfunc = self.caller
             for sfunc, t in cleanlist('stream'):
@@ -194,7 +210,6 @@ class StreamExtension(SignalExtension): #{{{
         # End def #}}}
         sup = super(StreamExtension, self)._init_calls_after(cleanlist)
         ret = odict()
-        ret['streamin'] = call_streamin
         ret['stream'] = call_stream
         ret.update(sup.iteritems())
         return ret
