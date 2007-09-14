@@ -45,3 +45,32 @@ as unnamed arguments which get connected to the after slot type:
 ['test_before', 'test_signal', 'test_after', 'test_after2', 'test_after3']
 
 
+By default a signal will not allow the same callable to be reused within a
+slot:
+
+>>> signal2 = BaseSignal(test_signal)
+>>> signal2.connect(after=[test_after, test_after])
+>>> print signal2([])
+['test_signal', 'test_after']
+
+
+But if it is desired to reuse a callable within the same slot, passing the
+``unique`` keyword to the ``connect()`` method will allow control over this
+behaviour:
+
+>>> signal2 = BaseSignal(test_signal)
+>>> signal2.connect(after=[test_after, test_after], unique=False)
+>>> print signal2([])
+['test_signal', 'test_after', 'test_after']
+
+
+Beware, though, that if you want to disconnect a callable that is repeated
+within a slot, you will remove only the first such callable found:
+
+>>> signal2.connect(after=[test_after2, test_after], unique=False)
+>>> print signal2([])
+['test_signal', 'test_after', 'test_after', 'test_after2', 'test_after']
+>>> signal2.disconnect(after=[test_after])
+>>> print signal2([])
+['test_signal', 'test_after', 'test_after2', 'test_after']
+
