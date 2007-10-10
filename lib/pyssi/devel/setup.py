@@ -7,9 +7,9 @@
 from setuptools import setup, find_packages
 
 setup(
-  name="SkeletonEgg",
+  name="PySSI",
   version="0.0.1",
-  description="""SkeletonEgg""",
+  description="""Python signal slot implementation""",
   author="Ariel De Ocampo",
   author_email = 'arieldeocampo@gmail.com',
   license = 'MIT',
