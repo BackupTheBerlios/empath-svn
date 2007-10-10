@@ -6,3 +6,6 @@ commit[.]log
 src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
+tests[/]profile[/]data[/].*
+build[/].*
+.*[.]so
