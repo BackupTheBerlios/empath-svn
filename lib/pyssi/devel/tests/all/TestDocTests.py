@@ -10,10 +10,10 @@ from smanstal.tests import addtest, mkdocsuite
 
 # All tests go here
 from os.path import abspath, sep, join as joinpath
-apidocdir = joinpath(sep.join(abspath(__file__).split(sep)[:-3]), 'doc', 'api')
+manualdocdir = joinpath(sep.join(abspath(__file__).split(sep)[:-3]), 'doc', 'manual')
 
 # Create suite function for this module
-suite = addtest(mkdocsuite(apidocdir, recurse=True))
+suite = addtest(mkdocsuite(manualdocdir, recurse=True))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
