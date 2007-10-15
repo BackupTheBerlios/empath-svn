@@ -15,10 +15,12 @@ from pyssi.util.byteplay import (LOAD_CONST, LOAD_FAST, CALL_FUNCTION,
                                  CALL_FUNCTION_VAR_KW)
 
 try:
-    from pyssi._speedups.util import cref
+    from pyssi._speedups.util import cref, iscallable, isclass
 except ImportError:
     from pyssi.util.callobj import quote as cref
+    from pyssi.util.introspect import iscallable, isclass
 
+_isf, _ism, _isb = isfunction, ismethod, isbuiltin
 # ==================================================================================
 # Constants
 # ==================================================================================
