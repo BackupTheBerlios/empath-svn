@@ -9,7 +9,7 @@ import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 import hotshot, hotshot.stats as hsstats, pstats
 
-from pyssi.core import Signal
+from pyssi.core import Signal, signal as decosig
 
 def base_before(l): #{{{
     l.append('BASE_BEFORE')
@@ -45,8 +45,24 @@ def signal_after(ret, l): #{{{
 # End def #}}}
 
 signal = Signal(signal_signal)
-signal.connect('before', dict(before=[signal_before]))
-signal.connect('after', dict(after=[signal_after]))
+signal.connect_before(dict(before=[signal_before]))
+signal.connect_after(dict(after=[signal_after]))
+
+@decosig(overload=False)
+def deco_signal(l): #{{{
+    l.append('SIGNAL')
+    return l
+# End def #}}}
+
+@deco_signal.before
+def deco_before(l): #{{{
+    l.append('BEFORE')
+# End def #}}}
+
+@deco_signal.after
+def deco_after(ret, l): #{{{
+    l.append('AFTER')
+# End def #}}}
 
 class TestGeneralProfile(BaseUnitTest): #{{{
     def stub(self, sig, *args): #{{{
@@ -74,6 +90,7 @@ class TestGeneralProfile(BaseUnitTest): #{{{
         pd = self.profile_dispatch
         pd('data/base.prof', 'data/base_results.txt', 'data/base_dump.prof', base)
         pd('data/signal.prof', 'data/signal_results.txt', 'data/signal_dump.prof', signal)
+        pd('data/deco.prof', 'data/deco_results.txt', 'data/deco_dump.prof', deco_signal)
     # End def #}}}
 
 #    def testDefault(self): #{{{
