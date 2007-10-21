@@ -5,13 +5,114 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from aossi.util import ismapping
+from weakref import ref
 
-__all__ = ('ChooseCallable', 'AmbiguousChoiceError', 'StopCascade', 'OrderedDictMixin')
+__all__ = ('callobj', 'cref', 'ChooseCallable', 'AmbiguousChoiceError', 'StopCascade', 'OrderedDictMixin')
 
 class AmbiguousChoiceError(StandardError): pass
 class StopCascade(Exception): pass
 
+_join = '_'.join
+
+# ==================================================================================
+# introspect
+# ==================================================================================
+# Copied from stdlib types module
+class _C:
+    def _m(self): pass
+def _f(): pass
+
+ClassType = type(_C)
+function = type(_f)
+method = type(_C()._m)
+bfunction = type(len)
+bmethod = type([].append)
+
+# Adapted from aossi.util.introspect
+def isclass(obj): #{{{
+    return isinstance(obj, ClassType) or hasattr(obj, '__bases__')
+# End def #}}}
+
+def iscallable(obj): #{{{
+    return bool(isinstance(obj, (function, bfunction, method, bmethod)) or
+                isclass(obj) or 
+                hasattr(obj, '__call__'))
+# End def #}}}
+
+def _mkitername(name): #{{{
+    return _join(['iter', name])
+# End def #}}}
+
+def ismapping(obj): #{{{
+    if isinstance(obj, dict):
+        return True
+    check = ('items', 'keys', 'values')
+#    check = check + tuple('iter' + c for c in check)
+    check = check + tuple(map(_mkitername, check))
+    check = check + ('__getitem__',)
+
+#    return False not in (iscallable(getattr(obj, n, None)) for n in check)
+    ret = True
+    for n in check:
+        if not iscallable(getattr(obj, n, None)):
+            ret = False
+            break
+    return ret
+# End def #}}}
+
+# ==================================================================================
+# cref
+# ==================================================================================
+cdef class callobj: #{{{
+    cdef object __weakref__
+    def __init__(self): #{{{
+        raise NotImplementedError("callobj is an abstract class")
+    # End def #}}}
+
+    def __call__(self): #{{{
+        raise NotImplementedError("Please override the __call__ method")
+    # End def #}}}
+# End class #}}}
+
+cdef class cref(callobj): #{{{
+    cdef object _ref, _isweak
+#    __slots__ = ('_ref', '_isweak')
+    def __init__(self, obj, callback=None, **kwargs): #{{{
+        weak = bool(kwargs.get('weak', True))
+        auto = bool(kwargs.get('auto', True))
+        self._ref = obj
+        self._isweak = weak
+        if weak:
+            try:
+                self._ref = ref(obj, callback)
+            except TypeError:
+                if not auto:
+                    raise
+                self._isweak = False
+    # End def #}}}
+
+    def __call__(self): #{{{
+        if self._isweak:
+            return self._ref()
+        return self._ref
+    # End def #}}}
+
+    # Properties #{{{
+    property isweak:
+        def __get__(self): #{{{
+            return self._isweak
+        # End def #}}}
+    property ref:
+        def __get__(self): #{{{
+            return self._ref
+        # End def #}}}
+#    isweak = property(lambda s: s._isweak)
+#    ref = property(lambda s: s._ref)
+    # End properties #}}}
+# End class #}}}
+# ==================================================================================
+# ChooseCallable
+# ==================================================================================
 # choices: sequence of 2-tuples
 #   - A function that computes whether or not its partner will be run
 #   - A callable that runs if its partner evaluates to True

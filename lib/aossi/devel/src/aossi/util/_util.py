@@ -5,6 +5,11 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+try:
+    from aossi._speedups.util import cref
+except ImportError
+    from aossi.util.callobj import quote as cref
+
 __all__ = ('ChooseCallable', 'AmbiguousChoiceError', 'StopCascade')
 
 class AmbiguousChoiceError(StandardError): pass

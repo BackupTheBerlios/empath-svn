@@ -6,13 +6,13 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from aossi.util.introspect import *
-from aossi.util.callobj import quote as cref
+#from aossi.util.callobj import quote as cref
 from inspect import formatargspec, getargspec
 
 try:
-    from aossi._speedups.util import ChooseCallable, AmbiguousChoiceError, StopCascade
+    from aossi._speedups.util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref
 except ImportError:
-    from aossi.util._util import ChooseCallable, AmbiguousChoiceError, StopCascade
+    from aossi.util._util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref
 
 __all__ = ('property_', 'deprecated', 'cref', 'ChooseCallable', 'ChoiceObject', 
             'AmbiguousChoiceError', 'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
