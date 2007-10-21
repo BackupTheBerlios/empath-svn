@@ -1,0 +1,123 @@
+=======================================
+4.2.1.4 See, There's This Pipe, And...
+=======================================
+
+While there is a built-in facility to do operations before or after a
+signal is run based on the arguments sent to a signal, there is no similar
+facility for operating on the output of a signal.
+
+Implementation
+---------------
+
+>>> from aossi.signals import SignalExtension
+>>> from aossi.util.odict import odict
+>>> from aossi.util.introspect import mro
+>>> from aossi.core import getsignal
+>>> class StreamExtension(SignalExtension):
+...    __slots__ = ()
+...    def _init_funclist_names(self):
+...        for n in super(StreamExtension, self)._init_funclist_names():
+...            yield n
+...        yield 'streamin'
+...        yield 'stream'
+...    def _init_calls_around(self, cleanlist):
+...        def call_streamin(self):
+...            def streamin_wrap(func):
+...                def wrap(cw, *args, **kwargs):
+...                    sig, signame = None, cw.__name__
+...                    if args:
+...                        for cls in mro(args[0].__class__):
+...                            sig = getsignal(getattr(cls, signame, None))
+...                            if sig and cw is sig.func:
+...                                break
+...                        else:
+...                            sig = None
+...                    if sig:
+...                        args = (args[0], list(args[1:]), kwargs)
+...                    else:
+...                        args = (list(args), kwargs)
+...                    callfunc = self.caller
+...                    for sfunc, t in cleanlist('streamin'):
+...                        callfunc(self, sfunc, 'streamin', False, None, *args)
+...                    args, kwargs = args
+...                    return func(*args, **kwargs)
+...                return wrap
+...            yield streamin_wrap
+...        sup = super(StreamExtension, self)._init_calls_around(cleanlist)
+...        ret = odict()
+...        ret['streamin'] = call_streamin
+...        ret.update(sup.iteritems())
+...        return ret
+...    def _init_calls_after(self, cleanlist):
+...        def call_stream(self, cw, func, ret, args, kwargs):
+...            callfunc = self.caller
+...            for sfunc, t in cleanlist('stream'):
+...                ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
+...            return ret
+...        sup = super(StreamExtension, self)._init_calls_after(cleanlist)
+...        ret = odict()
+...        ret['stream'] = call_stream
+...        ret.update(sup.iteritems())
+...        return ret
+...    def _init_default_connections(self):
+...        for n in super(StreamExtension, self)._init_default_connections():
+...            yield n
+...        yield 'streamin'
+...        yield 'stream'
+...
+
+Like the ``AroundExtension`` and ``OnReturnExtension`` classes,
+``StreamExtension`` overrides various methods to implement two slots in the
+``after`` slot category: ``stream`` and ``streamin``.
+
+Callables in the ``stream`` slot are ordered in FIFO order. The first
+callable in the slot gets passed the return value of the signal. The return
+value of this callable then gets passed to the second callable in the slot
+and so on. The ``stream`` slot is in the **after** slot category.
+
+Callables in the ``streamin`` slot are similar to those in the ``stream``
+slot except they act strictly on the input arguments of the signal.
+Callables are passed the argument list and keyword arguments as list and
+dict objects so that the actual arguments passed to the signal can be
+modified. The ``streamin`` slot is in the **around** slot category.
+
+
+Usage
+------
+
+To use this extension, we need to mix the above class into a subclass of
+``BaseSignal``:
+
+>>> from aossi.core import BaseSignal
+>>> class StreamSignal(StreamExtension, BaseSignal): pass
+...
+>>> def test(l, *args):
+...      l.extend(args)
+...      l.append('signal')
+...      return l
+...
+>>> def simple_stream(ret):
+...     ret.append('stream')
+...     return ret
+...
+
+
+The above implementation would then result in:
+
+>>> signal = StreamSignal(test)
+>>> print signal([])
+['signal']
+>>> signal.connect(stream=[simple_stream])
+>>> print signal([])
+['signal', 'stream']
+
+For ``streamin``:
+
+>>> def simple_streamin(args, kwargs):
+...     args[0].append('streamin')
+...     args.extend(['hello', 'added', 'arguments'])
+...
+>>> signal.connect(streamin=[simple_streamin])
+>>> print signal([])
+['streamin', 'hello', 'added', 'arguments', 'signal', 'stream']
+
