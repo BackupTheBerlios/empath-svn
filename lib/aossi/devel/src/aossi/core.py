@@ -43,7 +43,7 @@ def mkcallback(name, cleanlist): #{{{
 # End def #}}}
 
 def connect_func(self, listname, slots): #{{{
-    weak = bool(slots.get('weak', True))
+    weak = bool(slots.get('weak', self.func.isweak))
     uniq = bool(slots.get('unique', True))
     l, vals = self._funclist[listname], slots.get(listname, ())
     cleanlist, test_store = self._cleanlist, []
@@ -100,13 +100,18 @@ class BaseSignal(object): #{{{
                 callactivate=kwargs.get('activate_on_call', False), caller=callfunc)
 
         # Initialize values of function lists
-        self._init_functions(funclist)
+        self._init_funclist(funclist)
         self._init_calls(call_funclist)
         self._init_connections(conn)
     # End def #}}}
 
-    def _init_functions(self, funclist): #{{{
-        init = ('before', 'after')
+    def _init_funclist_names(self): #{{{
+        yield 'before'
+        yield 'after'
+    # End def #}}}
+
+    def _init_funclist(self, funclist): #{{{
+        init = self._init_funclist_names()
         funclist.update((name, []) for name in init)
     # End def #}}}
 
@@ -144,8 +149,14 @@ class BaseSignal(object): #{{{
         return odict(after=call_after)
     # End def #}}}
 
-    def _init_connections(self, connections): #{{{
+    def _init_default_connections(self): #{{{
         init = ('after', 'before')
+        for n in init:
+            yield n
+    # End def #}}}
+
+    def _init_connections(self, connections): #{{{
+        init = self._init_default_connections()
         connections.update((n, (connect_func, disconnect_func)) for n in init)
     # End def #}}}
 
