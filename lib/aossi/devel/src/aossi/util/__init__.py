@@ -8,10 +8,9 @@
 from aossi.util.introspect import *
 from aossi.util.callobj import quote as cref
 from inspect import formatargspec, getargspec
-from smanstal.types.introspect import isclassmethod, isstaticmethod
 
-__all__ = ('cref', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
-            'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
+__all__ = ('property_', 'deprecated', 'cref', 'ChooseCallable', 'ChoiceObject', 
+            'AmbiguousChoiceError', 'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
             'cargnames', 'cgetargspec', 'cargdefstr', 'cargval', 'methodtype', 'methodname',
             'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE',
             'isclassmethod', 'isstaticmethod')
@@ -31,12 +30,26 @@ METHODTYPE_INSTANCE = 3
 class AmbiguousChoiceError(StandardError): pass
 class StopCascade(Exception): pass
 
+# Based on the following recipe:
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/205183
+def property_(func): #{{{
+    vals = dict((k, v) for k,v in func().iteritems() 
+            if k in ('fdel', 'fset', 'fget', 'doc'))
+    return property(**vals)
+# End def #}}}
+
+# Make it easier to deprecate functionality
+def deprecated(msg, stacklevel=2): #{{{
+    from warnings import warn
+    warn(msg, DeprecationWarning, stacklevel=stacklevel)
+# End def #}}}
+
 # Does the same checks that callableobj does and
 # decides if an object is wrapped based on those checks
 def needs_wrapping(obj): #{{{
     if not iscallable(obj):
         return False
-    elif _ism(obj) or _isf(obj):
+    elif _ism(obj) or _isf(obj) or isclass(obj):
 #    elif any(f(obj) for f in (_ism, _isf, isclassmethod, isstaticmethod)):
         return False
     elif hasattr(obj, '__call__') and _ism(obj.__call__):
@@ -48,7 +61,7 @@ def needs_wrapping(obj): #{{{
 def callableobj(obj): #{{{
     if not iscallable(obj):
         return None
-    if _ism(obj) or _isf(obj):
+    if _ism(obj) or _isf(obj) or isclass(obj):
 #    if any(f(obj) for f in (_ism, _isf, isclassmethod, isstaticmethod)):
         return obj
     elif hasattr(obj, '__call__') and _ism(obj.__call__):
@@ -59,7 +72,7 @@ def callableobj(obj): #{{{
 # End def #}}}
 
 def callable_wrapper(func): #{{{
-    if not callable(func):
+    if not iscallable(func):
         raise TypeError('Argument is not callable')
     def callwrapper(*args, **kwargs): #{{{
         return func(*args, **kwargs)
@@ -69,15 +82,27 @@ def callable_wrapper(func): #{{{
 
 def cargnames(obj): #{{{
     obj = callableobj(obj)
+    isc = isclass(obj)
     if not obj: return None
+    elif isc:
+        obj = obj.__init__
+        obj = callable_wrapper(obj) if needs_wrapping(obj) else obj
     fargnames, fvargs, fvkey, fdef = getargspec(obj)
+    if isc and fargnames:
+        fargnames = fargnames[1:]
     return fargnames, fvargs, fvkey
 # End def #}}}
 
 def cgetargspec(obj): #{{{
     obj = callableobj(obj)
+    isc = isclass(obj)
     if not obj: return None
+    elif isc:
+        obj = obj.__init__
+        obj = callable_wrapper(obj) if needs_wrapping(obj) else obj
     fargnames, fvargs, fvkey, fdef = getargspec(obj)
+    if isc and fargnames:
+        fargnames = fargnames[1:]
     if not fdef:
         return fargnames, fvargs, fvkey, {}
     numargs = len(fargnames)
@@ -89,8 +114,14 @@ def cgetargspec(obj): #{{{
 
 def cargdefstr(obj): #{{{
     obj = callableobj(obj)
+    isc = isclass(obj)
     if not obj: return None
+    elif isc:
+        obj = obj.__init__
+        obj = callable_wrapper(obj) if needs_wrapping(obj) else obj
     fargnames, fvargs, fvkey, fdef = getargspec(obj)
+    if isc and fargnames:
+        fargnames = fargnames[1:]
     argstr = formatargspec(fargnames, fvargs, fvkey, fdef)[1:-1]
     other = []
     if fvargs:
