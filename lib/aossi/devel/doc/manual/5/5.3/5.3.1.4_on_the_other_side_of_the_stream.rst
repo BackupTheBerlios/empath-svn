@@ -1,0 +1,46 @@
+========================================
+5.3.1.4 On The Other Side Of The Stream
+========================================
+
+To match the ``StreamExtension`` class in ``aossi.signals`` is the
+``StreamDecoSignal`` class. This extension merely provides a basic
+decorator that places the functions it decorates into the ``stream`` slot
+defined by ``StreamExtension``:
+
+>>> from aossi.decorators import CustomDecoSignal
+>>> class StreamDecoSignal(CustomDecoSignal):
+...    __slots__ = ()
+...    __genericdecorators__ = ['streamin', 'stream']
+...
+
+The above definition is very similar to that shown in section 5.3.1.1.
+
+``StreamDecoSignal`` is defined in ``aossi.decorators`` as are all
+decorator extensions defined by the ``aossi`` package. Below is a simple
+example illustrating how to use the ``streamin`` and ``stream`` decorators.
+
+>>> from functools import wraps
+>>> from aossi.signals import StreamExtension
+>>> from aossi.decorators import StreamDecoSignal, make_signal
+>>> signal = make_signal(sigext_ = [StreamExtension],
+...                      decoext_ = [StreamDecoSignal])
+>>> @signal
+... def test_stream(l):
+...     l.append('signal')
+...     return l
+...
+>>> @test_stream.streamin
+... def streamin(args, kwargs):
+...     args[0].append('streamin')
+...
+>>> @test_stream.stream
+... def stream(ret):
+...     return [ret, 'stream']
+...
+>>> @test_stream.after
+... def after(l):
+...     l.append('after')
+...
+>>> print test_stream([])
+[['streamin', 'signal', 'after'], 'stream']
+

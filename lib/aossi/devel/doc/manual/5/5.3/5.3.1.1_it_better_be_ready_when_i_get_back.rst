@@ -1,0 +1,110 @@
+===========================================
+5.3.1.1 It Better Be Ready When I Get Back
+===========================================
+
+To match the ``OnReturnExtension`` class in ``aossi.signals`` is the
+``OnReturnDecoSignal`` class. This extension merely provides a basic
+decorator that places the functions it decorates into the ``onreturn`` slot
+defined by ``OnReturnExtension``:
+
+>>> from aossi.decorators import CustomDecoSignal
+>>> class OnReturnDecoSignal(CustomDecoSignal):
+...    __slots__ = ()
+...    __genericdecorators__ = ['onreturn']
+...
+
+The above extension derives from the ``CustomDecoSignal`` class. This is
+the base class that all decorator extensions must ultimately derive from.
+
+``__genericdecorators__`` is a special attribute that gets assigned a
+sequence of slot names to transform into decorators. There is no facility
+at this time to be able to change the decorator name used for a particular
+slot.
+
+``OnReturnDecoSignal`` is defined in ``aossi.decorators`` as are all
+decorator extensions defined by the ``aossi`` package. Below is a simple
+example illustrating how to use the ``onreturn`` decorator.
+
+>>> from aossi.signals import OnReturnExtension
+>>> from aossi.decorators import OnReturnDecoSignal, make_signal
+>>> signal = make_signal(sigext_ = [OnReturnExtension],
+...                      decoext_ = [OnReturnDecoSignal])
+>>> @signal
+... def test_onreturn(l):
+...     l.append('signal')
+...     return (l, 'onreturn')
+...
+>>> @test_onreturn.onreturn
+... def onret(ret):
+...     ret[0].append(ret[1])
+...
+>>> print test_onreturn([])[0]
+['signal', 'onreturn']
+
+``make_signal``
+================
+
+The above example also illustrates use of the ``make_signal`` function.
+This function creates a new signal decorator that turns a callable into a
+decorator signal. ``make_signal`` recognizes two special keywords:
+
+``sigext_``
+   A sequence of signal extension classes derived from SignalExtension.
+
+``decoext_``
+   A sequence of decorator signal extension classes derived from
+   CustomDecoSignal.
+
+``make_signal`` will check the objects passed into the above two arguments.
+
+One cannot pass an invalid ``sigext_`` sequence element:
+
+>>> from aossi.signals import OnReturnExtension
+>>> from aossi.decorators import OnReturnDecoSignal, make_signal
+>>> bad = make_signal(sigext_ = [OnReturnExtension, 1],
+...                      decoext_ = [OnReturnDecoSignal])
+>>> @bad
+... def fail_sigext(): pass
+...
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  ...
+TypeError: The 'sigext_' keyword expected SignalExtension classes, got int instead
+
+
+One also cannot pass an invalid ``decoext_`` sequence element:
+
+>>> bad = make_signal(sigext_ = [OnReturnExtension],
+...                      decoext_ = [OnReturnDecoSignal, 1])
+>>> @bad
+... def fail_decoext(): pass
+...
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  ...
+TypeError: The 'decoext_' keyword expected CustomDecoSignal classes, got int instead
+
+Any other keyword argument will be assumed to be an option that changes the
+behaviour of either a specific decorator or for the entire signal. If there
+is a need to pass arguments to the underlying signal class, the special
+keyword ``sigkw_`` can be used.
+
+>>> weak_signal = make_signal(sigext_ = [OnReturnExtension],
+...                      decoext_ = [OnReturnDecoSignal],
+...                      sigkw_ = dict(weak=True))
+>>> strong_signal = make_signal(sigext_ = [OnReturnExtension],
+...                      decoext_ = [OnReturnDecoSignal],
+...                      sigkw_ = dict(weak=False))
+>>> @weak_signal
+... def test_weak(l):
+...     pass
+...
+>>> @strong_signal
+... def test_strong(l):
+...     pass
+...
+>>> print test_weak.signal.func.isweak
+True
+>>> print test_strong.signal.func.isweak
+False
+

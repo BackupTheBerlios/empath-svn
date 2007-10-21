@@ -1,0 +1,38 @@
+===========================================
+5.3.1.2 Will You Train Your Replacement?
+===========================================
+
+To match the ``ReplaceExtension`` class in ``aossi.signals`` is the
+``ReplaceDecoSignal`` class. This extension merely provides a basic
+decorator that places the functions it decorates into the ``replace`` slot
+defined by ``ReplaceExtension``:
+
+>>> from aossi.decorators import CustomDecoSignal
+>>> class ReplaceDecoSignal(CustomDecoSignal):
+...    __slots__ = ()
+...    __genericdecorators__ = ['replace']
+...
+
+The above definition is very similar to that shown in section 5.3.1.1.
+
+``ReplaceDecoSignal`` is defined in ``aossi.decorators`` as are all
+decorator extensions defined by the ``aossi`` package. Below is a simple
+example illustrating how to use the ``replace`` decorator.
+
+>>> from aossi.signals import ReplaceExtension
+>>> from aossi.decorators import ReplaceDecoSignal, make_signal
+>>> signal = make_signal(sigext_ = [ReplaceExtension],
+...                      decoext_ = [ReplaceDecoSignal])
+>>> @signal
+... def test_replace(l):
+...     l.append('signal')
+...     return l
+...
+>>> @test_replace.replace
+... def onret(l):
+...     l.append('replace')
+...     return l
+...
+>>> print test_replace([])
+['replace']
+

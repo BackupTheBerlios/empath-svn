@@ -1,0 +1,19 @@
+========================
+5.3.1 Here's Some Paint
+========================
+
+Being able to define custom signals allows some modicum of flexibility, but
+the syntax to create a signal and properly connect callables to slots can
+be a bit tedious. There is also the issue where a slot in a specific slot
+category can cater to different up-front functionality though ultimately
+the low-level implementation remains the same.
+
+The decorator syntax can be used to ease the above two issues: most of the
+tiresome grunt-work involved in creating/using a signal can be hidden
+within a decorator, and different decorators can be used to modify slot
+callables before they get connected to a slot.
+
+The following chapters walk through the implementation of various
+decorators that are defined in the ``aossi.decorators`` module while
+offering examples of both the specific usage of each decorator and how to
+create custom decorators.

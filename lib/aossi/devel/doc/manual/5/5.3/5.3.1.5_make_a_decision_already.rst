@@ -1,0 +1,172 @@
+===============================
+5.3.1.5 Make A Decision Already
+===============================
+
+To match the ``StreamExtension`` class in ``aossi.signals`` is the
+``StreamDecoSignal`` class. This extension merely provides a basic
+decorator that places the functions it decorates into the ``stream`` slot
+defined by ``StreamExtension``:
+
+>>> from aossi.decorators import CustomDecoSignal, chooser_callfunc
+>>> class CondDecoSignal(CustomDecoSignal):
+...    __slots__ = ()
+...    __decorators__ = ['cond', 'return_cond', 'yield_cond']
+...    def __init__(self, signal, **kwargs):
+...        super(CondDecoSignal, self).__init__(signal, **kwargs)
+...        self.caller = chooser_callfunc()
+...
+...    def _expected_settings(self, kwargs, gset):
+...        sup = super(CondDecoSignal, self)._expected_settings(kwargs, gset)
+...        return sup | frozenset(['chooser', 'return_chooser', 'policy', 'return_policy', 'yield_chooser', 'yield_policy'])
+...
+...    def _blocked_csettings(self):
+...        sup = super(CondDecoSignal, self)._blocked_csettings()
+...        return sup | set(['chooser', 'return_chooser', 'policy', 'return_policy', 'yield_chooser', 'yield_policy'])
+...
+...    def _set_custom_global_settings(self, kwargs, gset):
+...        self.chooser_policy = kwargs.get('policy', self.chooser_policy)
+...        self.chooser = kwargs.get('chooser', self.chooser)
+...        self.return_chooser_policy = kwargs.get('return_policy', self.return_chooser_policy)
+...        self.return_chooser = kwargs.get('return_chooser', self.return_chooser)
+...        self.yield_chooser_policy = kwargs.get('yield_policy', self.yield_chooser_policy)
+...        self.yield_chooser = kwargs.get('yield_chooser', self.yield_chooser)
+...        super(CondDecoSignal, self)._set_custom_global_settings(kwargs, gset)
+...
+...    def _cond(self, name, condfunc):
+...        def factory(func):
+...            condtup = (condfunc, func)
+...            ret = self._generic(condtup, name)
+...            if ret is condtup:
+...                return func
+...            return ret
+...        return factory
+...
+...    def cond(self, condfunc):
+...        return self._cond('choose', condfunc)
+...
+...    def return_cond(self, condfunc):
+...        return self._cond('choosereturn', condfunc)
+...
+...    def yield_cond(self, condfunc): 
+...        return self._cond('chooseyield', condfunc)
+...
+
+The above implementation illustrates the use of several methods to
+implement a somewhat complicated signal decorator.**
+
+``__decorators__``
+   This is a magic attribute that gets a sequence of strings representing
+   the names of the actual decorators implemented by the extension class.
+
+``__init__()``
+   This method overrides the underlying callable that is responsible for
+   calling slot callables with one specifically geared towards choosing
+   among alternatives. This alternate caller callable is called
+   ``chooser_callfunc`` and is defined in the ``aossi.decorators`` module.
+
+``_expected_settings(self, kwargs, gset)``
+   This method, when passed a dictionary object containing local settings
+   values (``kwargs``) and a dictionary object containing global settings
+   values, returns a set of names the signal decorator is expected to be
+   able to handle if specified when defining a signal or slot callable.
+
+``_blocked_csettings(self)``
+   This method returns a set of names that should not be used as public
+   settings, that should only be used by the signal internally.
+
+``_set_custom_global_settings(self, kwargs, gset)``
+   When given the same arguments passed to ``_expected_settings()``, allows
+   for adding/changing/removing values in the local and global settings
+   dictionary objects.
+
+``_cond(self, name, condfunc)``
+   This method is defined by the ``CondDecoSignal`` class. Given a slot
+   name and a condition-evaluating function, it returns a decorator that
+   assigns a callable to the specified condition slot name. This method is
+   never used publically and is intended for internal use only.
+
+``cond(self, condfunc)``
+``return_cond(self, condfunc)``
+``yield_cond(self, condfunc)`` 
+   These methods are the actual decorators that implement the functionality
+   built into the ``ChooseExtension`` class defined in ``aossi.signals``:
+
+   - ``cond()`` implements the ``choose`` slot
+   - ``return_cond()`` implements the ``choosereturn`` slot
+   - ``yield_cond()`` implements the ``chooseyield`` slot
+
+Usage
+======
+
+The following bit of code sets up the environment for the examples:
+
+>>> from aossi.signals import ChooseExtension
+>>> from aossi.decorators import CondDecoSignal, make_signal
+>>> def signal(**kwargs):
+...    kwargs['sigext_'] = [ChooseExtension]
+...    kwargs['decoext_'] = [CondDecoSignal]
+...    return make_signal(**kwargs)
+... 
+>>> @signal(weakcondf=False)
+... def test(obj):
+...    return "This is the signal -- no valid choice is possible"
+... 
+
+****
+
+Note the different implementation for ``signal`` such that it is a function
+that returns a decorator. This is to enable passing global settings to the
+signal. In the above code block, the ``weakcondf`` keyword is passed in to
+disallow weakly referenced condition-evaluating callables. This is so
+lambda functions can be passed to the decorators without becoming invalid
+and thus be automatically removed from the signal slots.
+
+cond()
+-------
+
+>>> @test.cond(lambda o: isinstance(o, int))
+... def test_cond(obj):
+...    return 'GOT INT: %i' %obj
+... 
+>>> print test('hello')
+This is the signal -- no valid choice is possible
+>>> print test(42)
+GOT INT: 42
+>>> test.signal.disconnect()
+
+return_cond()
+--------------
+
+>>> @test.cond(lambda o: True)
+... def test_cond(obj):
+...    return obj
+... 
+>>> @test.return_cond(lambda o: (o == 'hello'))
+... def test_return_cond(ret):
+...    return 'Message: %s' %ret
+... 
+>>> print test(42)
+42
+>>> print test('world')
+world
+>>> print test('hello')
+Message: hello
+>>> test.signal.disconnect()
+
+yield_cond()
+--------------
+
+>>> @test.cond(lambda o: True)
+... def test_cond(obj):
+...    for o in obj:
+...       yield o
+... 
+>>> @test.yield_cond(lambda el: (el == 42))
+... def test_yield_cond(el):
+...    return 'The Answer'
+... 
+>>> print list(test(range(10)))
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> print list(test([1, 2, 42, 5, 'hello', 'world', 42, 56]))
+[1, 2, 'The Answer', 5, 'hello', 'world', 'The Answer', 56]
+

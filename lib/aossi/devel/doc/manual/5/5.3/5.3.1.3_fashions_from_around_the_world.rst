@@ -1,0 +1,44 @@
+======================================
+5.3.1.3 Fashions From Around The World
+======================================
+
+To match the ``AroundExtension`` class in ``aossi.signals`` is the
+``AroundDecoSignal`` class. This extension merely provides a basic
+decorator that places the functions it decorates into the ``around`` slot
+defined by ``AroundExtension``:
+
+>>> from aossi.decorators import CustomDecoSignal
+>>> class AroundDecoSignal(CustomDecoSignal):
+...    __slots__ = ()
+...    __genericdecorators__ = ['around']
+...
+
+The above definition is very similar to that shown in section 5.3.1.1.
+
+``AroundDecoSignal`` is defined in ``aossi.decorators`` as are all
+decorator extensions defined by the ``aossi`` package. Below is a simple
+example illustrating how to use the ``around`` decorator.
+
+>>> from functools import wraps
+>>> from aossi.signals import AroundExtension
+>>> from aossi.decorators import AroundDecoSignal, make_signal
+>>> signal = make_signal(sigext_ = [AroundExtension],
+...                      decoext_ = [AroundDecoSignal])
+>>> @signal
+... def test_around(l):
+...     l.append('signal')
+...     return l
+...
+>>> @test_around.around
+... def around(func):
+...     @wraps(func)
+...     def wrap(cw, l):
+...         l.append('before')
+...         l = func(l)
+...         l.append('after')
+...         return l
+...     return wrap
+...
+>>> print test_around([])
+['before', 'signal', 'after']
+
