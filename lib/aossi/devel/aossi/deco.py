@@ -127,6 +127,8 @@ def setsignal(**kwargs): #{{{
 def signal(func): #{{{
     if isinstance(getattr(func, 'signal', None), DecoSignal):
         return func
+    elif not _isf(func):
+        raise TypeError('argument must be a python function')
     defstr, callstr = cargdefstr(func)
     signal = DecoSignal(func)
     fstr = """
