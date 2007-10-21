@@ -118,33 +118,38 @@ class BaseSignal(object): #{{{
     # End def #}}}
 
     def _init_calls(self, call_funclist): #{{{
-        cleanlist = self._cleanlist
+        cleanlist, funclist = self._cleanlist, self._funclist
+        def slot_is_empty(name): return bool(funclist[name])
         for cftype in ('before', 'replace', 'around', 'after'):
-            call_funclist[cftype].update(getattr(self, '_init_calls_%s' %cftype)(cleanlist).iteritems())
+            call_funclist[cftype].update(getattr(self, '_init_calls_%s' %cftype)(cleanlist, slot_is_empty).iteritems())
     # End def #}}}
 
-    def _init_calls_before(self, cleanlist): #{{{
+    def _init_calls_before(self, cleanlist, have_slotfunc): #{{{
         def call_before(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = self.caller
+            callfunc = None
             for bfunc, t in cleanlist('before'):
+                if not callfunc:
+                    callfunc = self.caller
                 callfunc(self, bfunc, 'before', False, None, *args, **kwargs)
             return ret
         # End def #}}}
         return odict(before=call_before)
     # End def #}}}
 
-    def _init_calls_replace(self, cleanlist): #{{{
+    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
         return odict()
     # End def #}}}
 
-    def _init_calls_around(self, cleanlist): #{{{
+    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
         return odict()
     # End def #}}}
 
-    def _init_calls_after(self, cleanlist): #{{{
+    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
         def call_after(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = self.caller
+            callfunc = None
             for afunc, t in cleanlist('after'):
+                if not callfunc:
+                    callfunc = self.caller
                 callfunc(self, afunc, 'after', False, None, *args, **kwargs)
             return ret
         # End def #}}}
@@ -190,13 +195,15 @@ class BaseSignal(object): #{{{
 
     def _generate_wrapfactory(self): #{{{
         def do_wrap(func): #{{{
+            callfunclist = self._call_funclist
+            before = callfunclist['before'].iteritems
+            after = callfunclist['after'].iteritems
             def newcall(s, *args, **kwargs): #{{{
                 ret = None
-                callfunclist = self._call_funclist
-                for name, cfunc in callfunclist['before'].iteritems():
+                for name, cfunc in before():
                     ret = cfunc(self, s, func, ret, args, kwargs)
                 ret = func(*args, **kwargs)
-                for name, cfunc in callfunclist['after'].iteritems():
+                for name, cfunc in after():
                     ret = cfunc(self, s, func, ret, args, kwargs)
                 return ret
             # End def #}}}

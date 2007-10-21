@@ -112,11 +112,11 @@ class AroundExtension(SignalExtension): #{{{
         yield 'around'
     # End def #}}}
 
-    def _init_calls_around(self, cleanlist): #{{{
+    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
         def call_around(self): #{{{
             return (arfunc for arfunc, _ in cleanlist('around'))
         # End def #}}}
-        ret = super(AroundExtension, self)._init_calls_around(cleanlist)
+        ret = super(AroundExtension, self)._init_calls_around(cleanlist, have_slotfunc)
         ret['around'] = call_around
         return ret
     # End def #}}}
@@ -138,14 +138,16 @@ class OnReturnExtension(SignalExtension): #{{{
         yield 'onreturn'
     # End def #}}}
 
-    def _init_calls_after(self, cleanlist): #{{{
+    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
         def call_onreturn(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = self.caller
+            callfunc = None
             for rfunc, t in cleanlist('onreturn'):
+                if not callfunc:
+                    callfunc = self.caller
                 callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
             return ret
         # End def #}}}
-        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist)
+        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist, have_slotfunc)
         ret['onreturn'] = call_onreturn
         return ret
     # End def #}}}
@@ -168,51 +170,52 @@ class StreamExtension(SignalExtension): #{{{
         yield 'stream'
     # End def #}}}
 
-    def _init_calls_around(self, cleanlist): #{{{
+    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
         def call_streamin(self): #{{{
             def streamin_wrap(func): #{{{
                 def wrap(cw, *args, **kwargs): #{{{
-                    if not self._funclist['streamin']:
-                        return func(*args, **kwargs)
-                    sig, signame = None, cw.__name__
-                    if args:
-                        for cls in mro(args[0].__class__):
-                            sig = getsignal(getattr(cls, signame, None))
-                            if sig and cw is sig.func:
-                                break
+                    if have_slotfunc('streamin'):
+                        sig, signame = None, cw.__name__
+                        if args:
+                            for cls in mro(args[0].__class__):
+                                sig = getsignal(getattr(cls, signame, None))
+                                if sig and cw is sig.func:
+                                    break
+                            else:
+                                sig = None
+                        if sig:
+                            args = (args[0], list(args[1:]), kwargs)
                         else:
-                            sig = None
-                    if sig:
-                        args = (args[0], list(args[1:]), kwargs)
-                    else:
-                        args = (list(args), kwargs)
-                    callfunc = self.caller
-                    for sfunc, t in cleanlist('streamin'):
-                        callfunc(self, sfunc, 'streamin', False, None, *args)
-                    if sig:
-                        args, kwargs = [args[0]] + args[1], args[2]
-                    else:
-                        args, kwargs = args
+                            args = (list(args), kwargs)
+                        callfunc = self.caller
+                        for sfunc, t in cleanlist('streamin'):
+                            callfunc(self, sfunc, 'streamin', False, None, *args)
+                        if sig:
+                            args, kwargs = [args[0]] + args[1], args[2]
+                        else:
+                            args, kwargs = args
                     return func(*args, **kwargs)
                 # End def #}}}
                 return wrap
             # End def #}}}
             yield streamin_wrap
         # End def #}}}
-        sup = super(StreamExtension, self)._init_calls_around(cleanlist)
+        sup = super(StreamExtension, self)._init_calls_around(cleanlist, have_slotfunc)
         ret = odict(sup.iteritems())
         ret['streamin'] = call_streamin
         return ret
     # End def #}}}
 
-    def _init_calls_after(self, cleanlist): #{{{
+    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
         def call_stream(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = self.caller
+            callfunc = None
             for sfunc, t in cleanlist('stream'):
+                if not callfunc:
+                    callfunc = self.caller
                 ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
             return ret
         # End def #}}}
-        sup = super(StreamExtension, self)._init_calls_after(cleanlist)
+        sup = super(StreamExtension, self)._init_calls_after(cleanlist, have_slotfunc)
         ret = odict()
         ret['stream'] = call_stream
         ret.update(sup.iteritems())
@@ -237,7 +240,7 @@ class ReplaceExtension(SignalExtension): #{{{
         yield 'replace'
     # End def #}}}
 
-    def _init_calls_replace(self, cleanlist): #{{{
+    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
         def call_replace(self): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
@@ -255,7 +258,7 @@ class ReplaceExtension(SignalExtension): #{{{
             # Need to return an iterator
             yield do_wrap
         # End def #}}}
-        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist)
+        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
         ret['replace'] = call_replace
         return ret
     # End def #}}}
@@ -294,11 +297,13 @@ class ChooseExtension(SignalExtension): #{{{
         connections.update((n, (connect_choosefunc, disconnect_choosefunc)) for n in init)
     # End def #}}}
 
-    def _init_calls_replace(self, cleanlist): #{{{
+    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
         choice, callchoice = make_choice_helpers(self, callfunc, cleanlist)
         def call_choose(self): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
+                    if not have_slotfunc('choose'):
+                        return func(*args, **kwargs)
                     func_choice = choice(self, 'choose', 'chooser', self.chooser_policy, func, False, None, *args, **kwargs)
                     return callchoice(self, func, func_choice, False, None, *args, **kwargs)
                 # End def #}}}
@@ -311,6 +316,8 @@ class ChooseExtension(SignalExtension): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
                     ret = func(*args, **kwargs)
+                    if not have_slotfunc('choosereturn'):
+                        return ret
                     ret_choice = choice(self, 'choosereturn', 'return_chooser', self.return_chooser_policy, 
                             func, True, ret, *args, **kwargs)
                     return callchoice(self, func, ret_choice, True, ret, *args, **kwargs)
@@ -324,7 +331,7 @@ class ChooseExtension(SignalExtension): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
                     gen = func(*args, **kwargs)
-                    if not isinstance(gen, GeneratorType) or not self._funclist['chooseyield']:
+                    if not isinstance(gen, GeneratorType) or not have_slotfunc('chooseyield'):
                         return gen
                     def mk_gen(gen): #{{{
                         for ret in gen:
@@ -339,7 +346,7 @@ class ChooseExtension(SignalExtension): #{{{
             # Need to return an iterator
             yield do_wrap
         # End def #}}}
-        ret = super(ChooseExtension, self)._init_calls_replace(cleanlist)
+        ret = super(ChooseExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
         ret['choose'] = call_choose
         ret['choosereturn'] = call_choosereturn
         ret['chooseyield'] = call_chooseyield
