@@ -103,12 +103,13 @@ Contents
 
     - 4.2.1 Cake and Pie
 
-      - 4.2.1.1 Around We Go
-      - 4.2.1.2 Remind Me When We Return
-      - 4.2.1.3 See, There's This Pipe, And...
-      - 4.2.1.4 What Do You Mean "I'm Expendable"?!
-      - 4.2.1.5 Choices, Choices
-      - 4.2.1.6 Piece Of Cake, Easy As Pie
+      - 4.2.1.1 Core Concepts
+      - 4.2.1.2 Around We Go
+      - 4.2.1.3 Remind Me When We Return
+      - 4.2.1.4 See, There's This Pipe, And...
+      - 4.2.1.5 What Do You Mean "I'm Expendable"?!
+      - 4.2.1.6 Choices, Choices
+      - 4.2.1.7 Piece Of Cake, Easy As Pie
 
     - 4.2.2 Meet Me Later Than After
 
