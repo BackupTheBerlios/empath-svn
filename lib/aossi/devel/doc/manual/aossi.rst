@@ -118,13 +118,14 @@ Contents
     - 5.3.1 Here's Some Paint
 
       - 5.3.1.1 It Better Be Ready When I Get Back
-      - 5.3.1.2 Fashions From Around The World
-      - 5.3.1.3 On The Other Side of the Stream
-      - 5.3.1.4 Make A Decision Already!
-      - 5.3.1.5 Remain Flexible
-      - 5.3.1.6 Let's Do It All!
-      - 5.3.1.7 Is This A Black-Tie Affair?
-      - 5.3.1.8 Pigs Can Fly... If They're Pink
+      - 5.3.1.2 Will You Train Your Replacement?
+      - 5.3.1.3 Fashions From Around The World
+      - 5.3.1.4 On The Other Side of the Stream
+      - 5.3.1.5 Make A Decision Already!
+      - 5.3.1.6 Remain Flexible
+      - 5.3.1.7 Let's Do It All!
+      - 5.3.1.8 Is This A Black-Tie Affair?
+      - 5.3.1.9 Pigs Can Fly... If They're Pink
 
     - 5.3.2 Standard Phone Rates Apply
     - 5.3.3 Send That Signal
