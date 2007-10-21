@@ -8,13 +8,16 @@
 __all__ = ('iscallable', 'methodtype', 'methodname', 'cref', 'isreadonly', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
             'StopCascade', 'cargnames', 'cargdefstr', 'cargval', 'iswrapped', 'callableobj', 'cgetargspec', 'callable_wrapper',
             'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE')
-from aossi.impex import import_, CopyModuleImporter
-_ab = import_(':aossi:__builtin__', importer=CopyModuleImporter(copy_prefix=':aossi:'))
+#from aossi.impex import import_, CopyModuleImporter
+#_ab = import_(':aossi:__builtin__', importer=CopyModuleImporter(copy_prefix=':aossi:'))
+import __builtin__ as _ab
 property = _ab.property
 
 from weakref import ref
-from inspect import isfunction as _isf, ismethod as _ism, isbuiltin as _isb, \
-        isclass, formatargspec, getargspec
+from inspect import (isfunction as _isf, ismethod as _ism, isbuiltin as _isb, 
+        isclass, formatargspec, getargspec)
+
+from smanstal.types.callobj import quote as cref
 
 METHODTYPE_NOTMETHOD = 0
 METHODTYPE_UNBOUND = 1
@@ -137,27 +140,27 @@ def methodname(obj): #{{{
             return i
 # End def #}}}
 
-class cref(object): #{{{
-    __slots__ = ('_ref', '_isweak', '__weakref__')
-    def __init__(self, obj, callback=None, **kwargs): #{{{
-        weak = bool(kwargs.get('weak', True))
-        self._ref = obj
-        self._isweak = weak
-        if weak:
-            self._ref = ref(obj, callback)
-    # End def #}}}
+#class cref(object): #{{{
+#    __slots__ = ('_ref', '_isweak', '__weakref__')
+#    def __init__(self, obj, callback=None, **kwargs): #{{{
+#        weak = bool(kwargs.get('weak', True))
+#        self._ref = obj
+#        self._isweak = weak
+#        if weak:
+#            self._ref = ref(obj, callback)
+#    # End def #}}}
 
-    def __call__(self): #{{{
-        if self._isweak:
-            return self._ref()
-        return self._ref
-    # End def #}}}
+#    def __call__(self): #{{{
+#        if self._isweak:
+#            return self._ref()
+#        return self._ref
+#    # End def #}}}
 
-    # Properties #{{{
-    isweak = property(lambda s: s._isweak)
-    ref = property(lambda s: s._ref)
-    # End properties #}}}
-# End class #}}}
+#    # Properties #{{{
+#    isweak = property(lambda s: s._isweak)
+#    ref = property(lambda s: s._ref)
+#    # End properties #}}}
+## End class #}}}
 
 def isreadonly(obj, aname, attr): #{{{
     ret = False

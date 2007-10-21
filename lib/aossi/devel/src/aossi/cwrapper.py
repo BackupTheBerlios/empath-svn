@@ -7,41 +7,45 @@
 
 __all__ = ('CallableWrapper', 'cid', 'num_static_args')
 
-from aossi.impex import import_, CopyModuleImporter
-#__builtins__.update(import_(':aossi:__builtin__', attr=True, importer=CopyModuleImporter(copy_prefix=':aossi:')))
-#globals().update(__builtins__)
-_ab = import_(':aossi:__builtin__', importer=CopyModuleImporter(copy_prefix=':aossi:'))
-property = _ab.property
-
 from warnings import warn
 from types import MethodType as method
 from inspect import getargspec, isfunction as _isf, ismethod as _ism, isbuiltin as _isb, isclass
-from aossi.misc import (iscallable, iswrapped, methodtype, cref, ChoiceObject, callableobj,
+from aossi.util import (iscallable, needs_wrapping, methodtype, cref, ChoiceObject, callableobj,
         METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND, METHODTYPE_INSTANCE, METHODTYPE_CLASS)
 
+__all__ = ('cid', 'num_static_args', 'CallableWrapper')
+
 def cid(obj): #{{{
-    isinstance = _ab.isinstance
     if isinstance(obj, CallableWrapper) or isinstance(obj, ChoiceObject):
         return obj.cid
-    return _ab.hash(obj)
+    return hash(obj)
 # End def #}}}
 
+# Returns 2-tuple:
+#   - Number of mandatory arguments expected when calling the callable
+#       - -1 == not a callable
+#       - Any default values will reduce this number
+#   - Maximum number of arguments expected, None == unlimited
+# Assumes obj is either a function, a method, a CallableWrapper,
+# or a callable with a __call__ method (not a method-wrapper)
 def num_static_args(obj): #{{{
     if not iscallable(obj):
         return -1, None
     if _ism(obj):
         obj = obj.im_func
-    if _ab.isinstance(obj, CallableWrapper):
+    if isinstance(obj, CallableWrapper):
         return obj._numargs, obj._maxargs
     if not _isf(obj):
         obj = obj.__call__
+        if not _ism(obj):
+            return -1, None
     argspec = getargspec(obj)
-    l, d = _ab.len(argspec[0]), argspec[3]
+    l, d = len(argspec[0]), argspec[3]
     max = l
     if argspec[1]:
         max = None
     if d:
-        l -= _ab.len(d)
+        l -= len(d)
     return l, max
 # End def #}}}
 
@@ -49,24 +53,24 @@ class CallableWrapper(object): #{{{
     __slots__ = ('__weakref__', '_object', '_function', '_newcall', '_numargs', '_maxargs', '_funcid', 
                     '__name__', '_methodtype')
     def __init__(self, obj, callback=None, **kwargs): #{{{
-        self.__name__ = _ab.getattr(obj, '__name__', 'Unnamed Callable')
-        isw = iswrapped(obj)
+        self.__name__ = getattr(obj, '__name__', 'UnnamedCallable')
+        isw = needs_wrapping(obj)
         obj = callableobj(obj)
         if not obj:
             raise TypeError('Argument must be a valid callable object')
-        elif callback is not None and not callable(callback):
+        elif callback is not None and not iscallable(callback):
             raise TypeError('callback argument must be a callable object')
 
         self._object = None
         self._function = None
         self._newcall = self.call
         self._numargs, self._maxargs = num_static_args(obj)
-        isweak = _ab.bool(kwargs.get('weak', True))
+        isweak = bool(kwargs.get('weak', True))
         if isw:
             isweak = False
 
         mtype = methodtype(obj)
-#        self._methodtype = mtype
+        self._methodtype = mtype
         if mtype not in (METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND):
             o = obj.im_class
             if mtype == METHODTYPE_INSTANCE:
@@ -79,11 +83,12 @@ class CallableWrapper(object): #{{{
     # End def #}}}
 
     def __call__(self, *args, **kwargs): #{{{
+        nc = self._newcall
         if self._isdead():
             warn('Calling a dead wrapper', RuntimeWarning, stacklevel=2)
             return
-        elif self._newcall:
-            return self._newcall(*args, **kwargs)
+        elif nc:
+            return nc(*args, **kwargs)
 
         return self.call(*args, **kwargs)
     # End def #}}}
@@ -94,7 +99,7 @@ class CallableWrapper(object): #{{{
         # no args got passed in i.e. no self reference,
         # add the object reference.
         o = self._object
-        largs = _ab.len(args)
+        largs = len(args)
         withself_numargs = self._numargs - 1
         sendself = self._maxargs is not None and largs >= withself_numargs and largs <= self._maxargs - 1 
         sendself = sendself or (self._maxargs is None and largs >= withself_numargs)
@@ -108,6 +113,8 @@ class CallableWrapper(object): #{{{
         self._newcall = self.call
     # End def #}}}
 
+    # Wrapper functions will get passed the self reference
+    # for the CallableWrapper object
     def wrap(self, func): #{{{
         if not iscallable(func):
             raise TypeError('Argument must be a valid callable object')
@@ -124,11 +131,12 @@ class CallableWrapper(object): #{{{
     # End def #}}}
 
     def _getcallable(self): #{{{
-        if self._object is None:
-            return self._function()
-        elif self._object() is None:
+        sobj, sfun = self._object, self._function
+        if sobj is None:
+            return sfun()
+        elif sobj() is None:
             return None
-        return self._function
+        return sfun
     # End def #}}}
 
     def _get_original(self): #{{{
@@ -142,19 +150,19 @@ class CallableWrapper(object): #{{{
             if isclass(obj):
                 im_class = obj
             else:
-                im_self = obj
-                im_class = obj.__class__
+                im_self, im_class = obj, obj.__class__
+        gc_ret = self._getcallable()
         if im_self or im_class:
-            return method(self.callable, im_self, im_class)
-        return self.callable
+            return method(gc_ret, im_self, im_class)
+        return gc_ret
     # End def #}}}
 
     def _get_ismethod(self): #{{{
-        if self.isdead:
+        if self._isdead():
             raise ValueError("Cannot determine callable type: dead reference")
         return bool(self._object)
     # End def #}}}
-    
+
     # Properties #{{{
     numargs = property(lambda s: s._numargs)
     maxargs = property(lambda s: s._maxargs)
@@ -163,7 +171,7 @@ class CallableWrapper(object): #{{{
     cid = property(lambda s: s._funcid)
     original = property(lambda s: s._get_original())
     ismethod = property(lambda s: s._get_ismethod())
-#    methodtype = property(lambda s: s._methodtype)
+    methodtype = property(lambda s: s._methodtype)
     # End properties #}}}
 # End class #}}}
 
