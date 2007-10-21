@@ -732,9 +732,25 @@ def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
                 raise TypeError("The 'sigext' argument expected SignalExtension classes, got %s instead" %ext.__name__)
             sigapp(ext)
         sigapp(BaseSignal)
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1015123066
         _NewDecoSignal = newclass('_NewDecoSignal', tuple(signature), 
                                   dict(__slots__ = ()))
+        return _NewDecoSignal(f, **sigkw)
+||||||| /tmp/decorators.py~base.nj9Lvu
+        cstr = """
+        class _NewDecoSignal(%s):
+            __slots__ = ()
+        """ %', '.join('signature[%i]' %i for i in xrange(len(signature)))
+        exec compile(cstr.strip(), '<string>', 'exec') in locals()
+        return _NewDecoSignal(f, **sigkw)
+=======
+        cstr = """
+        class _NewDecoSignal(%s):
+            __slots__ = ()
+        """ %', '.join('signature[%i]' %i for i in xrange(len(signature)))
+        exec compile(cstr.strip(), '<string>', 'exec') in locals()
         return _NewDecoSignal(f, **sigopt)
+>>>>>>> /tmp/decorators.py~other.fqSWuI
     # End def #}}}
     def settings(func): #{{{
         signal = getattr(func, 'signal', None)
@@ -743,13 +759,31 @@ def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
         elif not _isf(func) and not isclass(func):
             raise TypeError('argument must be a python function or a python class')
         else:
-            signal = mkdeco(func, opt)
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1015123066
+            signal = mkdeco(func, kwargs)
             args, vargs, vkeys, defaults = spec = cgetargspec(func)
             code_args = args + [v for v in (vargs, vkeys) if v != None]
             fcode = Code(CodeList(), (), code_args, bool(vargs), bool(vkeys), True, 'f', '<dynamic decorator signal function>', 1, None)
             fcode.code[:] = ([(SetLineno, 2), (LOAD_GLOBAL, 'signal')] + bp_call_args(*spec) + 
                             [(RETURN_VALUE, None)])
             DecoSignalFunction = newfunction(fcode.to_code(), locals(), 'DecoSignalFunction', default_argvals(args, defaults))
+||||||| /tmp/decorators.py~base.nj9Lvu
+            defstr, callstr = cargdefstr(func)
+            signal = mkdeco(func, kwargs)
+            fstr = """
+            def DecoSignalFunction(%s):
+                return signal(%s)
+            """ %(defstr, callstr)
+            exec compile(fstr.strip(), '<string>', 'exec') in locals()
+=======
+            defstr, callstr = cargdefstr(func)
+            signal = mkdeco(func, opt)
+            fstr = """
+            def DecoSignalFunction(%s):
+                return signal(%s)
+            """ %(defstr, callstr)
+            exec compile(fstr.strip(), '<string>', 'exec') in locals()
+>>>>>>> /tmp/decorators.py~other.fqSWuI
         d = DecoSignalFunction
         d = wraps(func)(d)
         d.signal = signal
