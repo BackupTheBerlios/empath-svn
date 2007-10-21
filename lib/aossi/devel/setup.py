@@ -6,11 +6,13 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 from setuptools import setup, find_packages, Feature, Extension
 
-speedcore = Feature(
+speedups = Feature(
     "optional C speed-enhancement modules",
     standard = True,
     ext_modules = [
-        Extension("aossi._speedcore", ["src/aossi/_speedcore.pyx"]),
+        Extension("aossi._speedups.core", ["src/aossi/_speedups/core.pyx"]),
+        Extension("aossi._speedups.cwrapper", ["src/aossi/_speedups/cwrapper.pyx"]),
+        Extension("aossi._speedups.util", ["src/aossi/_speedups/util.pyx"]),
     ]
 )
 
@@ -19,7 +21,7 @@ setup(
     version="0.4.0-1",
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    features={'speedcore': speedcore},
+    features={'speedups': speedups},
 
 #    package_data={'aossi_docs': 'data/somefile.dat'},
 
