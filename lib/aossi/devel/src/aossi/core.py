@@ -88,8 +88,9 @@ class BaseSignal(object): #{{{
         if not iscallable(signal):
             raise TypeError("Argument must be callable.")
         expected = ('weak', 'active', 'activate_on_call')
-        if any(kw for kw in kwargs if kw not in expected):
-            raise ValueError("Detected unexpected arguments: %s" %', '.join([found]))
+        unexpected = [kw for kw in kwargs if kw not in expected]
+        if unexpected:
+            raise ValueError("Detected unexpected arguments: %s" %', '.join(unexpected))
         weak = kwargs.get('weak', True)
         self._func = CallableWrapper(signal, weak=weak)
         self.__name__ = self._func.__name__
