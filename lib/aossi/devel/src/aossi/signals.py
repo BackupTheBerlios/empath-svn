@@ -5,14 +5,15 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+# stdlib imports
+from types import GeneratorType
+
+# package imports
 from aossi.core import *
 from aossi.cwrapper import CallableWrapper, cid
-from aossi.util import iscallable, ChooseCallable, ChoiceObject
+from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
 from aossi.util.introspect import mro
-
 from aossi.util.odict import odict
-
-from smanstal.decorators import property_
 
 __all__ = ('SignalExtension', 'AroundExtension', 'OnReturnExtension', 'StreamExtension',
             'ReplaceExtension', 'ChooseExtension', 'DefaultExtension', 'Signal')
@@ -125,14 +126,6 @@ class AroundExtension(SignalExtension): #{{{
             yield n
         yield 'around'
     # End def #}}}
-
-    @property_
-    def around(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('around'))
-        # End def #}}}
-        return locals()
-    # End def #}}}
 # End class #}}}
 # ==================================================================================
 # OnReturnExtension
@@ -161,14 +154,6 @@ class OnReturnExtension(SignalExtension): #{{{
         for n in super(OnReturnExtension, self)._init_default_connections():
             yield n
         yield 'onreturn'
-    # End def #}}}
-
-    @property_
-    def onreturn(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('onreturn'))
-        # End def #}}}
-        return locals()
     # End def #}}}
 # End class #}}}
 # ==================================================================================
@@ -221,22 +206,6 @@ class StreamExtension(SignalExtension): #{{{
         yield 'streamin'
         yield 'stream'
     # End def #}}}
-
-    @property_
-    def stream(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('stream'))
-        # End def #}}}
-        return locals()
-    # End def #}}}
-
-    @property_
-    def streamin(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('streamin'))
-        # End def #}}}
-        return locals()
-    # End def #}}}
 # End class #}}}
 # ==================================================================================
 # ReplaceExtension
@@ -285,10 +254,11 @@ class ChooseExtension(SignalExtension): #{{{
     __slots__ = ()
     def __init__(self, signal, **kwargs): #{{{
         self._vars = getattr(self, '_vars', dict())
-        self._vars.update(choosepolicy=None, chooseretpolicy=None)
+        self._vars.update(choosepolicy=None, chooseretpolicy=None, chooseyieldpolicy=None)
         super(ChooseExtension, self).__init__(signal, **kwargs)
         self.chooser = ChooseCallable
         self.return_chooser = ChooseCallable
+        self.yield_chooser = ChooseCallable
     # End def #}}}
 
     def _init_funclist_names(self): #{{{
@@ -296,11 +266,12 @@ class ChooseExtension(SignalExtension): #{{{
             yield n
         yield 'choose'
         yield 'choosereturn'
+        yield 'chooseyield'
     # End def #}}}
 
     def _init_connections(self, connections): #{{{
         super(ChooseExtension, self)._init_connections(connections)
-        init = ('choose', 'choosereturn')
+        init = ('choose', 'choosereturn', 'chooseyield')
         connections.update((n, (connect_choosefunc, disconnect_choosefunc)) for n in init)
     # End def #}}}
 
@@ -330,9 +301,29 @@ class ChooseExtension(SignalExtension): #{{{
             # Need to return an iterator
             yield do_wrap
         # End def #}}}
+        def call_chooseyield(self): #{{{
+            def do_wrap(func): #{{{
+                def newcall(cw, *args, **kwargs): #{{{
+                    gen = func(*args, **kwargs)
+                    if not isinstance(gen, GeneratorType):
+                        gen = (gen,)
+                    def mk_gen(gen): #{{{
+                        for ret in gen:
+                            ret_choice = choice(self, 'chooseyield', 'yield_chooser', self.yield_chooser_policy, 
+                                    func, True, ret, *args, **kwargs)
+                            yield callchoice(self, func, ret_choice, True, ret, *args, **kwargs)
+                    # End def #}}}
+                    return mk_gen(gen)
+                # End def #}}}
+                return newcall
+            # End def #}}}
+            # Need to return an iterator
+            yield do_wrap
+        # End def #}}}
         ret = super(ChooseExtension, self)._init_calls_replace(cleanlist)
         ret['choose'] = call_choose
         ret['choosereturn'] = call_choosereturn
+        ret['chooseyield'] = call_chooseyield
         return ret
     # End def #}}}
 
@@ -345,7 +336,7 @@ class ChooseExtension(SignalExtension): #{{{
         def fcond(self, listname, siglist, f, index): #{{{
             if not super_fcond(self, listname, siglist, f, index):
                 return False
-            if choosercid and listname in ('choose', 'choosereturn'):
+            if choosercid and listname in ('choose', 'choosereturn', 'chooseyield'):
                 if choosercid != f.choosefunc.cid:
                     return False
             return True
@@ -368,8 +359,10 @@ class ChooseExtension(SignalExtension): #{{{
     # Properties #{{{
     chooser_policy = property(lambda s: s._vars['choosepolicy'], lambda s, p: s._setpolicy('choosepolicy', p))
     return_chooser_policy = property(lambda s: s._vars['chooseretpolicy'], lambda s, p: s._setpolicy('chooseretpolicy', p))
+    yield_chooser_policy = property(lambda s: s._vars['chooseyieldpolicy'], lambda s, p: s._setpolicy('chooseyieldpolicy', p))
     chooser = property(lambda s: s._vars['chooser'], lambda s, c: s._setchooser('chooser', c))
     return_chooser = property(lambda s: s._vars['return_chooser'], lambda s, c: s._setchooser('return_chooser', c))
+    yield_chooser = property(lambda s: s._vars['yield_chooser'], lambda s, c: s._setchooser('yield_chooser', c))
     # End properties #}}}
 # End class #}}}
 # ==================================================================================
