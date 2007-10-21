@@ -3,6 +3,7 @@ commit[.]log
 .*[.]py[co]
 .*[.].*~
 ([^/]*[/])*[.]svn
+tests[/]profile[/]data[/].*
 src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
