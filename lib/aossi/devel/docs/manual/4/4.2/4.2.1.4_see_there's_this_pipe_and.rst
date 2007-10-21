@@ -2,9 +2,10 @@
 4.2.1.4 See, There's This Pipe, And...
 =======================================
 
-While there is a built-in facility to do operations before or after a
-signal is run based on the arguments sent to a signal, there is no similar
-facility for operating on the output of a signal.
+Sometimes it is useful to be able to chain functions together to filter,
+transform, or otherwise operate on either the input or output of a signal.
+The following implements the ``SignalExtension`` which provides two slots,
+``streamin`` and ``stream`` that handles input and output respectively.
 
 Implementation
 ---------------
