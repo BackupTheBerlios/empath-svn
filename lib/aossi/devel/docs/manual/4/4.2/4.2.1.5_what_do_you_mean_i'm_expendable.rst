@@ -1,0 +1,98 @@
+============================================
+4.2.1.5 What Do You Mean "I'm Expendable"?!
+============================================
+
+For the most part, the underlying callable of a signal should be useful by
+itself. But some situations call for temporarily switching out the signal
+callable with another callable. The ``ReplaceExtension`` provides a way to
+do this while preserving every previous signal callable.
+
+Implementation
+---------------
+
+>>> from aossi.signals import SignalExtension
+>>> class ReplaceExtension(SignalExtension):
+...    __slots__ = ()
+...    def _init_funclist_names(self):
+...        for n in super(ReplaceExtension, self)._init_funclist_names():
+...            yield n
+...        yield 'replace'
+...    def _init_calls_replace(self, cleanlist):
+...        def call_replace(self):
+...            def do_wrap(func):
+...                def newcall(cw, *args, **kwargs):
+...                    callfunc, rfunc, ret = self.caller, None, None
+...                    for sfunc, t in cleanlist('replace'):
+...                        rfunc = sfunc
+...                    if rfunc:
+...                        ret = callfunc(self, rfunc, 'replace', False, ret, *args, **kwargs)
+...                    else:
+...                        ret = func(*args, **kwargs)
+...                    return ret
+...                return newcall
+...            # Need to return an iterator
+...            yield do_wrap
+...        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist)
+...        ret['replace'] = call_replace
+...        return ret
+...    def _init_default_connections(self):
+...        for n in super(ReplaceExtension, self)._init_default_connections():
+...            yield n
+...        yield 'replace'
+...
+
+Besides the methods overridden as per the previous extensions, the method
+that defines the slots available in the **replace** category is 
+``_init_calls_replace()``. The **replace** category is almost identical to
+the **around** category but is meant to be the closest wrappers to the underlying
+signal callable.
+
+
+Usage
+------
+
+To use this extension, we need to mix the above class into a subclass of
+``BaseSignal``:
+
+>>> from aossi.core import BaseSignal
+>>> class ReplaceSignal(ReplaceExtension, BaseSignal): pass
+...
+>>> def test(l):
+...      l.append('signal')
+...      return l
+...
+>>> def simple_replace(l):
+...     l.append('replaced')
+...     return l
+...
+
+
+The above implementation would then result in:
+
+>>> signal = ReplaceSignal(test)
+>>> print signal([])
+['signal']
+>>> signal.connect(replace=[simple_replace])
+>>> print signal([])
+['replaced']
+
+You can in fact connect multiple replace callables. In this situation, the
+callable used for the signal will be the latest replace callable that was
+connected:
+
+>>> def new_replace(l):
+...     l.append('new replace')
+...     return l
+...
+>>> signal.connect(replace=[new_replace])
+>>> print len(list(signal.slot('replace')))
+2
+>>> print signal([])
+['new replace']
+>>> signal.disconnect(replace=[new_replace])
+>>> print signal([])
+['replaced']
+>>> signal.disconnect(replace=[simple_replace])
+>>> print signal([])
+['signal']
+
