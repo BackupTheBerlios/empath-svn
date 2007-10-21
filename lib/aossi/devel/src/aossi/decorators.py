@@ -94,12 +94,14 @@ class MetaDecoSignalExtension(type): #{{{
         setup = {'__genericdecorators__': ['after', 'before'],
                  '__decorators__': ['global_settings', 'settings'],
                  '__dependencies__': []}
+        def mkdeco(deconame): 
+            def deco(self, f): return self._generic(f, deconame)
+            return deco
         for name, default in setup.iteritems():
             clsdict[name] = gen = mcls._magic_sets(name, default, (classname, bases, clsdict))
             if name == '__genericdecorators__':
                 for deconame in gen:
-                    def deco(self, f): return self._generic(f, deconame)
-                    clsdict[deconame] = deco
+                    clsdict[deconame] = mkdeco(deconame)
         return super(MetaDecoSignalExtension, mcls).__new__(mcls, classname, bases, clsdict)
     # End def #}}}
 
