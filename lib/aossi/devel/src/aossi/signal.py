@@ -5,8 +5,6 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-__all__ = ('Signal',)
-
 from aossi.core import *
 from aossi.cwrapper import CallableWrapper, cid
 from aossi.util import iscallable, ChooseCallable, ChoiceObject
