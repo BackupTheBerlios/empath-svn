@@ -169,12 +169,16 @@ class Signal(BaseSignal): #{{{
 
     def _init_calls_after(self, cleanlist): #{{{
         def call_streamin(self, cw, func, ret, args, kwargs): #{{{
-            callfunc, cnam = self.caller, 'streamin'
-            for cls in mro(args[0].__class__):
-                sig = getsignal(getattr(cls, cw.__name__, None)) if args else None
-                if sig and cw is sig.func:
-                    args = (args[0], list(args[1:]), kwargs)
-                    break
+            callfunc, cnam, sig, signame = self.caller, 'streamin', None, cw.__name__
+            if args:
+                for cls in mro(args[0].__class__):
+                    sig = getsignal(getattr(cls, signame, None))
+                    if sig and cw is sig.func:
+                        break
+                else:
+                    sig = None
+            if sig:
+                args = (args[0], list(args[1:]), kwargs)
             else:
                 args = (list(args), kwargs)
             for sfunc, t in cleanlist(cnam):
