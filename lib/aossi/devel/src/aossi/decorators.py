@@ -95,8 +95,11 @@ class MetaDecoSignalExtension(type): #{{{
                  '__decorators__': ['global_settings', 'settings'],
                  '__dependencies__': []}
         for name, default in setup.iteritems():
-            clsdict[name] = mcls._magic_sets(name, default, (classname, bases, clsdict))
-        del setup
+            clsdict[name] = gen = mcls._magic_sets(name, default, (classname, bases, clsdict))
+            if name == '__genericdecorators__':
+                for deconame in gen:
+                    def deco(self, f): return self._generic(f, deconame)
+                    clsdict[deconame] = deco
         return super(MetaDecoSignalExtension, mcls).__new__(mcls, classname, bases, clsdict)
     # End def #}}}
 
@@ -105,6 +108,7 @@ class MetaDecoSignalExtension(type): #{{{
         classname, bases, clsdict = newargs
         past = set(default)
         cur = clsdict.pop(name, [])
+        updatepast = past.update
         if not isbasemetaclass(bases, mcls):
             allowed = (CustomDecoSignal, DecoSignalExtension)
             for b in bases:
@@ -114,7 +118,7 @@ class MetaDecoSignalExtension(type): #{{{
                     battr = getattr(bcls, name, None)
                     if battr is None or not issubclass(bcls, allowed):
                         continue
-                    past.update(battr)
+                    updatepast(battr)
         return frozenset(past) | frozenset(str(s) for s in cur)
     # End def #}}}
 # End class #}}}
@@ -140,15 +144,15 @@ class DecoSignalExtension(SignalExtension): #{{{
         return super(DecoSignalExtension, self).__call__(*args, **kwargs)
     # End def #}}}
 
-    def __getattribute__(self, name): #{{{
-        generic_deco = ogetattr(self, '__genericdecorators__')
-        if name == '__genericdecorators__':
-            return generic_deco
-        elif name in generic_deco:
-            return (lambda f: ogetattr(self, '_generic')(f, name))
-        return ogetattr(self, name)
-#        return super(DecoSignalExtension, self).__getattribute__(name)
-    # End def #}}}
+#    def __getattribute__(self, name): #{{{
+#        generic_deco = ogetattr(self, '__genericdecorators__')
+#        if name == '__genericdecorators__':
+#            return generic_deco
+#        elif name in generic_deco:
+#            return (lambda f: ogetattr(self, '_generic')(f, name))
+#        return ogetattr(self, name)
+##        return super(DecoSignalExtension, self).__getattribute__(name)
+#    # End def #}}}
 
     def _blocked_csettings(self): #{{{
         return set(['globals', 'clear'])
@@ -296,10 +300,10 @@ class DecoSignalExtension(SignalExtension): #{{{
     @property_
     def connect_settings(): #{{{
         def fget(self): #{{{
-            return s._allsettings()
+            return self._allsettings()
         # End def #}}}
         def fset(self, cs): #{{{
-            s._set_settings(cs)
+            self._set_settings(cs)
         # End def #}}}
         return locals()
     # End def #}}}
