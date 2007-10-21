@@ -1,0 +1,10 @@
+commit[.]log
+[.].*[.]sw[po]
+.*[.]py[co]
+.*[.].*~
+([^/]*[/])*[.]svn
+src[/].*[.]egg-info[/].*
+doc[/]html[/].*
+screenrc
+[.]coverage
+tests[/]profile[/]data[/].*
