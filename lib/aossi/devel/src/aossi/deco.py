@@ -109,7 +109,7 @@ class DecoSignal(Signal): #{{{
         if not isinstance(kwargs, dict):
             raise TypeError('connect_settings attribute must be a dict')
         expected = ('clear', 'weak', 'weakcondf', 'globals', 'chooser', 'return_chooser', 
-                    'policy', 'return_policy', 'priority', 'ismethod')
+                    'policy', 'return_policy', 'priority', 'ismethod', 'callmethod')
         exp_startswith = ('margs_', 'mkw_', 'match_')
         startswith = lambda x: True in (x.startswith(s) for s in exp_startswith)
         if any(i for i in kwargs if i not in expected and not startswith(i)):
@@ -130,7 +130,7 @@ class DecoSignal(Signal): #{{{
 
     def _func_settings(self, func): #{{{
         s = self._csettings()
-        block = ('ismethod',)
+        block = set(['ismethod', 'callmethod'])
         news = dict((k, v) for k, v in s.iteritems() if k not in block)
         ism = bool(s.get('ismethod', False))
         istup = isinstance(func, tuple)
@@ -138,6 +138,13 @@ class DecoSignal(Signal): #{{{
         # Add to methods var so callfunc can process both
         # conditional callables and target callables
         if ism:
+            callmeth = bool(s.get('callmethod', False))
+            if callmeth:
+                name = func.__name__
+                def f(*args, **kwargs): #{{{
+                    return getattr(args[0], name)(*args[1:], **kwargs)
+                # End def #}}}
+                func = (func[0], f) if istup else f
             if istup:
                 for f in func:
                     meth_app(f)
