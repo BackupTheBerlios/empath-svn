@@ -1,0 +1,46 @@
+======
+AOSSI
+======
+
+AOSSI is a pure python signal/slot implementation. It draws inspiration 
+from signal-slots in QT [1]_, the AOP support from the Dojo toolkit [2]_, 
+the RuleDispatch package from PEAK [3]_, and a python cookbook recipe [4]_  
+as well as a C++ library [5]_.
+
+Dependencies
+=============
+
+Python Interpreter
+-------------------
+AOSSI currently requires version 2.5 of the python interpreter. However,
+as there are no parts that require anything specific to python2.5, a future
+version of this package will most likely be refactored to support python2.4
+as well.
+
+External Packages
+------------------
+AOSSI depends on two external packages:
+
+* smanstal
+* anyall
+
+Installation
+=============
+
+See the INSTALL file.
+
+Using this package
+===================
+
+See the manual located in the docs/manual/ directory.
+
+Links
+======
+
+.. [1] http://troll.no
+.. [2] http://dojotoolkit.org
+.. [3] http://peak.telecommunity.com
+.. [4] http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/439356
+.. [5] http://sigslot.sourceforge.net
+
+
