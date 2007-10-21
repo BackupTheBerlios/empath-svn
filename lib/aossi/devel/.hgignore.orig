@@ -1,0 +1,16 @@
+commit[.]log
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.2688727846
+[.].*[.]sw[po]
+.*[.]py[co]
+.*[.].*~
+([^/]*[/])*[.]svn
+src[/].*[.]egg-info[/].*
+docs[/]html[/].*
+screenrc
+[.]coverage
+||||||| /tmp/.hgignore~base.df5F8v
+[.].*[.]swp
+=======
+[.].*[.]swp
+.*[.]pyc
+>>>>>>> /tmp/.hgignore~other.bQ1RIE
