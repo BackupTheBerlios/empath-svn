@@ -18,8 +18,8 @@ from eqobj.validators.type import InstanceType
 from aossi.core import BaseSignal
 from aossi.signals import DefaultExtension, SignalExtension
 from aossi.cwrapper import cid
-from aossi.util import cargdefstr, StopCascade, isiterable, isclassmethod, isstaticmethod
-from aossi.util.introspect import isclass, isbasemetaclass, mro, isfunction as _isf, ismethod as _ism
+from aossi.util import cargdefstr, StopCascade, isiterable, isclassmethod, isstaticmethod, property_, cref
+from aossi.util.introspect import isclass, isbasemetaclass, mro, isfunction as _isf, ismethod as _ism, iscallable
 
 ogetattr = object.__getattribute__
 
@@ -129,7 +129,7 @@ class DecoSignalExtension(SignalExtension): #{{{
             if not isinstance(self, cls):
                 raise TypeError("CustomDecoSignal dependency not fulfilled: %s type required" %cls.__name__)
         self._vars = getattr(self, '_vars', dict())
-        self._vars.update(settings={}, global_settings={}, methods=[], prev=None)
+        self._vars.update(settings={}, global_settings={}, methods=[], prev=None, sigfunc=None)
         super(DecoSignalExtension, self).__init__(signal, **kwargs)
         self.caller = callfunc()
     # End def #}}}
@@ -235,6 +235,8 @@ class DecoSignalExtension(SignalExtension): #{{{
         if ism:
             callmeth = bool(s.get('callmethod', False))
             if callmeth and not mk_sig:
+                if options['overload']:
+                    raise ValueError("Keywords 'overload' and 'callmethod' cannot be True at the same time")
                 func_obj = func[1] if istup else func
                 name, vardict = func_obj.__name__, dict()
                 defstr, callstr = cargdefstr(func_obj)
@@ -278,7 +280,7 @@ class DecoSignalExtension(SignalExtension): #{{{
         s[name] = [pfunc]
         self.connect(**s)
         if opts['overload']:
-            return self
+            return self.signalfunc
         return func
     # End def #}}}
 
@@ -288,6 +290,23 @@ class DecoSignalExtension(SignalExtension): #{{{
 
     def _get_dependencies(self): #{{{
         return frozenset()
+    # End def #}}}
+
+    @property_
+    def signalfunc(): #{{{
+        def fget(self): #{{{
+            ret = self._vars['sigfunc']
+            return ret if not ret else ret()
+        # End def #}}}
+        def fset(self, val): #{{{
+            vars = self._vars
+            if vars['sigfunc'] is not None:
+                raise ValueError("Can only set 'signalfunc' property once")
+            if not iscallable(val) or getattr(val, 'signal', None) is not self:
+                raise TypeError('Attempt to set invalid signalfunc')
+            vars['sigfunc'] = cref(val)
+        # End def #}}}
+        return locals()
     # End def #}}}
 
     # Properties #{{{
@@ -644,6 +663,7 @@ def make_signal(**kwargs): #{{{
         d = DecoSignalFunction
         d = wraps(func)(d)
         d.signal = signal
+        signal.signalfunc = d
         for n in signal.decorators:
             setattr(d, n, getattr(signal, n))
         kwargs.pop('decoext_', ())
