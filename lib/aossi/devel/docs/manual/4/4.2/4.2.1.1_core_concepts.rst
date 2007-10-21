@@ -1,0 +1,34 @@
+========================
+4.2.1.1 Core Concepts
+========================
+
+To understand the following implementations, it is necessary to understand
+the core concepts at the heart of the ``BaseSignal`` class.
+
+Every signal can have four basic categories of slots which each run at
+different times during the invocation of a signal: before, replace, around,
+after.
+
+Before
+--------
+This slot category is reserved for slots that run entirely before the
+signal is called. An example of a slot in this category is the ``before``
+slot that is built into the ``BaseSignal`` class. Arguments cannot be
+modified, and the return value of any callables of these slots is ignored.
+
+Replace
+--------
+This slot category is reserved for slots that completely replaces the
+underlying callable a signal is based upon.
+
+Around
+-------
+This slot category is for slots that control the arguments being passed
+into a signal and the output being returned from a signal. An example of a
+slot in this category is the AroundExtension class implemented below.
+
+After
+------
+This slot category is for slots that run completely after the signal has
+been invoked. Slots in this category cannot modify the return value, and
+anything returned by the callables of these slots is ignored.

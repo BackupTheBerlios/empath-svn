@@ -1,0 +1,92 @@
+======================
+4.2.1.2 Around We Go
+======================
+
+Sometimes it is necessary to modify either the arguments passed to a signal
+or the output received from a signal. To facilitate this, we need to
+create an extension that wraps the signal and controls input and output.
+
+Implementation
+---------------
+
+>>> from aossi.signals import SignalExtension
+>>> class AroundExtension(SignalExtension):
+...    __slots__ = ()
+...    def _init_funclist_names(self):
+...        for n in super(AroundExtension, self)._init_funclist_names():
+...            yield n
+...        yield 'around'
+...    def _init_calls_around(self, cleanlist): #{{{
+...        def call_around(self):
+...            return (arfunc for arfunc, _ in cleanlist('around'))
+...        ret = super(AroundExtension, self)._init_calls_around(cleanlist)
+...        ret['around'] = call_around
+...        return ret
+...    def _init_default_connections(self):
+...        for n in super(AroundExtension, self)._init_default_connections():
+...            yield n
+...        yield 'around'
+...
+
+``AroundExtension`` specifies an empty __slots__ attribute to preserve the
+same memory-saving semantics of its ancestor, but for most purposes, it
+isn't needed.
+
+The ``_init_funclist_names()`` method returns a generator that yields the
+names of all the slots that will be associated with and acted upon by this
+extension. The above implementation yields all names from its ancestors
+before yielding its own extension-specific name.
+
+The ``_init_calls_around()`` method is responsible for defining the
+specific slots included in the **around** slot category. It gets passed a
+function, ``cleanlist()``, that when given a slot name, will return a
+generator that yields valid callables. Any invalid callables
+``cleanlist()`` finds is removed from the slot. Each slot name is mapped to
+a function that returns a generator that yields all callables that wrap
+around the signal.
+
+The ``_init_default_connections()`` method returns a generator that yields
+the names of every slot regardless of category. This method is invoked by
+the ``_init_connections()`` method which deals with assigning callables to
+handle connecting callables passed to the ``connect()`` method to their
+respective slots. An example of an implementation of the
+``_init_connections()`` method is provided in the ``ChooseExtension`` class
+below.
+
+Usage
+------
+
+To use this extension, we need to mix the above class into a subclass of
+``BaseSignal``:
+
+>>> from aossi.core import BaseSignal
+>>> class AroundSignal(AroundExtension, BaseSignal): pass
+...
+>>> def test(l):
+...      l.append('signal')
+...      return l
+...
+>>>
+
+Callables that get used in the ``around`` slot require a specific syntax:
+
+>>> def simple_around(func):
+...     def wrap(sig, l):
+...             l.append('around_before')
+...             ret = func(l)
+...             l.append('around_after')
+...             return ret
+...     return wrap
+...
+
+One can think of the outer most function as a decorator for a signal. The
+innermost function (``wrap()`` in the above example) then has the
+responsibility of calling the signal with any necessary arguments and
+providing a return value if one is required. The above implementation would
+then result in:
+
+>>> signal = AroundSignal(test)
+>>> signal.connect(around=[simple_around])
+>>> print signal([])
+['around_before', 'signal', 'around_after']
+

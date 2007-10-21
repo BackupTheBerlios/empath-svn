@@ -1,0 +1,116 @@
+=================================
+4.2.1.3 Remind Me When We Return
+=================================
+
+While there is a built-in facility to do operations before or after a
+signal is run based on the arguments sent to a signal, there is no similar
+facility for operating on the output of a signal.
+
+Implementation
+---------------
+
+>>> from aossi.signals import SignalExtension
+>>> class OnReturnExtension(SignalExtension):
+...    __slots__ = ()
+...    def _init_funclist_names(self):
+...        for n in super(OnReturnExtension, self)._init_funclist_names():
+...            yield n
+...        yield 'onreturn'
+...    def _init_calls_after(self, cleanlist):
+...        def call_onreturn(self, cw, func, ret, args, kwargs):
+...            callfunc = self.caller
+...            for rfunc, t in cleanlist('onreturn'):
+...                callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
+...            return ret
+...        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist)
+...        ret['onreturn'] = call_onreturn
+...        return ret
+...    def _init_default_connections(self):
+...        for n in super(OnReturnExtension, self)._init_default_connections():
+...            yield n
+...        yield 'onreturn'
+...
+
+``OnReturnExtension`` specifies an empty __slots__ attribute to preserve the
+same memory-saving semantics of its ancestor, but for most purposes, it
+isn't needed.
+
+The ``_init_funclist_names()`` method returns a generator that yields the
+names of all the slots that will be associated with and acted upon by this
+extension. The above implementation yields all names from its ancestors
+before yielding its own extension-specific name.
+
+The ``_init_calls_after()`` method is responsible for defining the specific
+slots included in the **after** slot category. It gets passed a function,
+``cleanlist()``, that when given a slot name, will return a generator that
+yields valid callables. Any invalid callables ``cleanlist()`` finds is
+removed from the slot. Each slot name is mapped to a function that returns
+the value returned by the signal after running every callable in the slot.
+Each callable in a slot is passed the return value of the signal.
+
+The ``_init_default_connections()`` method returns a generator that yields
+the names of every slot regardless of category. This method is invoked by
+the ``_init_connections()`` method which deals with assigning callables to
+handle connecting callables passed to the ``connect()`` method to their
+respective slots. An example of an implementation of the
+``_init_connections()`` method is provided in the ``ChooseExtension`` class
+implementation.
+
+``OnReturnExtension`` does one thing different than the ``AroundExtension``
+class: it uses the callable returned by the ``caller`` signal property to
+call each callable in its slot. For extensions that don't define a
+different callable, the ``caller`` property will have a default set to the
+following function:
+
+>>> def callfunc(sig, func, functype, pass_ret, ret, *args, **kwargs):
+...    sfunc = sig.func
+...    if pass_ret:
+...        args, kwargs = (ret,), {}
+...    # Going from a method signal to any callable, 
+...    # remove the `self` argument if required
+...    if sfunc.ismethod and len(args) >= sfunc.maxargs:
+...        obj = sfunc._object()
+...        fo = func._object
+...        if fo:
+...            fo = fo()
+...        if fo != obj and fo != obj.__class__:
+...            args = args[1:]
+...    return func(*args, **kwargs)
+...
+
+``callfunc`` is defined in the ``aossi.core`` module. This function either
+sends the return value as the only argument if ``pass_ret`` is True, and it
+also handles the case of going from a pure function signal to a method slot
+callable. The details of the above code play around with the internals of
+the ``CallableWrapper`` class which is defined in ``aossi.cwrapper`` as the
+``func`` argument will always be a ``CallableWrapper`` instance.
+
+Usage
+------
+
+To use this extension, we need to mix the above class into a subclass of
+``BaseSignal``:
+
+>>> from aossi.core import BaseSignal
+>>> class OnReturnSignal(OnReturnExtension, BaseSignal): pass
+...
+>>> def test(l):
+...      l.append('signal')
+...      return l
+...
+>>> def simple_onreturn(ret):
+...     ret.append('onreturn')
+...
+
+Even though it was mentioned before that ``after`` slot callables generally
+wouldn't affect the value returned from the signal, because the returned
+value is a mutable object, the ``simple_onreturn()`` function can slightly
+tweak the return value without completely replacing it.
+
+The above implementation would then result in:
+
+>>> signal = OnReturnSignal(test)
+>>> signal.connect(onreturn=[simple_onreturn])
+>>> print signal([])
+['signal', 'onreturn']
+
