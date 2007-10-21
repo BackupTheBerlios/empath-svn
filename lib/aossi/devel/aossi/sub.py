@@ -1,11 +1,10 @@
-# Module: aossi.subscription
+# Module: aossi.sub
 # File: subscription.py
 # Copyright (C) 2006 Ariel De Ocampo arieldeocampo@gmail.com
 #
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 from warnings import warn
-warn('This module is deprecated', DeprecationWarning)
 
 from aossi.signal import Signal
 from aossi.misc import iscallable
