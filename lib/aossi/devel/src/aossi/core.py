@@ -159,6 +159,10 @@ class BaseSignal(object): #{{{
     # End def #}}}
 
     def _cleanlist(self, l): #{{{
+        # If everything is being deleted e.g. program termination
+        # don't do anything and just return
+        if not dir(self):
+            return
         l = self._funclist[l]
         llen, i = len(l), 0
         while i < llen:
