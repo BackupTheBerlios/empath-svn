@@ -1,0 +1,141 @@
+===========================================
+4.1.5 Information, Stick, Too Much Shaking?
+===========================================
+
+Other ``BaseSignal`` Attributes
+=================================
+
+The following are some of the other attributes found on a BaseSignal object
+that may be useful.
+
+``reload()``
+-------------
+
+The ``reload()`` method uses the callables connected to the signal's
+various slots to recreate signal functionality.
+
+>>> from aossi.core import BaseSignal
+>>> def test(l):
+...     l.append('signal')
+...     return l
+...
+>>> def before(l):
+...     l.append('before')
+...
+>>> signal = BaseSignal(test, active=False)
+>>> signal.connect(before=[before])
+>>> print signal([])
+['signal']
+>>> signal.reload()
+>>> print signal.active
+True
+>>> print signal([])
+['before', 'signal']
+
+``slot(name)``
+------------------
+
+The ``slot()`` method returns a generator yielding the callables stored in
+the slot specified by the ``name`` argument. The ``cid()`` function is
+described further below.
+
+>>> from aossi.core import cid
+>>> a = set(map(cid, signal.slot('before')))
+>>> print cid(before) in a
+True
+
+``func``
+-----------
+
+The ``func`` attribute is a read-only property that returns the underlying
+``CallableWrapper`` object.
+
+``valid``
+-----------
+
+As mentioned in an earlier chapter, the ``valid`` attribute is a read-only
+property that returns a boolean value determining whether the reference to
+the underlying callable the signal is based on is dead/invalid.
+
+>>> def signal(l):
+...     l.append('signal')
+...     return l
+...
+>>> signal = BaseSignal(signal)
+>>> print signal.valid
+False
+>>> signal = BaseSignal(test)
+>>> print signal.valid
+True
+
+``connected``
+---------------
+
+This attribute is a read-only property that returns a boolean value
+determining if there are any callables connected to the signal.
+
+>>> print signal.connected
+False
+>>> signal.connect(before=[before])
+>>> print signal.connected
+True
+
+``caller``
+------------
+
+``caller`` is a read-write property that returns or sets a callable that
+provides a low-level mechanism for calling a callable from the signal's
+sets. The value of this property is responsible only for calling the
+callable passed to it; it does not decide which callable from which slot to
+run.
+
+``original``
+--------------
+
+This attribute is a read-only property that returns the original callable
+the signal is based on.
+
+Useful Core Functions
+======================
+
+``cid()``
+----------
+
+This function accepts a single argument and returns a unique numerical
+value for that object. This function is based on the ``hash()`` builtin
+function and is the basis upon which the mechanism of connecting callabled
+to a signal's slots is built. Effectively this means that only hashable
+callables can be used. 
+
+However, it should be noted that all callables should be able to be used as
+signals or connected to a signal's slots. Any pure python function, method,
+or class is hashable. A callable object may not itself be hashable, but its
+``__call__`` method is assumed to be ultimately hashable, and that is what
+is used for the signal/slot callable for objects that are not functions,
+methods, or classes.
+
+>>> print cid(before) in set(map(cid, signal.slot('before')))
+True
+
+>>> class UnHashable(object):
+...     def __hash__(self):
+...             raise NotImplementedError
+...     def __call__(self, l):
+...             l.append('after')
+...
+>>> after = UnHashable()
+>>> hash(after)
+Traceback (most recent call last):
+   ...
+NotImplementedError
+>>> signal.connect(after=[after])
+>>> print signal([])
+['before', 'signal', 'after']
+
+It is useful to note that a signal's ``cid()`` number is different from
+that of the callable it is based on:
+
+>>> print cid(test) == cid(signal)
+False
+>>> print cid(test) == cid(signal.func)
+True

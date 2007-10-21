@@ -1,0 +1,49 @@
+================================
+4.1.4 Call Me When You're Ready
+================================
+
+Another attribute that works in tandem with the ``active`` property is
+``activate_on_call``. 
+
+>>> from aossi.core import BaseSignal
+>>> def test_activate(l):
+...     l.append('signal')
+...     return l
+...
+>>> def before(l):
+...     l.append('before')
+...
+>>> signal = BaseSignal(test_activate)
+>>> signal.connect(before=[before])
+>>> print signal([])
+['before', 'signal']
+>>> signal.active = False
+>>> print signal([])
+['signal']
+>>> signal.activate_on_call = True
+>>> print signal([])
+['before', 'signal']
+>>> print signal.active
+True
+
+This enables lazy calling of a signal's slots. When the ``active``
+attribute is set to True, every call to the ``connect()`` method will
+modify the signal with the specified callables according to the callable's
+respective slot. Usage of the ``activate_on_call`` attribute along with
+setting ``active`` to ``False`` will then defer signal modification until
+the signal is actually called.
+
+Similar to the ``active`` attribute, you can pass the ``activate_on_call``
+keyword when creating the signal if you want to change the default value:
+
+>>> signal = BaseSignal(test_activate, active=False, activate_on_call=True)
+>>> print signal.active
+False
+>>> print signal.activate_on_call
+True
+>>> signal.connect(before=[before])
+>>> print signal([])
+['before', 'signal']
+>>> print signal.active
+True
+

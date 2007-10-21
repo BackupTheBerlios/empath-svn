@@ -1,0 +1,39 @@
+==============================
+4.1.3 Advice for the Active
+==============================
+
+There are some situations where we don't want a signal to run all of its
+slots, but we don't want to disconnect any connected callables. For
+example, if there is a bug that occurs when running a signal, and we want
+to know if it's a problem with the signal or with one of the callables
+connected to its slots, one way would be to disconnect all slots. Another
+way would be to temporarily disable the signal from running its slots:
+
+>>> from aossi.core import BaseSignal
+>>> def test_active(l):
+...     l.append('signal')
+...     return l
+...
+>>> def before(l):
+...     l.append('before')
+...
+>>> signal = BaseSignal(test_active)
+>>> signal.connect(before=[before])
+>>> signal.active = False
+>>> print signal([])
+['signal']
+
+A signal's ``active`` attribute holds a boolean value. If this value is
+True, the default, then the signal runs all of its slots as normal. If the
+value is False, then the signal is disabled and acts as if it isn't a
+signal at all.
+
+If you know beforehand that you want a signal to not be active from the
+very start, you can pass the ``active`` keyword when creating the signal:
+
+>>> signal = BaseSignal(test_active, active=False)
+>>> print signal.active
+False
+>>> signal.connect(before=[before])
+>>> print signal([])
+['signal']
