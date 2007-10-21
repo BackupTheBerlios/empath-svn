@@ -1,2 +1,9 @@
 commit[.]log
-[.].*[.]swp
+[.].*[.]sw[po]
+.*[.]py[co]
+.*[.].*~
+([^/]*[/])*[.]svn
+src[/].*[.]egg-info[/].*
+docs[/]html[/].*
+screenrc
+[.]coverage
