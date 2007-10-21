@@ -325,7 +325,7 @@ class _BaseSignal(object): #{{{
 # End class #}}}
 
 def getsignal(obj): #{{{
-    if isinstance(obj, BaseSignal):
+    if isinstance(obj, _BaseSignal):
         return obj
     sig = getattr(obj, 'signal', None)
     if sig:
