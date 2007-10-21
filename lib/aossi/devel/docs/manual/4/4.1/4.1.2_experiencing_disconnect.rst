@@ -1,0 +1,83 @@
+==============================
+4.1.2 Experiencing Disconnect
+==============================
+
+Of course one can spend all day long connecting callables
+to signals, and a lot of times there is no need to actually
+manage connections. However, for more complex tasks, being
+able to disconnect a previously connected callable can be
+pretty handy.
+
+>>> from aossi.core import BaseSignal
+>>> def signal(l):
+...     l.append('signal')
+...     return l
+...
+>>> def before(l):
+...     l.append('before')
+...
+>>> signal = BaseSignal(signal, weak=False)
+>>> signal.connect(before=[before])
+>>> print signal([])
+['before', 'signal']
+>>> signal.disconnect(before=[before])
+>>> print signal([])
+['signal']
+
+If you don't specify any arguments, the disconnect method will
+remove all connections to the signal:
+
+>>> def before2(l):
+...     l.append('before2')
+...
+>>> def after(l):
+...     l.append('after')
+...
+>>> signal.connect(before=[before, before2], after=[after])
+>>> print signal([])
+['before', 'before2', 'signal', 'after']
+>>> print signal.connected
+True
+>>> signal.disconnect()
+>>> print signal.connected
+False
+>>> print signal([])
+['signal']
+
+If you pass in an empty iterator, the signal's disconnect method will
+only disconnect everything in the specified slot type:
+
+>>> signal.connect(before=[before, before2], after=[after])
+>>> signal.disconnect(before=[])
+>>> print signal([])
+['signal', 'after']
+
+As an interesting aside in the above examples, as the ``signal`` reference
+is getting reassigned to a new ``BaseSignal`` object, the original
+function the ``signal`` name referenced to would get garbage
+collected. By default, signals and connections are stored as weak
+references, so the original ``signal`` function needs to be stored as a 
+hard reference. To accomplish this, the ``weak`` keyword argument needs
+to be set to ``False`` when creating a new ``BaseSignal`` object. If
+we keep the default value of ``True``, then a ``RuntimeWarning`` exception
+is issued:
+
+>>> from aossi.core import BaseSignal
+>>> from warnings import simplefilter
+>>> simplefilter('error', RuntimeWarning)
+>>> def signal(l):
+...     l.append('signal')
+...     return l
+...
+>>> signal = BaseSignal(signal)
+>>> print signal([])
+Traceback (most recent call last):
+   ...
+RuntimeWarning: Calling an invalid signal
+>>> print signal.valid
+False
+
+A signal's ``valid`` property determines whether a weakly referenced
+callable is still alive. Because the function originally referenced
+via the ``signal`` name was clobbered, it was garbage collected thus
+resulting in a 'dead' signal.
