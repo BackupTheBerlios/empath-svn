@@ -52,7 +52,7 @@ class Test_callableobj(BaseUnitTest): #{{{
         # End class #}}}
         ret = callableobj(_)
         self.assertTrue(ret)
-        self.assertTrue(isfunction(ret))
+        self.assertTrue(ret is _)
     # End def #}}}
 
     def testWrap(self): #{{{

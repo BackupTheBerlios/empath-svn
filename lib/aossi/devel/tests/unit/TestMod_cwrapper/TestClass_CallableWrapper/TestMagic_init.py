@@ -108,6 +108,13 @@ class Test_init(BaseUnitTest): #{{{
         cw = CallableWrapper(_)
         self.assertEqual(cw._funcid, exp)
     # End def #}}}
+
+    def testClass(self): #{{{
+        '''Classes are valid callables'''
+        class Test(object): pass
+        cw = CallableWrapper(Test)
+        self.assertEqual((cw.numargs, cw.maxargs), (0, None))
+    # End def #}}}
 # End class #}}}
 
 # Create suite function for this module
