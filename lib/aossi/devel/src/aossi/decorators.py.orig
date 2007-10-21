@@ -724,24 +724,24 @@ def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
         sigapp = signature.append
         for ext in decoext:
             if not isclass(ext) or not issubclass(ext, CustomDecoSignal):
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.35014479
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1701413411
                 raise TypeError("The 'decoext' argument expected CustomDecoSignal classes, got %s instead" %ext.__name__)
-||||||| /tmp/decorators.py~base.MrCgOZ
+||||||| /tmp/decorators.py~base.XC3FNz
                 raise TypeError("The 'decoext' keyword expected CustomDecoSignal classes, got %s instead" %ext.__name__)
 =======
                 raise TypeError("The 'decoext_' keyword expected CustomDecoSignal classes, got %s instead" %ext.__class__.__name__)
->>>>>>> /tmp/decorators.py~other.vZ0gk4
+>>>>>>> /tmp/decorators.py~other.FWMFSy
             sigapp(ext)
         sigapp(DecoSignalExtension)
         for ext in sigext:
             if not isclass(ext) or not issubclass(ext, SignalExtension):
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.35014479
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1701413411
                 raise TypeError("The 'sigext' argument expected SignalExtension classes, got %s instead" %ext.__name__)
-||||||| /tmp/decorators.py~base.MrCgOZ
+||||||| /tmp/decorators.py~base.XC3FNz
                 raise TypeError("The 'sigext' keyword expected SignalExtension classes, got %s instead" %ext.__name__)
 =======
                 raise TypeError("The 'sigext_' keyword expected SignalExtension classes, got %s instead" %ext.__class__.__name__)
->>>>>>> /tmp/decorators.py~other.vZ0gk4
+>>>>>>> /tmp/decorators.py~other.FWMFSy
             sigapp(ext)
         sigapp(BaseSignal)
         _NewDecoSignal = newclass('_NewDecoSignal', tuple(signature), 
