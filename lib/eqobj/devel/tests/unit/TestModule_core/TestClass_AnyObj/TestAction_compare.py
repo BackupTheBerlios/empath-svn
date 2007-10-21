@@ -8,12 +8,10 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.core import EqObj
-from eqobj.collections.sets import AllSetElementsMixin, TrimOption
+from eqobj.core import AnyObj
+from eqobj.validators.type import InstanceType as itype
 
-class TestTrim(TrimOption, AllSetElementsMixin, EqObj): pass
-
-class Test_trimoption(BaseUnitTest): #{{{
+class Test_compare(BaseUnitTest): #{{{
     def setUp(self): #{{{
         pass
     # End def #}}}
@@ -22,22 +20,20 @@ class Test_trimoption(BaseUnitTest): #{{{
         pass
     # End def #}}}
 
-    def test_trim(self): #{{{
-        '''Trims unknown keys'''
-        a = TestTrim(range(5), trim=True)
-        self.assertTrue(a(range(10)))
+    def test_single(self): #{{{
+        '''Single compare'''
+        a = AnyObj(itype(int))
+        self.assertEqual(a, 1)
+        self.assertNotEqual(a, '1')
     # End def #}}}
 
-    def test_notrim(self): #{{{
-        '''No trim'''
-        a = TestTrim(range(5))
-        self.assertFalse(a(range(10)))
-    # End def #}}}
-
-    def test_falsetrim(self): #{{{
-        '''Trim == False'''
-        a = TestTrim(range(5), trim=False)
-        self.assertFalse(a(range(10)))
+    def test_multi(self): #{{{
+        '''Multi compare'''
+        a = AnyObj(*map(itype, [int, str, unicode]))
+        self.assertEqual(a, 1)
+        self.assertEqual(a, '1')
+        self.assertEqual(a, u'1')
+        self.assertNotEqual(a, 1.1)
     # End def #}}}
 # End class #}}}
 

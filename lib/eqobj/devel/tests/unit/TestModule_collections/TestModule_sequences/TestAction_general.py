@@ -8,7 +8,7 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.core import EqObj
+from eqobj.core import EqObj, AnyObj
 from eqobj.collections.sequences import *
 
 class CheckObjectType(EqObj): #{{{
@@ -36,7 +36,7 @@ class Test_general(BaseUnitTest): #{{{
     def test_eqobj_list(self): #{{{
         '''Simple isinstance eqobj'''
         a = [self.cstr, self.cint]
-        b = CheckObjectType(list) & AllElements(a)
+        b = CheckObjectType(list) & Sequence(a)
         self.assertEquals(b, ['a', 1])
         self.assertNotEquals(b, [1, 'a'])
     # End def #}}}

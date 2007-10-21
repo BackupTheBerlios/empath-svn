@@ -8,9 +8,10 @@
 import unittest, re
 from smanstal.tests import BaseUnitTest, addtest, mksuite
 
-from eqobj.collections.sets import AllSetElements
+from eqobj.core import AllObj
+from eqobj.validators.type import InstanceType as itype
 
-class Test_allkeys(BaseUnitTest): #{{{
+class Test_compare(BaseUnitTest): #{{{
     def setUp(self): #{{{
         pass
     # End def #}}}
@@ -19,23 +20,18 @@ class Test_allkeys(BaseUnitTest): #{{{
         pass
     # End def #}}}
 
-    def test_unequal_lengths(self): #{{{
-        '''Unequal lengths is always False'''
-        a = AllSetElements(range(5))
-        self.assertFalse(a(range(9)))
-        self.assertFalse(a(range(3)))
+    def test_single(self): #{{{
+        '''Single compare'''
+        a = AllObj(itype(int))
+        self.assertEqual(a, 1)
+        self.assertNotEqual(a, '1')
     # End def #}}}
 
-    def test_nomatch(self): #{{{
-        '''No match'''
-        a = AllSetElements(range(5))
-        self.assertFalse(a((0, 1, 2, 9, 10)))
-    # End def #}}}
-
-    def test_match(self): #{{{
-        '''Sets match'''
-        a = AllSetElements(range(5))
-        self.assertTrue(a(range(5)))
+    def test_multi(self): #{{{
+        '''Multi compare'''
+        a = AllObj(*map(itype, [bool, int]))
+        self.assertNotEqual(a, 1)
+        self.assertEqual(a, True)
     # End def #}}}
 # End class #}}}
 
