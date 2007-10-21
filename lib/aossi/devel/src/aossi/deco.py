@@ -144,10 +144,12 @@ class DecoSignal(Signal): #{{{
             if callmeth and not mk_sig:
                 name, vardict = func.__name__, dict()
                 defstr, callstr = cargdefstr(func)
+                self_str = defstr.split(',', 1)[0].strip()
+                callstr = callstr.split(',', 1)[1].strip()
                 fstr = """
                 def f(%s):
                     return getattr(%s, '%s')(%s)
-                """ %(defstr, defstr.split(',')[0], name, callstr)
+                """ %(defstr, self_str, name, callstr)
                 exec compile(fstr.strip(), '<string>', 'exec') in vardict
                 f = vardict['f']
                 func = (func[0], f) if istup else f
