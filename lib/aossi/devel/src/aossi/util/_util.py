@@ -5,15 +5,25 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-try:
-    from aossi._speedups.util import cref
-except ImportError
-    from aossi.util.callobj import quote as cref
+#try:
+#    from aossi._speedups.util import cref
+#except ImportError:
+#    from aossi.util.callobj import quote as cref
+from aossi.util.callobj import quote as cref
 
-__all__ = ('ChooseCallable', 'AmbiguousChoiceError', 'StopCascade')
+__all__ = ('ChooseCallable', 'AmbiguousChoiceError', 'StopCascade', 'callable_wrapper')
 
 class AmbiguousChoiceError(StandardError): pass
 class StopCascade(Exception): pass
+
+def callable_wrapper(func): #{{{
+    if not iscallable(func):
+        raise TypeError('Argument is not callable')
+    def callwrapper(*args, **kwargs): #{{{
+        return func(*args, **kwargs)
+    # End def #}}}
+    return callwrapper
+# End def #}}}
 
 # choices: sequence of 2-tuples
 #   - A function that computes whether or not its partner will be run

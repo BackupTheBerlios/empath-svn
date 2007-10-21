@@ -110,6 +110,19 @@ cdef class cref(callobj): #{{{
 #    ref = property(lambda s: s._ref)
     # End properties #}}}
 # End class #}}}
+
+# ==================================================================================
+# Helpers
+# ==================================================================================
+cdef class callable_wrapper: #{{{
+    cdef object func
+    def __init__(self, func): #{{{
+        self.func = func
+    # End def #}}}
+    def __call__(self, *args, **kwargs): #{{{
+        return self.func(*args, **kwargs)
+    # End def #}}}
+# End class #}}}
 # ==================================================================================
 # ChooseCallable
 # ==================================================================================

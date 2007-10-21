@@ -10,9 +10,9 @@ from aossi.util.introspect import *
 from inspect import formatargspec, getargspec
 
 try:
-    from aossi._speedups.util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref
+    from aossi._speedups.util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref, callable_wrapper
 except ImportError:
-    from aossi.util._util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref
+    from aossi.util._util import ChooseCallable, AmbiguousChoiceError, StopCascade, cref, callable_wrapper
 
 __all__ = ('property_', 'deprecated', 'cref', 'ChooseCallable', 'ChoiceObject', 
             'AmbiguousChoiceError', 'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
@@ -73,14 +73,14 @@ def callableobj(obj): #{{{
     return obj
 # End def #}}}
 
-def callable_wrapper(func): #{{{
-    if not iscallable(func):
-        raise TypeError('Argument is not callable')
-    def callwrapper(*args, **kwargs): #{{{
-        return func(*args, **kwargs)
-    # End def #}}}
-    return callwrapper
-# End def #}}}
+#def callable_wrapper(func): #{{{
+#    if not iscallable(func):
+#        raise TypeError('Argument is not callable')
+#    def callwrapper(*args, **kwargs): #{{{
+#        return func(*args, **kwargs)
+#    # End def #}}}
+#    return callwrapper
+## End def #}}}
 
 def cargnames(obj): #{{{
     obj = callableobj(obj)
@@ -182,3 +182,46 @@ class ChoiceObject(object): #{{{
     isdead = property(lambda s: s._func.isdead or s._choosefunc.isdead)
     # End properties #}}}
 # End class #}}}
+
+from aossi.util.byteplay import (LOAD_CONST, LOAD_FAST, CALL_FUNCTION, 
+                                 CALL_FUNCTION_VAR, CALL_FUNCTION_KW,
+                                 CALL_FUNCTION_VAR_KW)
+def bp_call_args(args, vargs, vkeys, defaults, callmethod=False): #{{{
+    if callmethod:
+        args = args[1:]
+    num_pos = num_kw = 0
+    have_vargs = have_vkeys = False
+    ret = []
+    rapp = ret.append
+    for a in args:
+#        if a in defaults:
+#            rapp((LOAD_CONST, a))
+#            rapp((LOAD_CONST, defaults[a]))
+#            num_kw += 1
+#        else:
+        rapp((LOAD_FAST, a))
+        num_pos += 1
+    if vargs != None:
+        rapp((LOAD_FAST, vargs))
+        have_vargs = True
+    if vkeys != None:
+        rapp((LOAD_FAST, vkeys))
+        have_vkeys = True
+    cnum = (num_kw << 8) | (num_pos)
+    if not have_vargs and not have_vkeys:
+        rapp((CALL_FUNCTION, cnum))
+    elif have_vargs and not have_vkeys:
+        rapp((CALL_FUNCTION_VAR, cnum))
+    elif not have_vargs and have_vkeys:
+        rapp((CALL_FUNCTION_KW, cnum))
+    else:
+        rapp((CALL_FUNCTION_VAR_KW, cnum))
+    return ret
+# End def #}}}
+
+def default_argvals(args, defaults): #{{{
+    if not defaults:
+        return 
+    argdefs = args[len(defaults)*-1:]
+    return tuple(defaults[a] for a in argdefs)
+# End def #}}}

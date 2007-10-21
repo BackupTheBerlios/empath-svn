@@ -13,6 +13,8 @@ speedups = Feature(
         Extension("aossi._speedups.core", ["src/aossi/_speedups/core.pyx"]),
         Extension("aossi._speedups.cwrapper", ["src/aossi/_speedups/cwrapper.pyx"]),
         Extension("aossi._speedups.util", ["src/aossi/_speedups/util.pyx"]),
+        Extension("aossi._speedups.signals", ["src/aossi/_speedups/signals.pyx"]),
+        Extension("aossi._speedups.decorators", ["src/aossi/_speedups/decorators.pyx"]),
     ]
 )
 

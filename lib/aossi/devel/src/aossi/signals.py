@@ -15,6 +15,18 @@ from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
 from aossi.util.introspect import mro
 from aossi.util.odict import odict
 
+#from aossi._speedups.signals import (SignalExtension, AroundExtension, OnReturnExtension,
+#                                     StreamExtension, ReplaceExtension, ChooseExtension)
+#from aossi._signals import (SignalExtension, AroundExtension, OnReturnExtension,
+#                                     StreamExtension, ReplaceExtension, ChooseExtension)
+try:
+    from aossi._speedups.signals import (SignalExtension, AroundExtension, OnReturnExtension,
+                                         StreamExtension, ReplaceExtension, ChooseExtension)
+except ImportError:
+    from aossi._signals import (SignalExtension, AroundExtension, OnReturnExtension, StreamExtension,
+                                ReplaceExtension, ChooseExtension)
+    
+
 __all__ = ('SignalExtension', 'AroundExtension', 'OnReturnExtension', 'StreamExtension',
             'ReplaceExtension', 'ChooseExtension', 'DefaultExtension', 'Signal')
 # ==================================================================================
@@ -98,299 +110,299 @@ def disconnect_choosefunc(self, listname, slots): #{{{
 # ==================================================================================
 # SignalExtension
 # ==================================================================================
-class SignalExtension(object): #{{{
-    __slots__ = ()
-# End class #}}}
+#class SignalExtension(object): #{{{
+#    __slots__ = ()
+## End class #}}}
 # ==================================================================================
 # AroundExtension
 # ==================================================================================
-class AroundExtension(SignalExtension): #{{{
-    __slots__ = ()
-    def _init_funclist_names(self): #{{{
-        for n in super(AroundExtension, self)._init_funclist_names():
-            yield n
-        yield 'around'
-    # End def #}}}
+#class AroundExtension(SignalExtension): #{{{
+#    __slots__ = ()
+#    def _init_funclist_names(self): #{{{
+#        for n in super(AroundExtension, self)._init_funclist_names():
+#            yield n
+#        yield 'around'
+#    # End def #}}}
 
-    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
-        def call_around(self): #{{{
-            return (arfunc for arfunc, _ in cleanlist('around'))
-        # End def #}}}
-        ret = super(AroundExtension, self)._init_calls_around(cleanlist, have_slotfunc)
-        ret['around'] = call_around
-        return ret
-    # End def #}}}
+#    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
+#        def call_around(self): #{{{
+#            return (arfunc for arfunc, _ in cleanlist('around'))
+#        # End def #}}}
+#        ret = super(AroundExtension, self)._init_calls_around(cleanlist, have_slotfunc)
+#        ret['around'] = call_around
+#        return ret
+#    # End def #}}}
 
-    def _init_default_connections(self): #{{{
-        for n in super(AroundExtension, self)._init_default_connections():
-            yield n
-        yield 'around'
-    # End def #}}}
-# End class #}}}
+#    def _init_default_connections(self): #{{{
+#        for n in super(AroundExtension, self)._init_default_connections():
+#            yield n
+#        yield 'around'
+#    # End def #}}}
+## End class #}}}
 # ==================================================================================
 # OnReturnExtension
 # ==================================================================================
-class OnReturnExtension(SignalExtension): #{{{
-    __slots__ = ()
-    def _init_funclist_names(self): #{{{
-        for n in super(OnReturnExtension, self)._init_funclist_names():
-            yield n
-        yield 'onreturn'
-    # End def #}}}
+#class OnReturnExtension(SignalExtension): #{{{
+#    __slots__ = ()
+#    def _init_funclist_names(self): #{{{
+#        for n in super(OnReturnExtension, self)._init_funclist_names():
+#            yield n
+#        yield 'onreturn'
+#    # End def #}}}
 
-    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
-        def call_onreturn(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = None
-            for rfunc, t in cleanlist('onreturn'):
-                if not callfunc:
-                    callfunc = self.caller
-                callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
-            return ret
-        # End def #}}}
-        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist, have_slotfunc)
-        ret['onreturn'] = call_onreturn
-        return ret
-    # End def #}}}
+#    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
+#        def call_onreturn(self, cw, func, ret, args, kwargs): #{{{
+#            callfunc = None
+#            for rfunc, t in cleanlist('onreturn'):
+#                if not callfunc:
+#                    callfunc = self.caller
+#                callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
+#            return ret
+#        # End def #}}}
+#        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist, have_slotfunc)
+#        ret['onreturn'] = call_onreturn
+#        return ret
+#    # End def #}}}
 
-    def _init_default_connections(self): #{{{
-        for n in super(OnReturnExtension, self)._init_default_connections():
-            yield n
-        yield 'onreturn'
-    # End def #}}}
-# End class #}}}
+#    def _init_default_connections(self): #{{{
+#        for n in super(OnReturnExtension, self)._init_default_connections():
+#            yield n
+#        yield 'onreturn'
+#    # End def #}}}
+## End class #}}}
 # ==================================================================================
 # StreamExtension
 # ==================================================================================
-class StreamExtension(SignalExtension): #{{{
-    __slots__ = ()
-    def _init_funclist_names(self): #{{{
-        for n in super(StreamExtension, self)._init_funclist_names():
-            yield n
-        yield 'streamin'
-        yield 'stream'
-    # End def #}}}
+#class StreamExtension(SignalExtension): #{{{
+#    __slots__ = ()
+#    def _init_funclist_names(self): #{{{
+#        for n in super(StreamExtension, self)._init_funclist_names():
+#            yield n
+#        yield 'streamin'
+#        yield 'stream'
+#    # End def #}}}
 
-    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
-        def call_streamin(self): #{{{
-            def streamin_wrap(func): #{{{
-                def wrap(cw, *args, **kwargs): #{{{
-                    if have_slotfunc('streamin'):
-                        sig, signame = None, cw.__name__
-                        if args:
-                            for cls in mro(args[0].__class__):
-                                sig = getsignal(getattr(cls, signame, None))
-                                if sig and cw is sig.func:
-                                    break
-                            else:
-                                sig = None
-                        if sig:
-                            args = (args[0], list(args[1:]), kwargs)
-                        else:
-                            args = (list(args), kwargs)
-                        callfunc = self.caller
-                        for sfunc, t in cleanlist('streamin'):
-                            callfunc(self, sfunc, 'streamin', False, None, *args)
-                        if sig:
-                            args, kwargs = [args[0]] + args[1], args[2]
-                        else:
-                            args, kwargs = args
-                    return func(*args, **kwargs)
-                # End def #}}}
-                return wrap
-            # End def #}}}
-            yield streamin_wrap
-        # End def #}}}
-        sup = super(StreamExtension, self)._init_calls_around(cleanlist, have_slotfunc)
-        ret = odict(sup.iteritems())
-        ret['streamin'] = call_streamin
-        return ret
-    # End def #}}}
+#    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
+#        def call_streamin(self): #{{{
+#            def streamin_wrap(func): #{{{
+#                def wrap(cw, *args, **kwargs): #{{{
+#                    if have_slotfunc('streamin'):
+#                        sig, signame = None, cw.__name__
+#                        if args:
+#                            for cls in mro(args[0].__class__):
+#                                sig = getsignal(getattr(cls, signame, None))
+#                                if sig and cw is sig.func:
+#                                    break
+#                            else:
+#                                sig = None
+#                        if sig:
+#                            args = (args[0], list(args[1:]), kwargs)
+#                        else:
+#                            args = (list(args), kwargs)
+#                        callfunc = self.caller
+#                        for sfunc, t in cleanlist('streamin'):
+#                            callfunc(self, sfunc, 'streamin', False, None, *args)
+#                        if sig:
+#                            args, kwargs = [args[0]] + args[1], args[2]
+#                        else:
+#                            args, kwargs = args
+#                    return func(*args, **kwargs)
+#                # End def #}}}
+#                return wrap
+#            # End def #}}}
+#            yield streamin_wrap
+#        # End def #}}}
+#        sup = super(StreamExtension, self)._init_calls_around(cleanlist, have_slotfunc)
+#        ret = odict(sup.iteritems())
+#        ret['streamin'] = call_streamin
+#        return ret
+#    # End def #}}}
 
-    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
-        def call_stream(self, cw, func, ret, args, kwargs): #{{{
-            callfunc = None
-            for sfunc, t in cleanlist('stream'):
-                if not callfunc:
-                    callfunc = self.caller
-                ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
-            return ret
-        # End def #}}}
-        sup = super(StreamExtension, self)._init_calls_after(cleanlist, have_slotfunc)
-        ret = odict()
-        ret['stream'] = call_stream
-        ret.update(sup.iteritems())
-        return ret
-    # End def #}}}
+#    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
+#        def call_stream(self, cw, func, ret, args, kwargs): #{{{
+#            callfunc = None
+#            for sfunc, t in cleanlist('stream'):
+#                if not callfunc:
+#                    callfunc = self.caller
+#                ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
+#            return ret
+#        # End def #}}}
+#        sup = super(StreamExtension, self)._init_calls_after(cleanlist, have_slotfunc)
+#        ret = odict()
+#        ret['stream'] = call_stream
+#        ret.update(sup.iteritems())
+#        return ret
+#    # End def #}}}
 
-    def _init_default_connections(self): #{{{
-        for n in super(StreamExtension, self)._init_default_connections():
-            yield n
-        yield 'streamin'
-        yield 'stream'
-    # End def #}}}
-# End class #}}}
+#    def _init_default_connections(self): #{{{
+#        for n in super(StreamExtension, self)._init_default_connections():
+#            yield n
+#        yield 'streamin'
+#        yield 'stream'
+#    # End def #}}}
+## End class #}}}
 # ==================================================================================
 # ReplaceExtension
 # ==================================================================================
-class ReplaceExtension(SignalExtension): #{{{
-    __slots__ = ()
-    def _init_funclist_names(self): #{{{
-        for n in super(ReplaceExtension, self)._init_funclist_names():
-            yield n
-        yield 'replace'
-    # End def #}}}
+#class ReplaceExtension(SignalExtension): #{{{
+#    __slots__ = ()
+#    def _init_funclist_names(self): #{{{
+#        for n in super(ReplaceExtension, self)._init_funclist_names():
+#            yield n
+#        yield 'replace'
+#    # End def #}}}
 
-    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
-        def call_replace(self): #{{{
-            def do_wrap(func): #{{{
-                def newcall(cw, *args, **kwargs): #{{{
-                    callfunc, rfunc, ret = self.caller, None, None
-                    for sfunc, t in cleanlist('replace'):
-                        rfunc = sfunc
-                    if rfunc:
-                        ret = callfunc(self, rfunc, 'replace', False, ret, *args, **kwargs)
-                    else:
-                        ret = func(*args, **kwargs)
-                    return ret
-                # End def #}}}
-                return newcall
-            # End def #}}}
-            # Need to return an iterator
-            yield do_wrap
-        # End def #}}}
-        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
-        ret['replace'] = call_replace
-        return ret
-    # End def #}}}
+#    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
+#        def call_replace(self): #{{{
+#            def do_wrap(func): #{{{
+#                def newcall(cw, *args, **kwargs): #{{{
+#                    callfunc, rfunc, ret = self.caller, None, None
+#                    for sfunc, t in cleanlist('replace'):
+#                        rfunc = sfunc
+#                    if rfunc:
+#                        ret = callfunc(self, rfunc, 'replace', False, ret, *args, **kwargs)
+#                    else:
+#                        ret = func(*args, **kwargs)
+#                    return ret
+#                # End def #}}}
+#                return newcall
+#            # End def #}}}
+#            # Need to return an iterator
+#            yield do_wrap
+#        # End def #}}}
+#        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
+#        ret['replace'] = call_replace
+#        return ret
+#    # End def #}}}
 
-    def _init_default_connections(self): #{{{
-        for n in super(ReplaceExtension, self)._init_default_connections():
-            yield n
-        yield 'replace'
-    # End def #}}}
-# End class #}}}
+#    def _init_default_connections(self): #{{{
+#        for n in super(ReplaceExtension, self)._init_default_connections():
+#            yield n
+#        yield 'replace'
+#    # End def #}}}
+## End class #}}}
 # ==================================================================================
 # ChooseExtension
 # ==================================================================================
-class ChooseExtension(SignalExtension): #{{{
-    __slots__ = ()
-    def __init__(self, signal, **kwargs): #{{{
-        self._vars = getattr(self, '_vars', dict())
-        self._vars.update(choosepolicy=None, chooseretpolicy=None, chooseyieldpolicy=None)
-        super(ChooseExtension, self).__init__(signal, **kwargs)
-        self.chooser = ChooseCallable
-        self.return_chooser = ChooseCallable
-        self.yield_chooser = ChooseCallable
-    # End def #}}}
+#class ChooseExtension(SignalExtension): #{{{
+#    __slots__ = ()
+#    def __init__(self, signal, **kwargs): #{{{
+#        self._vars = getattr(self, '_vars', dict())
+#        self._vars.update(choosepolicy=None, chooseretpolicy=None, chooseyieldpolicy=None)
+#        super(ChooseExtension, self).__init__(signal, **kwargs)
+#        self.chooser = ChooseCallable
+#        self.return_chooser = ChooseCallable
+#        self.yield_chooser = ChooseCallable
+#    # End def #}}}
 
-    def _init_funclist_names(self): #{{{
-        for n in super(ChooseExtension, self)._init_funclist_names():
-            yield n
-        yield 'choose'
-        yield 'choosereturn'
-        yield 'chooseyield'
-    # End def #}}}
+#    def _init_funclist_names(self): #{{{
+#        for n in super(ChooseExtension, self)._init_funclist_names():
+#            yield n
+#        yield 'choose'
+#        yield 'choosereturn'
+#        yield 'chooseyield'
+#    # End def #}}}
 
-    def _init_connections(self, connections): #{{{
-        super(ChooseExtension, self)._init_connections(connections)
-        init = ('choose', 'choosereturn', 'chooseyield')
-        connections.update((n, (connect_choosefunc, disconnect_choosefunc)) for n in init)
-    # End def #}}}
+#    def _init_connections(self, connections): #{{{
+#        super(ChooseExtension, self)._init_connections(connections)
+#        init = ('choose', 'choosereturn', 'chooseyield')
+#        connections.update((n, (connect_choosefunc, disconnect_choosefunc)) for n in init)
+#    # End def #}}}
 
-    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
-        choice, callchoice = make_choice_helpers(self, callfunc, cleanlist)
-        def call_choose(self): #{{{
-            def do_wrap(func): #{{{
-                def newcall(cw, *args, **kwargs): #{{{
-                    if not have_slotfunc('choose'):
-                        return func(*args, **kwargs)
-                    func_choice = choice(self, 'choose', 'chooser', self.chooser_policy, func, False, None, *args, **kwargs)
-                    return callchoice(self, func, func_choice, False, None, *args, **kwargs)
-                # End def #}}}
-                return newcall
-            # End def #}}}
-            # Need to return an iterator
-            yield do_wrap
-        # End def #}}}
-        def call_choosereturn(self): #{{{
-            def do_wrap(func): #{{{
-                def newcall(cw, *args, **kwargs): #{{{
-                    ret = func(*args, **kwargs)
-                    if not have_slotfunc('choosereturn'):
-                        return ret
-                    ret_choice = choice(self, 'choosereturn', 'return_chooser', self.return_chooser_policy, 
-                            func, True, ret, *args, **kwargs)
-                    return callchoice(self, func, ret_choice, True, ret, *args, **kwargs)
-                # End def #}}}
-                return newcall
-            # End def #}}}
-            # Need to return an iterator
-            yield do_wrap
-        # End def #}}}
-        def call_chooseyield(self): #{{{
-            def do_wrap(func): #{{{
-                def newcall(cw, *args, **kwargs): #{{{
-                    gen = func(*args, **kwargs)
-                    if not isinstance(gen, GeneratorType) or not have_slotfunc('chooseyield'):
-                        return gen
-                    def mk_gen(gen): #{{{
-                        for ret in gen:
-                            ret_choice = choice(self, 'chooseyield', 'yield_chooser', self.yield_chooser_policy, 
-                                    func, True, ret, *args, **kwargs)
-                            yield callchoice(self, func, ret_choice, True, ret, ret)
-                    # End def #}}}
-                    return mk_gen(gen)
-                # End def #}}}
-                return newcall
-            # End def #}}}
-            # Need to return an iterator
-            yield do_wrap
-        # End def #}}}
-        ret = super(ChooseExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
-        ret['choose'] = call_choose
-        ret['choosereturn'] = call_choosereturn
-        ret['chooseyield'] = call_chooseyield
-        return ret
-    # End def #}}}
+#    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
+#        choice, callchoice = make_choice_helpers(self, callfunc, cleanlist)
+#        def call_choose(self): #{{{
+#            def do_wrap(func): #{{{
+#                def newcall(cw, *args, **kwargs): #{{{
+#                    if not have_slotfunc('choose'):
+#                        return func(*args, **kwargs)
+#                    func_choice = choice(self, 'choose', 'chooser', self.chooser_policy, func, False, None, *args, **kwargs)
+#                    return callchoice(self, func, func_choice, False, None, *args, **kwargs)
+#                # End def #}}}
+#                return newcall
+#            # End def #}}}
+#            # Need to return an iterator
+#            yield do_wrap
+#        # End def #}}}
+#        def call_choosereturn(self): #{{{
+#            def do_wrap(func): #{{{
+#                def newcall(cw, *args, **kwargs): #{{{
+#                    ret = func(*args, **kwargs)
+#                    if not have_slotfunc('choosereturn'):
+#                        return ret
+#                    ret_choice = choice(self, 'choosereturn', 'return_chooser', self.return_chooser_policy, 
+#                            func, True, ret, *args, **kwargs)
+#                    return callchoice(self, func, ret_choice, True, ret, *args, **kwargs)
+#                # End def #}}}
+#                return newcall
+#            # End def #}}}
+#            # Need to return an iterator
+#            yield do_wrap
+#        # End def #}}}
+#        def call_chooseyield(self): #{{{
+#            def do_wrap(func): #{{{
+#                def newcall(cw, *args, **kwargs): #{{{
+#                    gen = func(*args, **kwargs)
+#                    if not isinstance(gen, GeneratorType) or not have_slotfunc('chooseyield'):
+#                        return gen
+#                    def mk_gen(gen): #{{{
+#                        for ret in gen:
+#                            ret_choice = choice(self, 'chooseyield', 'yield_chooser', self.yield_chooser_policy, 
+#                                    func, True, ret, *args, **kwargs)
+#                            yield callchoice(self, func, ret_choice, True, ret, ret)
+#                    # End def #}}}
+#                    return mk_gen(gen)
+#                # End def #}}}
+#                return newcall
+#            # End def #}}}
+#            # Need to return an iterator
+#            yield do_wrap
+#        # End def #}}}
+#        ret = super(ChooseExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
+#        ret['choose'] = call_choose
+#        ret['choosereturn'] = call_choosereturn
+#        ret['chooseyield'] = call_chooseyield
+#        return ret
+#    # End def #}}}
 
-    def _find_cond(self, **kw): #{{{
-        chooser = kw.pop('chooser', None)
-        choosercid = None
-        if iscallable(chooser):
-            choosercid = cid(chooser)
-        super_fcond = super(ChooseExtension, self)._find_cond(**kw)
-        def fcond(self, listname, siglist, f, index): #{{{
-            if not super_fcond(self, listname, siglist, f, index):
-                return False
-            if choosercid and listname in ('choose', 'choosereturn', 'chooseyield'):
-                if choosercid != f.choosefunc.cid:
-                    return False
-            return True
-        # End def #}}}
-        return fcond
-    # End def #}}}
+#    def _find_cond(self, **kw): #{{{
+#        chooser = kw.pop('chooser', None)
+#        choosercid = None
+#        if iscallable(chooser):
+#            choosercid = cid(chooser)
+#        super_fcond = super(ChooseExtension, self)._find_cond(**kw)
+#        def fcond(self, listname, siglist, f, index): #{{{
+#            if not super_fcond(self, listname, siglist, f, index):
+#                return False
+#            if choosercid and listname in ('choose', 'choosereturn', 'chooseyield'):
+#                if choosercid != f.choosefunc.cid:
+#                    return False
+#            return True
+#        # End def #}}}
+#        return fcond
+#    # End def #}}}
 
-    def _setpolicy(self, name, p): #{{{
-        self._vars[name] = p
-    # End def #}}}
+#    def _setpolicy(self, name, p): #{{{
+#        self._vars[name] = p
+#    # End def #}}}
 
-    def _setchooser(self, name, c): #{{{
-        if c is None:
-            return
-        elif not iscallable(c):
-            raise TypeError('chooser property must be a valid callable object')
-        self._vars[name] = CallableWrapper(c, weak=False)
-    # End def #}}}
+#    def _setchooser(self, name, c): #{{{
+#        if c is None:
+#            return
+#        elif not iscallable(c):
+#            raise TypeError('chooser property must be a valid callable object')
+#        self._vars[name] = CallableWrapper(c, weak=False)
+#    # End def #}}}
 
-    # Properties #{{{
-    chooser_policy = property(lambda s: s._vars['choosepolicy'], lambda s, p: s._setpolicy('choosepolicy', p))
-    return_chooser_policy = property(lambda s: s._vars['chooseretpolicy'], lambda s, p: s._setpolicy('chooseretpolicy', p))
-    yield_chooser_policy = property(lambda s: s._vars['chooseyieldpolicy'], lambda s, p: s._setpolicy('chooseyieldpolicy', p))
-    chooser = property(lambda s: s._vars['chooser'], lambda s, c: s._setchooser('chooser', c))
-    return_chooser = property(lambda s: s._vars['return_chooser'], lambda s, c: s._setchooser('return_chooser', c))
-    yield_chooser = property(lambda s: s._vars['yield_chooser'], lambda s, c: s._setchooser('yield_chooser', c))
-    # End properties #}}}
-# End class #}}}
+#    # Properties #{{{
+#    chooser_policy = property(lambda s: s._vars['choosepolicy'], lambda s, p: s._setpolicy('choosepolicy', p))
+#    return_chooser_policy = property(lambda s: s._vars['chooseretpolicy'], lambda s, p: s._setpolicy('chooseretpolicy', p))
+#    yield_chooser_policy = property(lambda s: s._vars['chooseyieldpolicy'], lambda s, p: s._setpolicy('chooseyieldpolicy', p))
+#    chooser = property(lambda s: s._vars['chooser'], lambda s, c: s._setchooser('chooser', c))
+#    return_chooser = property(lambda s: s._vars['return_chooser'], lambda s, c: s._setchooser('return_chooser', c))
+#    yield_chooser = property(lambda s: s._vars['yield_chooser'], lambda s, c: s._setchooser('yield_chooser', c))
+#    # End properties #}}}
+## End class #}}}
 # ==================================================================================
 # Signal
 # ==================================================================================
