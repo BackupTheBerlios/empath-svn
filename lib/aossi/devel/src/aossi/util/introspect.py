@@ -9,11 +9,12 @@
 #_ab = import_(':aossi:__builtin__', importer=CopyModuleImporter(copy_prefix=':aossi:'))
 
 #from weakref import ref
-from inspect import isfunction, ismethod, isbuiltin
+from inspect import isbuiltin
 from types import (FunctionType as function, BuiltinFunctionType as bfunction, 
         MethodType as method, BuiltinMethodType as bmethod, ClassType)
 
-__all__ = ('isclass', 'iscallable', 'isiterable', 'ismapping',
+__all__ = ('isclass', 'isbasemetaclass', 'isclassmethod', 'isstaticmethod', 
+            'iscallable', 'isiterable', 'ismapping',
             'isreadonly', 'isfunction', 'ismethod', 'isbuiltin',
             'isobjclass', 'mro')
 # ==================================================================================
@@ -21,6 +22,29 @@ __all__ = ('isclass', 'iscallable', 'isiterable', 'ismapping',
 # ==================================================================================
 def isclass(obj): #{{{
     return isinstance(obj, ClassType) or hasattr(obj, '__bases__')
+# End def #}}}
+
+def isbasemetaclass(bases, metacls): #{{{
+    return not any(isinstance(b, metacls) for b in bases)
+# End def #}}}
+
+def isfunction(obj): #{{{
+   return isinstance(obj, function)
+# End def #}}}
+
+def ismethod(obj): #{{{
+   return isinstance(obj, method)
+# End def #}}}
+
+def isclassmethod(obj): #{{{
+    return (isinstance(obj, classmethod) or 
+            ismethod(obj) and isclass(getattr(obj, 'im_self', None)))
+# End def #}}}
+
+def isstaticmethod(cls, attr): #{{{
+    if not isclass(cls):
+        raise TypeError("%s object is not a class" %cls.__class__.__name__)
+    return isfunction(getattr(cls, attr))
 # End def #}}}
 
 def iscallable(obj): #{{{
