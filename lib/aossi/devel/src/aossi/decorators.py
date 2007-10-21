@@ -19,7 +19,7 @@ from anyall.value import AllValueSequences, AllValueMappings
 from functools import wraps
 ogetattr = object.__getattribute__
 
-from smanstal.types.introspect import isclass
+from smanstal.types.introspect import isclass, isbasemetaclass, mro
 
 __all__ = ('DecoSignalExtension', 'CustomDecoSignal', 'GenericMatchDecoSignal',
             'OnReturnDecoSignal', 'ReplaceDecoSignal', 'AroundDecoSignal', 
@@ -81,9 +81,41 @@ def func_ismethod(func, *args): #{{{
     return bool(sfunc)
 # End def #}}}
 # ==================================================================================
+# MetaDecoSignalExtension
+# ==================================================================================
+class MetaDecoSignalExtension(type): #{{{
+    def __new__(mcls, classname, bases, clsdict): #{{{
+        setup = {'__genericdecorators__': ['after', 'before'],
+                 '__decorators__': ['global_settings', 'settings']}
+        for name, default in setup.iteritems():
+            clsdict[name] = mcls._magic_sets(name, default, (classname, bases, clsdict))
+        del setup
+        return super(MetaDecoSignalExtension, mcls).__new__(mcls, classname, bases, clsdict)
+    # End def #}}}
+
+    @classmethod
+    def _magic_sets(mcls, name, default, newargs): #{{{
+        classname, bases, clsdict = newargs
+        past = set(default)
+        cur = clsdict.pop(name, [])
+        if not isbasemetaclass(bases, mcls):
+            allowed = (CustomDecoSignal, DecoSignalExtension)
+            for b in bases:
+                if not issubclass(b, allowed):
+                    continue
+                for bcls in mro(b):
+                    battr = getattr(bcls, name, None)
+                    if battr is None or not issubclass(bcls, allowed):
+                        continue
+                    past.update(battr)
+        return frozenset(past) | frozenset(str(s) for s in cur)
+    # End def #}}}
+# End class #}}}
+# ==================================================================================
 # DecoSignalExtension
 # ==================================================================================
 class DecoSignalExtension(SignalExtension): #{{{
+    __metaclass__ = MetaDecoSignalExtension
     __slots__ = ()
 
     def __init__(self, signal, **kwargs): #{{{
@@ -101,17 +133,14 @@ class DecoSignalExtension(SignalExtension): #{{{
         return super(DecoSignalExtension, self).__call__(*args, **kwargs)
     # End def #}}}
 
-    def _generic_names(self): #{{{
-        return frozenset(['after', 'before'])
-    # End def #}}}
-
     def __getattribute__(self, name): #{{{
-        generic_deco = ogetattr(self, '_generic_names')
-        if name == '_generic_names':
+        generic_deco = ogetattr(self, '__genericdecorators__')
+        if name == '__genericdecorators__':
             return generic_deco
-        elif name in generic_deco():
+        elif name in generic_deco:
             return (lambda f: ogetattr(self, '_generic')(f, name))
-        return super(DecoSignalExtension, self).__getattribute__(name)
+        return ogetattr(self, name)
+#        return super(DecoSignalExtension, self).__getattribute__(name)
     # End def #}}}
 
     def _blocked_csettings(self): #{{{
@@ -182,8 +211,9 @@ class DecoSignalExtension(SignalExtension): #{{{
         if ism:
             callmeth = bool(s.get('callmethod', False))
             if callmeth and not mk_sig:
-                name, vardict = func.__name__, dict()
-                defstr, callstr = cargdefstr(func)
+                func_obj = func[1] if istup else func
+                name, vardict = func_obj.__name__, dict()
+                defstr, callstr = cargdefstr(func_obj)
                 self_str = defstr.split(',', 1)[0].strip()
                 callstr = callstr.split(',', 1)[1].strip()
                 fstr = """
@@ -227,9 +257,10 @@ class DecoSignalExtension(SignalExtension): #{{{
     # End def #}}}
 
     def _get_decorators(self): #{{{
-        generic = self._generic_names()
-        other = set(['global_settings', 'settings'])
-        return generic | other
+        return self.__genericdecorators__ | self.__decorators__
+#        generic = self._generic_names()
+#        other = set(['global_settings', 'settings'])
+#        return generic | other
     # End def #}}}
 
     def _get_dependencies(self): #{{{
@@ -253,46 +284,35 @@ class CustomDecoSignal(object): #{{{
 # ==================================================================================
 class OnReturnDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    def _generic_names(self): #{{{
-        sup = super(OnReturnDecoSignal, self)._generic_names()
-        return sup | frozenset(['onreturn'])
-    # End def #}}}
+    __genericdecorators__ = ['onreturn']
 # End class #}}}
 # ==================================================================================
 # ReplaceDecoSignal
 # ==================================================================================
 class ReplaceDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    def _generic_names(self): #{{{
-        sup = super(ReplaceDecoSignal, self)._generic_names()
-        return sup | frozenset(['replace'])
-    # End def #}}}
+    __genericdecorators__ = ['replace']
 # End class #}}}
 # ==================================================================================
 # AroundDecoSignal
 # ==================================================================================
 class AroundDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    def _generic_names(self): #{{{
-        sup = super(AroundDecoSignal, self)._generic_names()
-        return sup | frozenset(['around'])
-    # End def #}}}
+    __genericdecorators__ = ['around']
 # End class #}}}
 # ==================================================================================
 # StreamDecoSignal
 # ==================================================================================
 class StreamDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    def _generic_names(self): #{{{
-        sup = super(StreamDecoSignal, self)._generic_names()
-        return sup | frozenset(['streamin', 'stream'])
-    # End def #}}}
+    __genericdecorators__ = ['streamin', 'stream']
 # End class #}}}
 # ==================================================================================
 # CondDecoSignal
 # ==================================================================================
 class CondDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
+    __decorators__ = ['cond', 'return_cond']
     def __init__(self, signal, **kwargs): #{{{
         super(CondDecoSignal, self).__init__(signal, **kwargs)
         self.caller = chooser_callfunc()
@@ -330,18 +350,13 @@ class CondDecoSignal(CustomDecoSignal): #{{{
     def return_cond(self, condfunc): #{{{
         return self._cond('choosereturn', condfunc)
     # End def #}}}
-
-    def _get_decorators(self): #{{{
-        sup = super(CondDecoSignal, self)._get_decorators()
-        return sup | set(['cond', 'return_cond'])
-    # End def #}}}
-
 # End class #}}}
 # ==================================================================================
 # WhenDecoSignal
 # ==================================================================================
 class WhenDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
+    __decorators__ = ['when', 'when_return']
     def _when(self, condfunc, s): #{{{
         if not isinstance(s, basestring):
             raise TypeError('argument must be a string')
@@ -370,11 +385,6 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
         return self._when(self.return_cond, s)
     # End def #}}}
 
-    def _get_decorators(self): #{{{
-        sup = super(WhenDecoSignal, self)._get_decorators()
-        return sup | set(['when', 'when_return'])
-    # End def #}}}
-
     def _get_dependencies(self): #{{{
         sup = super(WhenDecoSignal, self)._get_dependencies()
         return sup | frozenset([CondDecoSignal])
@@ -386,6 +396,7 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
 # ==================================================================================
 class CascadeDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
+    __decorators__ = ['cascade', 'cascade_return']
     def _cascade(self, condfunc, s, stop=False): #{{{
         self._set_settings({'policy': 'cascade'})
         if not isinstance(s, basestring):
@@ -424,11 +435,6 @@ class CascadeDecoSignal(CustomDecoSignal): #{{{
         return self._cascade(self.return_cond, s, stop)
     # End def #}}}
 
-    def _get_decorators(self): #{{{
-        sup = super(CascadeDecoSignal, self)._get_decorators()
-        return sup | set(['cascade', 'cascade_return'])
-    # End def #}}}
-
     def _get_dependencies(self): #{{{
         sup = super(CascadeDecoSignal, self)._get_dependencies()
         return sup | frozenset([CondDecoSignal])
@@ -459,6 +465,7 @@ class GenericMatchDecoSignal(CustomDecoSignal): #{{{
 # ==================================================================================
 class MatchTypeDecoSignal(GenericMatchDecoSignal): #{{{
     __slots__ = ()
+    __decorators__ = ['match_type', 'match_return_type']
     def _match_type(self, condfunc, *margs, **mkwargs): #{{{
         cs = self.connect_settings
         g = cs.get('globals', None)
@@ -500,17 +507,13 @@ class MatchTypeDecoSignal(GenericMatchDecoSignal): #{{{
         return self._match_type(self.return_cond, marg)
     # End def #}}}
 
-    def _get_decorators(self): #{{{
-        sup = super(MatchTypeDecoSignal, self)._get_decorators()
-        return sup | set(['match_type', 'match_return_type'])
-    # End def #}}}
-
 # End class #}}}
 # ==================================================================================
 # MatchValueDecoSignal
 # ==================================================================================
 class MatchValueDecoSignal(GenericMatchDecoSignal): #{{{
     __slots__ = ()
+    __decorators__ = ['match_value', 'match_return_value']
     def _match_value(self, condfunc, *margs, **mkwargs): #{{{
         cs = self.connect_settings
         margs_len = len(margs)
@@ -542,11 +545,6 @@ class MatchValueDecoSignal(GenericMatchDecoSignal): #{{{
 
     def match_return_value(self, marg): #{{{
         return self._match_value(self.return_cond, marg)
-    # End def #}}}
-
-    def _get_decorators(self): #{{{
-        sup = super(MatchValueDecoSignal, self)._get_decorators()
-        return sup | set(['match_value', 'match_return_value'])
     # End def #}}}
 
 # End class #}}}
