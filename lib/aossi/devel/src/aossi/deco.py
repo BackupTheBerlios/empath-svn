@@ -162,6 +162,12 @@ class DecoSignal(Signal): #{{{
         return func
     # End def #}}}
 
+    def replace(self, func): #{{{
+        pfunc, s = self._func_settings(func)
+        self.connect(replace=[pfunc], **s)
+        return func
+    # End def #}}}
+
     def around(self, func): #{{{
         pfunc, s = self._func_settings(func)
         self.connect(around=[pfunc], **s)
@@ -339,7 +345,7 @@ class DecoSignal(Signal): #{{{
     # End def #}}}
 
     def _get_decorators(self): #{{{
-        return ('global_settings', 'settings', 'after', 'before', 'onreturn', 'around',
+        return ('global_settings', 'settings', 'after', 'before', 'onreturn', 'replace', 'around',
                 'cond', 'return_cond', 'match_type', 'match_value', 'when', 'cascade',
                 'stream', 'match_return_type', 'match_return_value', 'when_return', 
                 'cascade_return')
@@ -354,16 +360,18 @@ class DecoSignal(Signal): #{{{
 def signal(**kwargs): #{{{
     def settings(func): #{{{
         if isinstance(getattr(func, 'signal', None), DecoSignal):
-            return func
+            signal = func.signal
+            locals().update(DecoSignalFunction=func)
         elif not _isf(func):
             raise TypeError('argument must be a python function')
-        defstr, callstr = cargdefstr(func)
-        signal = DecoSignal(func)
-        fstr = """
-        def DecoSignalFunction(%s):
-            return signal(%s)
-        """ %(defstr, callstr)
-        exec compile(fstr.strip(), '<string>', 'exec') in locals()
+        else:
+            defstr, callstr = cargdefstr(func)
+            signal = DecoSignal(func)
+            fstr = """
+            def DecoSignalFunction(%s):
+                return signal(%s)
+            """ %(defstr, callstr)
+            exec compile(fstr.strip(), '<string>', 'exec') in locals()
         d = wraps(func)(DecoSignalFunction)
         d.signal = signal
         for n in signal.decorators:
@@ -403,6 +411,11 @@ def after(signal): #{{{
 @_validate_signal
 def before(signal): #{{{
     return signal.before
+# End def #}}}
+
+@_validate_signal
+def replace(signal): #{{{
+    return signal.replace
 # End def #}}}
 
 @_validate_signal
