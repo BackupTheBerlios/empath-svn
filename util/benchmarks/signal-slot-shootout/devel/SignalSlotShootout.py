@@ -2,7 +2,7 @@
 # File: template.py
 # Copyright (C) 2007 Ariel De Ocampo arieldeocampo@gmail.com
 #
-# This module is part of the ${__name__} project and is released under
+# This module is part of the signal-slot-shootout project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 from __future__ import with_statement
 import os, os.path as op
