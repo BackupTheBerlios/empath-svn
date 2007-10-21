@@ -6,7 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 __all__ = ('iscallable', 'methodtype', 'methodname', 'cref', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
-            'cargnames', 'cargdefstr', 'cargval', 'callableobj',
+            'cargnames', 'cargdefstr', 'cargval', 'callableobj', 'cgetargspec',
             'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE')
 from weakref import ref
 from inspect import isfunction as _isf, ismethod as _ism, formatargspec, getargspec
@@ -25,25 +25,39 @@ def cargnames(obj): #{{{
     return fargnames, fvargs, fvkey
 # End def #}}}
 
+def cgetargspec(obj): #{{{
+    obj = callableobj(obj)
+    if not obj: return None
+    fargnames, fvargs, fvkey, fdef = getargspec(obj)
+    if not fdef:
+        return fargnames, fvargs, fvkey, {}
+    numargs = len(fargnames)
+    numdef = len(fdef)
+    diff = numargs - numdef
+    admatch = fargnames[diff:]
+    return fargnames, fvargs, fvkey, dict(zip(admatch, fdef))
+# End def #}}}
+
 def cargdefstr(obj): #{{{
     obj = callableobj(obj)
     if not obj: return None
     fargnames, fvargs, fvkey, fdef = getargspec(obj)
     argstr = formatargspec(fargnames, fvargs, fvkey, fdef)[1:-1]
-    return argstr
+    other = []
+    if fvargs:
+        other.append(''.join(['*', fvargs]))
+    if fvkey:
+        other.append(''.join(['**', fvkey]))
+    callstr = ', '.join(fargnames + other)
+    return argstr, callstr
 # End def #}}}
 
 def cargval(obj): #{{{
-    obj = callableobj(obj)
-    if not obj: return None
-    fargnames, fvargs, fvkey, fdef = getargspec(obj)
-    if not fdef:
-        return []
-    numargs = len(fargnames)
-    numdef = len(fdef)
-    diff = numargs - numdef
-    admatch = fargnames[diff:]
-    return dict(zip(admatch, fdef))
+    ret = cgetargspec(obj)
+    if not ret:
+        return None
+    else:
+        return ret[-1]
 # End def #}}}
 
 def callableobj(obj): #{{{

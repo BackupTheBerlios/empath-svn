@@ -51,6 +51,7 @@ class CallableWrapper(object): #{{{
         mtype = methodtype(obj)
         if mtype not in (METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND):
             o = obj.im_class
+            raise Exception(o.__name__)
             if mtype == METHODTYPE_INSTANCE:
                 o = obj.im_self
             self._object = cref(o, callback, weak=isweak)
@@ -75,8 +76,9 @@ class CallableWrapper(object): #{{{
         # If being called directly as a method instance and
         # no args got passed in i.e. no self reference,
         # add the object reference.
-        if len(args) == self._numargs - 1:
-            return f(self._object(), *args, **kwargs)
+        o = self._object
+        if o and len(args) == self._numargs - 1:
+            return f(o(), *args, **kwargs)
         else:
             return f(*args, **kwargs)
     # End def #}}}
