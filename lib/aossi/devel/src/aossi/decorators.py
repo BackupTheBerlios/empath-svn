@@ -5,26 +5,27 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+# stdlib imports
+from functools import wraps
+
+# 3rd-party imports
+from eqobj.collections.sequences import Sequence
+from eqobj.collections.mappings import Mapping
+from eqobj.validators.type import InstanceType
+
+# package imports
 from aossi.core import BaseSignal
 from aossi.signals import DefaultExtension, SignalExtension
 from aossi.cwrapper import cid
-from inspect import isfunction as _isf, ismethod as _ism
 from aossi.util import cargdefstr, StopCascade, isiterable, isclassmethod, isstaticmethod
+from aossi.util.introspect import isclass, isbasemetaclass, mro, isfunction as _isf, ismethod as _ism
 
-from aossi.util.callobj import evalobj, q
-
-from anyall.type import AllTypeSequences, AllTypeMappings
-from anyall.value import AllValueSequences, AllValueMappings
-
-from functools import wraps
 ogetattr = object.__getattribute__
-
-from smanstal.types.introspect import isclass, isbasemetaclass, mro
 
 __all__ = ('DecoSignalExtension', 'CustomDecoSignal', 'GenericMatchDecoSignal',
             'OnReturnDecoSignal', 'ReplaceDecoSignal', 'AroundDecoSignal', 
             'StreamDecoSignal', 'CondDecoSignal', 'WhenDecoSignal', 'CascadeDecoSignal', 
-            'MatchTypeDecoSignal', 'MatchValueDecoSignal',
+            'MatchTypeDecoSignal', 'MatchDecoSignal',
             'make_signal', 'DefaultDecoSignal', 'signal')
 
 # ==================================================================================
@@ -258,9 +259,6 @@ class DecoSignalExtension(SignalExtension): #{{{
 
     def _get_decorators(self): #{{{
         return self.__genericdecorators__ | self.__decorators__
-#        generic = self._generic_names()
-#        other = set(['global_settings', 'settings'])
-#        return generic | other
     # End def #}}}
 
     def _get_dependencies(self): #{{{
@@ -312,7 +310,7 @@ class StreamDecoSignal(CustomDecoSignal): #{{{
 # ==================================================================================
 class CondDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    __decorators__ = ['cond', 'return_cond']
+    __decorators__ = ['cond', 'return_cond', 'yield_cond']
     def __init__(self, signal, **kwargs): #{{{
         super(CondDecoSignal, self).__init__(signal, **kwargs)
         self.caller = chooser_callfunc()
@@ -320,12 +318,12 @@ class CondDecoSignal(CustomDecoSignal): #{{{
 
     def _expected_settings(self, kwargs, gset): #{{{
         sup = super(CondDecoSignal, self)._expected_settings(kwargs, gset)
-        return sup | frozenset(['chooser', 'return_chooser', 'policy', 'return_policy'])
+        return sup | frozenset(['chooser', 'return_chooser', 'policy', 'return_policy', 'yield_chooser', 'yield_policy'])
     # End def #}}}
 
     def _blocked_csettings(self): #{{{
         sup = super(CondDecoSignal, self)._blocked_csettings()
-        return sup | set(['chooser', 'return_chooser', 'policy', 'return_policy'])
+        return sup | set(['chooser', 'return_chooser', 'policy', 'return_policy', 'yield_chooser', 'yield_policy'])
     # End def #}}}
 
     def _set_custom_global_settings(self, kwargs, gset): #{{{
@@ -333,6 +331,9 @@ class CondDecoSignal(CustomDecoSignal): #{{{
         self.chooser = kwargs.get('chooser', self.chooser)
         self.return_chooser_policy = kwargs.get('return_policy', self.return_chooser_policy)
         self.return_chooser = kwargs.get('return_chooser', self.return_chooser)
+        self.yield_chooser_policy = kwargs.get('yield_policy', self.yield_chooser_policy)
+        self.yield_chooser = kwargs.get('yield_chooser', self.yield_chooser)
+        super(CondDecoSignal, self)._set_custom_global_settings(kwargs, gset)
     # End def #}}}
 
     def _cond(self, name, condfunc): #{{{
@@ -350,13 +351,17 @@ class CondDecoSignal(CustomDecoSignal): #{{{
     def return_cond(self, condfunc): #{{{
         return self._cond('choosereturn', condfunc)
     # End def #}}}
+
+    def yield_cond(self, condfunc): #{{{
+        return self._cond('chooseyield', condfunc)
+    # End def #}}}
 # End class #}}}
 # ==================================================================================
 # WhenDecoSignal
 # ==================================================================================
 class WhenDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    __decorators__ = ['when', 'when_return']
+    __decorators__ = ['when', 'when_return', 'when_yield']
     def _when(self, condfunc, s): #{{{
         if not isinstance(s, basestring):
             raise TypeError('argument must be a string')
@@ -385,6 +390,10 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
         return self._when(self.return_cond, s)
     # End def #}}}
 
+    def when_yield(self, s): #{{{
+        return self._when(self.yield_cond, s)
+    # End def #}}}
+
     def _get_dependencies(self): #{{{
         sup = super(WhenDecoSignal, self)._get_dependencies()
         return sup | frozenset([CondDecoSignal])
@@ -396,9 +405,9 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
 # ==================================================================================
 class CascadeDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
-    __decorators__ = ['cascade', 'cascade_return']
+    __decorators__ = ['cascade', 'cascade_return', 'cascade_yield']
     def _cascade(self, condfunc, s, stop=False): #{{{
-        self._set_settings({'policy': 'cascade'})
+        self._set_settings(dict((n, 'cascade') for n in ('policy', 'return_policy', 'yield_policy')))
         if not isinstance(s, basestring):
             raise TypeError('argument must be a string')
         elif not isinstance(stop, bool) and not isinstance(stop, basestring):
@@ -435,6 +444,10 @@ class CascadeDecoSignal(CustomDecoSignal): #{{{
         return self._cascade(self.return_cond, s, stop)
     # End def #}}}
 
+    def cascade_yield(self, s, stop=False): #{{{
+        return self._cascade(self.yield_cond, s, stop)
+    # End def #}}}
+
     def _get_dependencies(self): #{{{
         sup = super(CascadeDecoSignal, self)._get_dependencies()
         return sup | frozenset([CondDecoSignal])
@@ -446,13 +459,15 @@ class CascadeDecoSignal(CustomDecoSignal): #{{{
 class GenericMatchDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
     def _custom_blocked_csettings(self, name): #{{{
+        sw = name.startswith
         block_startswith = ('margs_', 'mkw_', 'match_')
-        return ( True in (name.startswith(s) for s in block_startswith) )
+        return any(sw(s) for s in block_startswith)
     # End def #}}}
 
     def _custom_expected(self, varname, kwargs, gset): #{{{
+        sw = varname.startswith
         exp_startswith = ('margs_', 'mkw_', 'match_')
-        return True in (varname.startswith(s) for s in exp_startswith)
+        return any(sw(s) for s in exp_startswith)
     # End def #}}}
 
     def _get_dependencies(self): #{{{
@@ -465,18 +480,21 @@ class GenericMatchDecoSignal(CustomDecoSignal): #{{{
 # ==================================================================================
 class MatchTypeDecoSignal(GenericMatchDecoSignal): #{{{
     __slots__ = ()
-    __decorators__ = ['match_type', 'match_return_type']
+    __decorators__ = ['match_type', 'match_return_type', 'match_yield_type']
+
     def _match_type(self, condfunc, *margs, **mkwargs): #{{{
+        it = InstanceType
         cs = self.connect_settings
-        g = cs.get('globals', None)
-        def mkcobj(obj, globals=None): #{{{
-            if isinstance(obj, basestring):
-                return evalobj(obj, globals)
-            else:
-                return obj
+        autotype = cs.pop('mkw_autotype', False)
+        def mk_itype(o): #{{{
+            if autotype:
+                if not isclass(o):
+                    o = o.__class__
+                return InstanceType(o)
+            return o
         # End def #}}}
         margs_len = len(margs)
-        arg_opt = dict(subset=False, exact=False, shallow=True)
+        arg_opt = dict()
         kw_opt = dict(arg_opt)
         match = {'match_': [arg_opt, kw_opt], 'margs_': [arg_opt], 'mkw_': [kw_opt]}
         for k, v in cs.iteritems():
@@ -488,10 +506,8 @@ class MatchTypeDecoSignal(GenericMatchDecoSignal): #{{{
                 for l in match[frag]:
                     l[key] = val
 
-        mseq = tuple(mkcobj(o, g) for o in margs)
-        mdict = dict((k, mkcobj(v, g)) for k, v in mkwargs.iteritems())
-        vargs = AllTypeSequences(mseq, **arg_opt)
-        vmap = AllTypeMappings(mdict, **kw_opt)
+        vargs = Sequence((it(t) for t in margs), **arg_opt)
+        vmap = Mapping(((mk_itype(k), v) for k, v in mkwargs.iteritems()), **kw_opt)
         def checksig(*args, **kwargs): #{{{
             return vargs == args and vmap == kwargs
         # End def #}}}
@@ -507,17 +523,21 @@ class MatchTypeDecoSignal(GenericMatchDecoSignal): #{{{
         return self._match_type(self.return_cond, marg)
     # End def #}}}
 
+    def match_yield_type(self, marg): #{{{
+        return self._match_type(self.yield_cond, marg)
+    # End def #}}}
+
 # End class #}}}
 # ==================================================================================
-# MatchValueDecoSignal
+# MatchDecoSignal
 # ==================================================================================
-class MatchValueDecoSignal(GenericMatchDecoSignal): #{{{
+class MatchDecoSignal(GenericMatchDecoSignal): #{{{
     __slots__ = ()
-    __decorators__ = ['match_value', 'match_return_value']
-    def _match_value(self, condfunc, *margs, **mkwargs): #{{{
+    __decorators__ = ['match', 'match_return', 'match_yield']
+    def _match(self, condfunc, *margs, **mkwargs): #{{{
         cs = self.connect_settings
         margs_len = len(margs)
-        arg_opt = dict(subset=False, exact=False, shallow=True)
+        arg_opt = dict()
         kw_opt = dict(arg_opt)
         match = {'match_': [arg_opt, kw_opt], 'margs_': [arg_opt], 'mkw_': [kw_opt]}
         for k, v in cs.iteritems():
@@ -529,8 +549,8 @@ class MatchValueDecoSignal(GenericMatchDecoSignal): #{{{
                 for l in match[frag]:
                     l[key] = val
 
-        v_arg = AllValueSequences(margs, **arg_opt)
-        v_kw = AllValueMappings(mkwargs, **kw_opt)
+        v_arg = Sequence(margs, **arg_opt)
+        v_kw = Mapping(mkwargs, **kw_opt)
 
         def checksig(*args, **kwargs): #{{{
             return v_arg == args and v_kw == kwargs
@@ -539,12 +559,16 @@ class MatchValueDecoSignal(GenericMatchDecoSignal): #{{{
         return condfunc(checksig)
     # End def #}}}
 
-    def match_value(self, marg, *margs, **mkwargs): #{{{
-        return self._match_value(self.cond, marg, *margs, **mkwargs)
+    def match(self, marg, *margs, **mkwargs): #{{{
+        return self._match(self.cond, marg, *margs, **mkwargs)
     # End def #}}}
 
-    def match_return_value(self, marg): #{{{
-        return self._match_value(self.return_cond, marg)
+    def match_return(self, marg): #{{{
+        return self._match(self.return_cond, marg)
+    # End def #}}}
+
+    def match_yield(self, marg): #{{{
+        return self._match(self.yield_cond, marg)
     # End def #}}}
 
 # End class #}}}
@@ -578,8 +602,8 @@ def make_signal(**kwargs): #{{{
         signal = getattr(func, 'signal', None)
         if isinstance(signal, DecoSignalExtension) and isinstance(signal, BaseSignal):
             locals().update(DecoSignalFunction=func)
-        elif not _isf(func):
-            raise TypeError('argument must be a python function')
+        elif not _isf(func) and not isclass(func):
+            raise TypeError('argument must be a python function or a python class')
         else:
             defstr, callstr = cargdefstr(func)
             signal = mkdeco(func, kwargs)
@@ -632,7 +656,7 @@ def global_settings(signal, **kwargs): #{{{
 # ==================================================================================
 class DefaultDecoSignal(OnReturnDecoSignal, ReplaceDecoSignal, AroundDecoSignal, 
                 StreamDecoSignal, CondDecoSignal, WhenDecoSignal, CascadeDecoSignal, 
-                MatchTypeDecoSignal, MatchValueDecoSignal): #{{{
+                MatchTypeDecoSignal, MatchDecoSignal): #{{{
     __slots__ = ()
 # End class #}}}
 
