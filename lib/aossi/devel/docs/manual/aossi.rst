@@ -6,7 +6,7 @@ AOSSI Manual
 :Version: 0.1.0
 :Date: 2007-05-13
 
-Copyright (C) 2007 Ariel De Ocampo <arieldeocampo@gmail.com>
+Copyright (C) 2007 Ariel De Ocampo
 
 Abstract
 =========
