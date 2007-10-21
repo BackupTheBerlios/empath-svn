@@ -11,25 +11,29 @@ Implementation
 
 >>> from aossi.signals import SignalExtension
 >>> class OnReturnExtension(SignalExtension):
-...    __slots__ = ()
-...    def _init_funclist_names(self):
-...        for n in super(OnReturnExtension, self)._init_funclist_names():
-...            yield n
-...        yield 'onreturn'
-...    def _init_calls_after(self, cleanlist):
-...        def call_onreturn(self, cw, func, ret, args, kwargs):
-...            callfunc = self.caller
-...            for rfunc, t in cleanlist('onreturn'):
-...                callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
-...            return ret
-...        ret = super(OnReturnExtension, self)._init_calls_after(cleanlist)
-...        ret['onreturn'] = call_onreturn
-...        return ret
-...    def _init_default_connections(self):
-...        for n in super(OnReturnExtension, self)._init_default_connections():
-...            yield n
-...        yield 'onreturn'
-...
+...     __slots__ = ()
+...     def _init_funclist_names(self):
+...         for n in super(OnReturnExtension, self)._init_funclist_names():
+...             yield n
+...         yield 'onreturn'
+... 
+...     def _init_calls_after(self, cleanlist, have_slotfunc):
+...         def call_onreturn(self, cw, func, ret, args, kwargs):
+...             callfunc = None
+...             for rfunc, t in cleanlist('onreturn'):
+...                 if not callfunc:
+...                     callfunc = self.caller
+...                 callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
+...             return ret
+...         ret = super(OnReturnExtension, self)._init_calls_after(cleanlist, have_slotfunc)
+...         ret['onreturn'] = call_onreturn
+...         return ret
+... 
+...     def _init_default_connections(self):
+...         for n in super(OnReturnExtension, self)._init_default_connections():
+...             yield n
+...         yield 'onreturn'
+... 
 
 ``OnReturnExtension`` specifies an empty __slots__ attribute to preserve the
 same memory-saving semantics of its ancestor, but for most purposes, it

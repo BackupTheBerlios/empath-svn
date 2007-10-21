@@ -11,22 +11,25 @@ Implementation
 
 >>> from aossi.signals import SignalExtension
 >>> class AroundExtension(SignalExtension):
-...    __slots__ = ()
-...    def _init_funclist_names(self):
-...        for n in super(AroundExtension, self)._init_funclist_names():
-...            yield n
-...        yield 'around'
-...    def _init_calls_around(self, cleanlist): #{{{
-...        def call_around(self):
-...            return (arfunc for arfunc, _ in cleanlist('around'))
-...        ret = super(AroundExtension, self)._init_calls_around(cleanlist)
-...        ret['around'] = call_around
-...        return ret
-...    def _init_default_connections(self):
-...        for n in super(AroundExtension, self)._init_default_connections():
-...            yield n
-...        yield 'around'
-...
+...     __slots__ = ()
+...     def _init_funclist_names(self): #{{{
+...         for n in super(AroundExtension, self)._init_funclist_names():
+...             yield n
+...         yield 'around'
+... 
+...     def _init_calls_around(self, cleanlist, have_slotfunc):
+...         def call_around(self): #{{{
+...             return (arfunc for arfunc, _ in cleanlist('around'))
+...         # End def #}}}
+...         ret = super(AroundExtension, self)._init_calls_around(cleanlist, have_slotfunc)
+...         ret['around'] = call_around
+...         return ret
+... 
+...     def _init_default_connections(self):
+...         for n in super(AroundExtension, self)._init_default_connections():
+...             yield n
+...         yield 'around'
+... 
 
 ``AroundExtension`` specifies an empty __slots__ attribute to preserve the
 same memory-saving semantics of its ancestor, but for most purposes, it

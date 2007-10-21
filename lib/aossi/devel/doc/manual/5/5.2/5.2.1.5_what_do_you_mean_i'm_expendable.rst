@@ -12,34 +12,36 @@ Implementation
 
 >>> from aossi.signals import SignalExtension
 >>> class ReplaceExtension(SignalExtension):
-...    __slots__ = ()
-...    def _init_funclist_names(self):
-...        for n in super(ReplaceExtension, self)._init_funclist_names():
-...            yield n
-...        yield 'replace'
-...    def _init_calls_replace(self, cleanlist):
-...        def call_replace(self):
-...            def do_wrap(func):
-...                def newcall(cw, *args, **kwargs):
-...                    callfunc, rfunc, ret = self.caller, None, None
-...                    for sfunc, t in cleanlist('replace'):
-...                        rfunc = sfunc
-...                    if rfunc:
-...                        ret = callfunc(self, rfunc, 'replace', False, ret, *args, **kwargs)
-...                    else:
-...                        ret = func(*args, **kwargs)
-...                    return ret
-...                return newcall
-...            # Need to return an iterator
-...            yield do_wrap
-...        ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist)
-...        ret['replace'] = call_replace
-...        return ret
-...    def _init_default_connections(self):
-...        for n in super(ReplaceExtension, self)._init_default_connections():
-...            yield n
-...        yield 'replace'
-...
+...     __slots__ = ()
+...     def _init_funclist_names(self):
+...         for n in super(ReplaceExtension, self)._init_funclist_names():
+...             yield n
+...         yield 'replace'
+... 
+...     def _init_calls_replace(self, cleanlist, have_slotfunc):
+...         def call_replace(self):
+...             def do_wrap(func):
+...                 def newcall(cw, *args, **kwargs):
+...                     callfunc, rfunc, ret = self.caller, None, None
+...                     for sfunc, t in cleanlist('replace'):
+...                         rfunc = sfunc
+...                     if rfunc:
+...                         ret = callfunc(self, rfunc, 'replace', False, ret, *args, **kwargs)
+...                     else:
+...                         ret = func(*args, **kwargs)
+...                     return ret
+...                 return newcall
+...             # Need to return an iterator
+...             yield do_wrap
+...         ret = super(ReplaceExtension, self)._init_calls_replace(cleanlist, have_slotfunc)
+...         ret['replace'] = call_replace
+...         return ret
+... 
+...     def _init_default_connections(self):
+...         for n in super(ReplaceExtension, self)._init_default_connections():
+...             yield n
+...         yield 'replace'
+... 
 
 Besides the methods overridden as per the previous extensions, the method
 that defines the slots available in the **replace** category is 

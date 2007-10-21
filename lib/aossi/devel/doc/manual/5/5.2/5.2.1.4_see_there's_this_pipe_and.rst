@@ -15,61 +15,65 @@ Implementation
 >>> from aossi.util.introspect import mro
 >>> from aossi.core import getsignal
 >>> class StreamExtension(SignalExtension):
-...    __slots__ = ()
-...    def _init_funclist_names(self):
-...        for n in super(StreamExtension, self)._init_funclist_names():
-...            yield n
-...        yield 'streamin'
-...        yield 'stream'
-...    def _init_calls_around(self, cleanlist):
-...        def call_streamin(self):
-...            def streamin_wrap(func):
-...                def wrap(cw, *args, **kwargs):
-...                    if not self._funclist['streamin']:
-...                        return func(*args, **kwargs)
-...                    sig, signame = None, cw.__name__
-...                    if args:
-...                        for cls in mro(args[0].__class__):
-...                            sig = getsignal(getattr(cls, signame, None))
-...                            if sig and cw is sig.func:
-...                                break
-...                        else:
-...                            sig = None
-...                    if sig:
-...                        args = (args[0], list(args[1:]), kwargs)
-...                    else:
-...                        args = (list(args), kwargs)
-...                    callfunc = self.caller
-...                    for sfunc, t in cleanlist('streamin'):
-...                        callfunc(self, sfunc, 'streamin', False, None, *args)
-...                    if sig:
-...                        args, kwargs = [args[0]] + args[1], args[2]
-...                    else:
-...                        args, kwargs = args
-...                    return func(*args, **kwargs)
-...                return wrap
-...            yield streamin_wrap
-...        sup = super(StreamExtension, self)._init_calls_around(cleanlist)
-...        ret = odict(sup.iteritems())
-...        ret['streamin'] = call_streamin
-...        return ret
-...    def _init_calls_after(self, cleanlist):
-...        def call_stream(self, cw, func, ret, args, kwargs):
-...            callfunc = self.caller
-...            for sfunc, t in cleanlist('stream'):
-...                ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
-...            return ret
-...        sup = super(StreamExtension, self)._init_calls_after(cleanlist)
-...        ret = odict()
-...        ret['stream'] = call_stream
-...        ret.update(sup.iteritems())
-...        return ret
-...    def _init_default_connections(self):
-...        for n in super(StreamExtension, self)._init_default_connections():
-...            yield n
-...        yield 'streamin'
-...        yield 'stream'
-...
+...     __slots__ = ()
+...     def _init_funclist_names(self):
+...         for n in super(StreamExtension, self)._init_funclist_names():
+...             yield n
+...         yield 'streamin'
+...         yield 'stream'
+... 
+...     def _init_calls_around(self, cleanlist, have_slotfunc):
+...         def call_streamin(self):
+...             def streamin_wrap(func):
+...                 def wrap(cw, *args, **kwargs):
+...                     if have_slotfunc('streamin'):
+...                         sig, signame = None, cw.__name__
+...                         if args:
+...                             for cls in mro(args[0].__class__):
+...                                 sig = getsignal(getattr(cls, signame, None))
+...                                 if sig and cw is sig.func:
+...                                     break
+...                             else:
+...                                 sig = None
+...                         if sig:
+...                             args = (args[0], list(args[1:]), kwargs)
+...                         else:
+...                             args = (list(args), kwargs)
+...                         callfunc = self.caller
+...                         for sfunc, t in cleanlist('streamin'):
+...                             callfunc(self, sfunc, 'streamin', False, None, *args)
+...                         if sig:
+...                             args, kwargs = [args[0]] + args[1], args[2]
+...                         else:
+...                             args, kwargs = args
+...                     return func(*args, **kwargs)
+...                 return wrap
+...             yield streamin_wrap
+...         sup = super(StreamExtension, self)._init_calls_around(cleanlist, have_slotfunc)
+...         ret = odict(sup.iteritems())
+...         ret['streamin'] = call_streamin
+...         return ret
+... 
+...     def _init_calls_after(self, cleanlist, have_slotfunc):
+...         def call_stream(self, cw, func, ret, args, kwargs):
+...             callfunc = None
+...             for sfunc, t in cleanlist('stream'):
+...                 if not callfunc:
+...                     callfunc = self.caller
+...                 ret = callfunc(self, sfunc, 'stream', True, ret, *args, **kwargs)
+...             return ret
+...         sup = super(StreamExtension, self)._init_calls_after(cleanlist, have_slotfunc)
+...         ret = odict()
+...         ret['stream'] = call_stream
+...         ret.update(sup.iteritems())
+...         return ret
+... 
+...     def _init_default_connections(self):
+...         for n in super(StreamExtension, self)._init_default_connections():
+...             yield n
+...         yield 'streamin'
+...         yield 'stream'
+... 
 
 Like the ``AroundExtension`` and ``OnReturnExtension`` classes,
 ``StreamExtension`` overrides various methods to implement two slots in the
