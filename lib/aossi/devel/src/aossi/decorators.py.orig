@@ -714,67 +714,39 @@ class DecoSignalExtension(_DecoSignalExtension): #{{{
 # ==================================================================================
 # signal
 # ==================================================================================
-<<<<<<< /tmp/decorators.py~base.GAuSmT
-def make_signal(**kwargs): #{{{
-    def mkdeco(f, kwargs): #{{{
-        sigkw = kwargs.pop('sigkw_', {})
-        if 'overload' in kwargs:
-            sigkw['weak'] = False
-=======
 def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
     if sigopt == None: sigopt = {}
     if opt == None: opt = {}
     def mkdeco(f, opt): #{{{
         if 'overload' in opt:
             sigopt['weak'] = False
->>>>>>> /tmp/decorators.py~other.MlC42v
         signature = []
         sigapp = signature.append
-<<<<<<< /tmp/decorators.py~base.GAuSmT
-        for ext in kwargs.pop('decoext_', ()):
-=======
         for ext in decoext:
->>>>>>> /tmp/decorators.py~other.MlC42v
             if not isclass(ext) or not issubclass(ext, CustomDecoSignal):
-<<<<<<< /tmp/decorators.py~base.GAuSmT
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1815517083
+                raise TypeError("The 'decoext' argument expected CustomDecoSignal classes, got %s instead" %ext.__name__)
+||||||| /tmp/decorators.py~base.Uhx56E
                 raise TypeError("The 'decoext' keyword expected CustomDecoSignal classes, got %s instead" %ext.__name__)
 =======
-                raise TypeError("The 'decoext' argument expected CustomDecoSignal classes, got %s instead" %ext.__name__)
->>>>>>> /tmp/decorators.py~other.MlC42v
+                raise TypeError("The 'decoext_' keyword expected CustomDecoSignal classes, got %s instead" %ext.__class__.__name__)
+>>>>>>> /tmp/decorators.py~other.8pOpqD
             sigapp(ext)
         sigapp(DecoSignalExtension)
-<<<<<<< /tmp/decorators.py~base.GAuSmT
-        for ext in kwargs.pop('sigext_', ()):
-=======
         for ext in sigext:
->>>>>>> /tmp/decorators.py~other.MlC42v
             if not isclass(ext) or not issubclass(ext, SignalExtension):
-<<<<<<< /tmp/decorators.py~base.GAuSmT
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.1815517083
+                raise TypeError("The 'sigext' argument expected SignalExtension classes, got %s instead" %ext.__name__)
+||||||| /tmp/decorators.py~base.Uhx56E
                 raise TypeError("The 'sigext' keyword expected SignalExtension classes, got %s instead" %ext.__name__)
 =======
-                raise TypeError("The 'sigext' argument expected SignalExtension classes, got %s instead" %ext.__name__)
->>>>>>> /tmp/decorators.py~other.MlC42v
+                raise TypeError("The 'sigext_' keyword expected SignalExtension classes, got %s instead" %ext.__class__.__name__)
+>>>>>>> /tmp/decorators.py~other.8pOpqD
             sigapp(ext)
         sigapp(BaseSignal)
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.268736195
         _NewDecoSignal = newclass('_NewDecoSignal', tuple(signature), 
                                   dict(__slots__ = ()))
         return _NewDecoSignal(f, **sigopt)
-||||||| /tmp/decorators.py~base.GAuSmT
-        cstr = """
-        class _NewDecoSignal(%s):
-            __slots__ = ()
-        """ %', '.join('signature[%i]' %i for i in xrange(len(signature)))
-        exec compile(cstr.strip(), '<string>', 'exec') in locals()
-        return _NewDecoSignal(f, **sigkw)
-=======
-        cstr = """
-        class _NewDecoSignal(%s):
-            __slots__ = ()
-        """ %', '.join('signature[%i]' %i for i in xrange(len(signature)))
-        exec compile(cstr.strip(), '<string>', 'exec') in locals()
-        return _NewDecoSignal(f, **sigopt)
->>>>>>> /tmp/decorators.py~other.MlC42v
     # End def #}}}
     def settings(func): #{{{
         signal = getattr(func, 'signal', None)
@@ -783,7 +755,6 @@ def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
         elif not _isf(func) and not isclass(func):
             raise TypeError('argument must be a python function or a python class')
         else:
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/src/aossi/decorators.py.orig.268736195
             signal = mkdeco(func, opt)
             args, vargs, vkeys, defaults = spec = cgetargspec(func)
             code_args = args + [v for v in (vargs, vkeys) if v != None]
@@ -791,38 +762,14 @@ def make_signal(sigext=(), decoext=(), sigopt=None, opt=None): #{{{
             fcode.code[:] = ([(SetLineno, 2), (LOAD_GLOBAL, 'signal')] + bp_call_args(*spec) + 
                             [(RETURN_VALUE, None)])
             DecoSignalFunction = newfunction(fcode.to_code(), locals(), 'DecoSignalFunction', default_argvals(args, defaults))
-||||||| /tmp/decorators.py~base.GAuSmT
-            defstr, callstr = cargdefstr(func)
-            signal = mkdeco(func, kwargs)
-            fstr = """
-            def DecoSignalFunction(%s):
-                return signal(%s)
-            """ %(defstr, callstr)
-            exec compile(fstr.strip(), '<string>', 'exec') in locals()
-=======
-            defstr, callstr = cargdefstr(func)
-            signal = mkdeco(func, opt)
-            fstr = """
-            def DecoSignalFunction(%s):
-                return signal(%s)
-            """ %(defstr, callstr)
-            exec compile(fstr.strip(), '<string>', 'exec') in locals()
->>>>>>> /tmp/decorators.py~other.MlC42v
         d = DecoSignalFunction
         d = wraps(func)(d)
         d.signal = signal
         signal.signalfunc = d
         for n in signal.decorators:
             setattr(d, n, getattr(signal, n))
-<<<<<<< /tmp/decorators.py~base.GAuSmT
-        kwargs.pop('decoext_', ())
-        kwargs.pop('sigext_', ())
-        kwargs['MAKE_SIGNAL'] = 1
-        return global_settings(d, **kwargs)(d)
-=======
         opt['MAKE_SIGNAL'] = 1
         return global_settings(d, **opt)(d)
->>>>>>> /tmp/decorators.py~other.MlC42v
     # End def #}}}
     return settings
 # End def #}}}
@@ -865,13 +812,7 @@ class DefaultDecoSignal(OnReturnDecoSignal, ReplaceDecoSignal, AroundDecoSignal,
 def signal(**kwargs): #{{{
     sigext = [DefaultExtension]
     decoext = [DefaultDecoSignal]
-<<<<<<< /tmp/decorators.py~base.GAuSmT
-    kwargs['sigext_'] = sigext
-    kwargs['decoext_'] = decoext
-    return make_signal(**kwargs)
-=======
     return make_signal(sigext, decoext, opt=kwargs)
->>>>>>> /tmp/decorators.py~other.MlC42v
 # End def #}}}
 # ==================================================================================
 # 
