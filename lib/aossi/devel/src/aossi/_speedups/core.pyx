@@ -239,7 +239,7 @@ cdef class _bs_iterslot: #{{{
     # End def #}}}
 
     def __next__(self): #{{{
-        f, _ = selfcleanlist.next()
+        f, _ = self.cleanlist.next()
         return f
     # End def #}}}
 # End class #}}}
@@ -509,7 +509,7 @@ cdef class _BaseSignal: #{{{
         # End def #}}}
     property valid:
         def __get__(self): #{{{
-            return (not self._func.isdead)
+            return bool(not self._func.isdead)
         # End def #}}}
     property connected:
         def __get__(self): #{{{
