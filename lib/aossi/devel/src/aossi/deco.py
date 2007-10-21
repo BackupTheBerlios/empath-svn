@@ -16,10 +16,11 @@ from anyall.type import AllTypeSequences, AllTypeMappings
 from anyall.value import AllValueSequences, AllValueMappings
 
 from functools import wraps
+ogetattr = object.__getattribute__
 
 __all__ = ('DecoSignal', 'signal', 'after', 'before', 'around',
             'onreturn', 'cond', 'return_cond', 'match_type', 'match_value', 'when', 'cascade', 
-            'stream', 'settings', 'global_settings', 
+            'stream', 'streamin', 'settings', 'global_settings', 
             'match_return_type', 'match_return_value', 'when_return', 'cascade_return')
 
 # ==================================================================================
@@ -64,6 +65,8 @@ def func_ismethod(func, *args): #{{{
 # ==================================================================================
 class DecoSignal(Signal): #{{{
     __slots__ = ()
+    __generic__ = frozenset(['after', 'before', 'onreturn', 'replace', 'around',
+                                'streamin', 'stream'])
     def __init__(self, signal, **kwargs): #{{{
         self._vars = getattr(self, '_vars', dict())
         self._vars.update(settings={}, global_settings={}, methods=[], prev=None)
@@ -74,6 +77,15 @@ class DecoSignal(Signal): #{{{
     def __call__(self, *args, **kwargs): #{{{
         self._vars['prev'] = self.func
         return super(DecoSignal, self).__call__(*args, **kwargs)
+    # End def #}}}
+
+    def __getattribute__(self, name): #{{{
+        generic_deco = ogetattr(self, '__generic__')
+        if name == '__generic__':
+            return generic_deco
+        elif name in generic_deco:
+            return (lambda f: ogetattr(self, '_generic')(f, name))
+        return super(DecoSignal, self).__getattribute__(name)
     # End def #}}}
 
     def _csettings(self): #{{{
@@ -152,42 +164,16 @@ class DecoSignal(Signal): #{{{
         return donothing
     # End def #}}}
 
-    def after(self, func): #{{{
+    def _generic(self, func, name): #{{{
         pfunc, s = self._func_settings(func)
-        self.connect(pfunc, **s)
-        return func
-    # End def #}}}
-
-    def before(self, func): #{{{
-        pfunc, s = self._func_settings(func)
-        self.connect(before=[pfunc], **s)
-        return func
-    # End def #}}}
-
-    def replace(self, func): #{{{
-        pfunc, s = self._func_settings(func)
-        self.connect(replace=[pfunc], **s)
-        return func
-    # End def #}}}
-
-    def around(self, func): #{{{
-        pfunc, s = self._func_settings(func)
-        self.connect(around=[pfunc], **s)
-        return func
-    # End def #}}}
-
-    def onreturn(self, func): #{{{
-        pfunc, s = self._func_settings(func)
-        self.connect(onreturn=[pfunc], **s)
+        s[name] = [pfunc]
+        self.connect(**s)
         return func
     # End def #}}}
 
     def _cond(self, name, condfunc): #{{{
         def factory(func): #{{{
-            pfunc, s = self._func_settings((condfunc, func))
-            s[name] = [pfunc]
-            self.connect(**s)
-            return func
+            return self._generic((condfunc, func), name)
         # End def #}}}
         return factory
     # End def #}}}
@@ -340,17 +326,13 @@ class DecoSignal(Signal): #{{{
         return self._cascade(self.return_cond, s, stop)
     # End def #}}}
 
-    def stream(self, func): #{{{
-        pfunc, s = self._func_settings(func)
-        self.connect(stream=[pfunc], **s)
-        return func
-    # End def #}}}
-
     def _get_decorators(self): #{{{
-        return ('global_settings', 'settings', 'after', 'before', 'onreturn', 'replace', 'around',
-                'cond', 'return_cond', 'match_type', 'match_value', 'when', 'cascade',
-                'stream', 'match_return_type', 'match_return_value', 'when_return', 
-                'cascade_return')
+        generic = self.__generic__
+        other = set(['global_settings', 'settings', 'cond', 'return_cond', 
+                'match_type', 'match_value', 'when', 'cascade',
+                'match_return_type', 'match_return_value', 'when_return', 
+                'cascade_return'])
+        return generic | other
     # End def #}}}
 
     # Properties #{{{
@@ -484,4 +466,9 @@ def cascade_return(signal, s, stop=False): #{{{
 @_validate_signal
 def stream(signal): #{{{
     return signal.stream
+# End def #}}}
+
+@_validate_signal
+def streamin(signal): #{{{
+    return signal.streamin
 # End def #}}}
