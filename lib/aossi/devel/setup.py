@@ -10,7 +10,7 @@ setup(
     name="aossi",
     version="0.1.0",
     packages=find_packages('src'),
-    package_dir={'': 'src'}
+    package_dir={'': 'src'},
 
 #    package_data={'aossi_docs': 'data/somefile.dat'},
 
