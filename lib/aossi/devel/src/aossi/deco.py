@@ -188,7 +188,8 @@ class DecoSignal(Signal): #{{{
 
     def _cond(self, name, condfunc): #{{{
         def factory(func): #{{{
-            return self._generic((condfunc, func), name)
+            self._generic((condfunc, func), name)
+            return func
         # End def #}}}
         return factory
     # End def #}}}
