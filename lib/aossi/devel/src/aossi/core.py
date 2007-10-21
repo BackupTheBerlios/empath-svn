@@ -5,17 +5,16 @@
 # This module is part of the aossi project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+# stdlib imports
 from warnings import warn
 
+# package imports
 from aossi.cwrapper import CallableWrapper, cid
-from aossi.util import iscallable, ChooseCallable, ChoiceObject
+from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
 from aossi.util.introspect import ismethod
-
 from aossi.util.odict import odict
 
-from smanstal.decorators import property_
-
-__all__ = ('BaseSignal', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func',
+__all__ = ('BaseSignal', 'cid', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func',
             'getsignal')
 # ==================================================================================
 # General Helpers
@@ -54,7 +53,7 @@ def connect_func(self, listname, slots): #{{{
         if not iscallable(f):
             raise TypeError('Detected non-callable element of \'%s\' slots' %listname)
         c = CallableWrapper(f, cleanfunc, weak=weak)
-        found = self._find(f, listname)
+        found = self._find(f, listname) or c.cid in (cid(o) for o in test_store)
         if found and uniq:
             continue
         test_store.append(c)
@@ -218,7 +217,7 @@ class BaseSignal(object): #{{{
                     sfunc_wrap(cfunc)
         do_wrap = self._generate_wrapfactory()
         sfunc_wrap(do_wrap)
-        self.active = True
+        self._vars['active'] = True
     # End def #}}}
 
     def _find_cond(self, **kw): #{{{
@@ -248,7 +247,6 @@ class BaseSignal(object): #{{{
         if foundindex is not None:
             return foundindex, foundlist
         return None
-
     # End def #}}}
 
     def connect(self, *after, **other_slots): #{{{
@@ -278,6 +276,10 @@ class BaseSignal(object): #{{{
 
         if self.active:
             self.reload()
+    # End def #}}}
+
+    def slot(self, name): #{{{
+        return (f for f, _ in self._cleanlist(name))
     # End def #}}}
 
     def _setactive(self, v): #{{{
@@ -312,22 +314,6 @@ class BaseSignal(object): #{{{
     caller = property(lambda s: s._vars['caller'], lambda s, c: s._setcaller(c))
     original = property(lambda s: s._func.original)
     # End properties #}}}
-
-    @property_
-    def after(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('after'))
-        # End def #}}}
-        return locals()
-    # End def #}}}
-
-    @property_
-    def before(): #{{{
-        def fget(self): #{{{
-            return (f for f, _ in self._cleanlist('before'))
-        # End def #}}}
-        return locals()
-    # End def #}}}
 # End class #}}}
 
 def getsignal(obj): #{{{
