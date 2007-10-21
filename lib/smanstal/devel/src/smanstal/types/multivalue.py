@@ -171,11 +171,21 @@ class MultiValue(object): #{{{
     # End def #}}}
 
     def _mkeqfunc(self): #{{{
-        return lambda s, o: s == o
+        return self.__compare__
+#        return lambda s, o: s == o
     # End def #}}}
 
     def _mktfunc(self): #{{{
-        return lambda k, v: v
+        return self.__transform__
+#        return lambda k, v: v
+    # End def #}}}
+
+    def __compare__(self, o1, o2): #{{{
+        return o1 == o2
+    # End def #}}}
+
+    def __transform__(self, name, value): #{{{
+        return value
     # End def #}}}
 
     # Properties #{{{

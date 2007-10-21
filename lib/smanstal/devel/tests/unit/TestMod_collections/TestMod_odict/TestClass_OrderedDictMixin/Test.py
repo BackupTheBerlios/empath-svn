@@ -43,7 +43,7 @@ class Test_odict(BaseUnitTest): #{{{
         other = odict(d)
         od = odict(d)
         self.assertEqual(od, other)
-        other._keys = []
+        other._keys[:] = []
         self.assertNotEqual(od, other)
     # End def #}}}
 
@@ -135,24 +135,24 @@ class Test_odict(BaseUnitTest): #{{{
         self.assertEqual(od.values(), expected)
     # End def #}}}
 
-    def test_itergetfunc(self): #{{{
-        '''itergetfunc function gets called'''
-        count = [0]
-        class test(odict): #{{{
-            def _itergetfunc(self): #{{{
-                supfunc = super(test, self)._itergetfunc()
-                def func(index): #{{{
-                    count[0] += 1
-                    return supfunc(index)
-                # End def #}}}
-                return func
-            # End def #}}}
-        # End class #}}}
+#    def test_itergetfunc(self): #{{{
+#        '''itergetfunc function gets called'''
+#        count = [0]
+#        class test(odict): #{{{
+#            def _itergetfunc(self): #{{{
+#                supfunc = super(test, self)._itergetfunc()
+#                def func(index): #{{{
+#                    count[0] += 1
+#                    return supfunc(index)
+#                # End def #}}}
+#                return func
+#            # End def #}}}
+#        # End class #}}}
 
-        od = test(self.data)
-        od.items()
-        self.assertEqual(count[0], len(self.data))
-    # End def #}}}
+#        od = test(self.data)
+#        od.items()
+#        self.assertEqual(count[0], len(self.data))
+#    # End def #}}}
 
     def test_fromkeys(self): #{{{
         '''Test fromkeys'''

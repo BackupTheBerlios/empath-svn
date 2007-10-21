@@ -10,7 +10,7 @@ from smanstal.collections.multidict import MultiDictMixin
 __all__ = ('omultidict',)
 
 class omultidict(OrderedDictMixin, MultiDictMixin, dict): #{{{
-    __slots__ = ('_keys',)
+    __slots__ = ()
     def __str__(self): #{{{
         o = 'omultidict([%s])'
         t = ', '.join('(%s, %s)' %(repr(k), repr(v)) for k, v in self.iteritems())
@@ -33,16 +33,11 @@ class omultidict(OrderedDictMixin, MultiDictMixin, dict): #{{{
         return True
     # End def #}}}
 
-    def _itergetfunc(self): #{{{
-        keys = self._keys
-        get = self.get
-        def func(index): #{{{
-            key, ind = keys[index]
-            return get(key, index=ind)
-        # End def #}}}
-        return func
+    def _indexvalue(self, index, getfunc, keys): #{{{
+        key = keys[index]
+        return getfunc(key, index=ind)
     # End def #}}}
-
+    
     def _pop_removekey(self, key, *args, **kw): #{{{
         remove = self._keys.remove
         while 1:
