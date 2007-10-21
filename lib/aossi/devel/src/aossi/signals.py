@@ -319,13 +319,13 @@ class ChooseExtension(SignalExtension): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
                     gen = func(*args, **kwargs)
-                    if not isinstance(gen, GeneratorType):
-                        gen = (gen,)
+                    if not isinstance(gen, GeneratorType) or not self._funclist['chooseyield']:
+                        return gen
                     def mk_gen(gen): #{{{
                         for ret in gen:
                             ret_choice = choice(self, 'chooseyield', 'yield_chooser', self.yield_chooser_policy, 
                                     func, True, ret, *args, **kwargs)
-                            yield callchoice(self, func, ret_choice, True, ret, *args, **kwargs)
+                            yield callchoice(self, func, ret_choice, True, ret, ret)
                     # End def #}}}
                     return mk_gen(gen)
                 # End def #}}}
