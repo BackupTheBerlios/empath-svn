@@ -82,11 +82,11 @@ def connect_choosefunc(self, listname, slots): #{{{
 def disconnect_choosefunc(self, listname, slots): #{{{
     l, vals = self._funclist[listname], slots.get(listname, ())
     delall = bool(slots.get('deleteall', False))
-    if delall and not vals:
+    if delall and (not (len(slots)-1) or listname in slots):
         while l:
             l.pop()
         return
-    for tup in vals:
+    for tup in slots.get(listname, ()):
         f, cond = tup, None
         if not iscallable(f):
             cond, f = tup
@@ -162,6 +162,14 @@ class OnReturnExtension(SignalExtension): #{{{
             yield n
         yield 'onreturn'
     # End def #}}}
+
+    @property_
+    def onreturn(): #{{{
+        def fget(self): #{{{
+            return (f for f, _ in self._cleanlist('onreturn'))
+        # End def #}}}
+        return locals()
+    # End def #}}}
 # End class #}}}
 # ==================================================================================
 # StreamExtension
@@ -212,6 +220,22 @@ class StreamExtension(SignalExtension): #{{{
             yield n
         yield 'streamin'
         yield 'stream'
+    # End def #}}}
+
+    @property_
+    def stream(): #{{{
+        def fget(self): #{{{
+            return (f for f, _ in self._cleanlist('stream'))
+        # End def #}}}
+        return locals()
+    # End def #}}}
+
+    @property_
+    def streamin(): #{{{
+        def fget(self): #{{{
+            return (f for f, _ in self._cleanlist('streamin'))
+        # End def #}}}
+        return locals()
     # End def #}}}
 # End class #}}}
 # ==================================================================================
