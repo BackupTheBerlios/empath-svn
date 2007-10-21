@@ -9,4 +9,4 @@ docs[/]html[/].*
 screenrc
 [.]coverage
 .*[.]so
-build[/].*
+tests[/]profile[/]data[/].*

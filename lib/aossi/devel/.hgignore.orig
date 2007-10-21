@@ -1,16 +1,33 @@
 commit[.]log
 [.].*[.]sw[po]
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.264101551
 .*[.]py[co]
 .*[.].*~
 ([^/]*[/])*[.]svn
-tests[/]profile[/]data[/].*
+||||||| /tmp/.hgignore~base.15Bt_J
+.*[.]pyc
+src[/]aossi.egg-info[/].*
+=======
+.*[.]py[co]
+.*[.].*~
+([^/]*[/])*[.]svn
 src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.1624021163
 [.]coverage
-||||||| /tmp/.hgignore~base.3oMcf0
-=======
+.*[.]so
+>>>>>>> /tmp/.hgignore~other.h0tAib
+tests[/]profile[/]data[/].*
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.264101551
+src[/].*[.]egg-info[/].*
+docs[/]html[/].*
+screenrc
+[.]coverage
+.*[.]so
+build[/].*
+||||||| /tmp/.hgignore~base.15Bt_J
+screenrc
 src[/]aossi[/].*[.]so
 build[/].*
->>>>>>> /tmp/.hgignore~other.CRv-Dy
+=======
+>>>>>>> /tmp/.hgignore~other.h0tAib
