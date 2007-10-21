@@ -204,11 +204,15 @@ class DecoSignal(Signal): #{{{
         margs_len = len(margs)
         arg_opt = dict(subset=False, exact=False, shallow=True)
         kw_opt = dict(arg_opt)
-        common = tuple((k[6:], bool(v)) for k, v in cs.iteritems() if k.startswith('match_') and len(k) > 6)
-        arg_opt.update(common)
-        kw_opt.update(common)
-        arg_opt.update((k[6:], bool(v)) for k, v in cs.iteritems() if k.startswith('margs_') and len(k) > 6)
-        kw_opt.update((k[4:], bool(v)) for k, v in cs.iteritems() if k.startswith('mkw_') and len(k) > 4)
+        match = {'match_': [arg_opt, kw_opt], 'margs_': [arg_opt], 'mkw_': [kw_opt]}
+        for k, v in cs.iteritems():
+            klen, ind = len(k), k.find('_')
+            frag = '' if ind < 0 else k[:ind+1]
+            anchor = len(frag)
+            if frag in match and klen > anchor:
+                key, val = k[anchor:], bool(v)
+                for l in match[frag]:
+                    l[key] = val
 
         mseq = tuple(mkcobj(o, g) for o in margs)
         mdict = dict((k, mkcobj(v, g)) for k, v in mkwargs.iteritems())
@@ -226,11 +230,15 @@ class DecoSignal(Signal): #{{{
         margs_len = len(margs)
         arg_opt = dict(subset=False, exact=False, shallow=True)
         kw_opt = dict(arg_opt)
-        common = tuple((k[6:], bool(v)) for k, v in cs.iteritems() if k.startswith('match_') and len(k) > 6)
-        arg_opt.update(common)
-        kw_opt.update(common)
-        arg_opt.update((k[6:], bool(v)) for k, v in cs.iteritems() if k.startswith('margs_') and len(k) > 6)
-        kw_opt.update((k[4:], bool(v)) for k, v in cs.iteritems() if k.startswith('mkw_') and len(k) > 4)
+        match = {'match_': [arg_opt, kw_opt], 'margs_': [arg_opt], 'mkw_': [kw_opt]}
+        for k, v in cs.iteritems():
+            klen, ind = len(k), k.find('_')
+            frag = '' if ind < 0 else k[:ind+1]
+            anchor = len(frag)
+            if frag in match and klen > anchor:
+                key, val = k[anchor:], bool(v)
+                for l in match[frag]:
+                    l[key] = val
 
         v_arg = AllValueSequences(margs, **arg_opt)
         v_kw = AllValueMappings(mkwargs, **kw_opt)
