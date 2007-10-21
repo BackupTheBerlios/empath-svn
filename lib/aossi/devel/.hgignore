@@ -8,3 +8,5 @@ src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
 [.]coverage
+.*[.]so
+build[/].*

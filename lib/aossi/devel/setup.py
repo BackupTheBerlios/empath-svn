@@ -4,13 +4,22 @@
 #
 # This module is part of the <WHAT-HAVE-YOU> project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Feature, Extension
+
+speedcore = Feature(
+    "optional C speed-enhancement modules",
+    standard = True,
+    ext_modules = [
+        Extension("aossi._speedcore", ["src/aossi/_speedcore.pyx"]),
+    ]
+)
 
 setup(
     name="aossi",
     version="0.4.0-1",
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    features={'speedcore': speedcore},
 
 #    package_data={'aossi_docs': 'data/somefile.dat'},
 

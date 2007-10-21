@@ -4,12 +4,13 @@ commit[.]log
 .*[.].*~
 ([^/]*[/])*[.]svn
 tests[/]profile[/]data[/].*
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.241614483
 src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.1624021163
 [.]coverage
-||||||| /tmp/.hgignore~base.kGxr-s
+||||||| /tmp/.hgignore~base.3oMcf0
 =======
-screenrc
->>>>>>> /tmp/.hgignore~other.6G7wgZ
+src[/]aossi[/].*[.]so
+build[/].*
+>>>>>>> /tmp/.hgignore~other.CRv-Dy
