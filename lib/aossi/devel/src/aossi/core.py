@@ -9,18 +9,16 @@
 from warnings import warn
 
 # package imports
-#from aossi._core import (_BaseSignal, cid, callfunc, mkcallback, 
-#                         connect_func, disconnect_func, getsignal)
 try:
-    from aossi._speedcore import (_BaseSignal, cid, callfunc, mkcallback, 
+    from aossi._speedups.core import (_BaseSignal, cid, callfunc, mkcallback, 
                                   connect_func, disconnect_func, getsignal)
 except ImportError:
     from aossi._core import (_BaseSignal, cid, callfunc, mkcallback, 
                              connect_func, disconnect_func, getsignal)
-from aossi.cwrapper import CallableWrapper, cid
-from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
-from aossi.util.introspect import ismethod
-from aossi.util.odict import odict
+#from aossi.cwrapper import CallableWrapper, cid
+#from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
+#from aossi.util.introspect import ismethod
+#from aossi.util.odict import odict
 
 __all__ = ('BaseSignal', 'cid', 'callfunc', 'mkcallback', 'connect_func', 'disconnect_func',
             'getsignal')
@@ -39,19 +37,5 @@ __all__ = ('BaseSignal', 'cid', 'callfunc', 'mkcallback', 'connect_func', 'disco
 # Connections function list -- odict listname/(cfunc, dfunc) 2-tuple
 # Options -- dict option name/value
 class BaseSignal(_BaseSignal): #{{{
-    __slots__ = ()
-
-    def slot(self, name): #{{{
-        return (f for f, _ in self._cleanlist(name))
-    # End def #}}}
-
-    # Properties #{{{
-    func = property(lambda s: s._func)
-    valid = property(lambda s: not s._func.isdead)
-    connected = property(lambda s: any(s._funclist.itervalues()))
-    active = property(lambda s: s._vars['active'], lambda s, v: s._setactive(v))
-    activate_on_call = property(lambda s: s._vars['callactivate'], lambda s, v: s._setcallactivate(v))
-    caller = property(lambda s: s._vars['caller'], lambda s, c: s._setcaller(c))
-    original = property(lambda s: s._func.original)
-    # End properties #}}}
+    __slots__ = ('__weakref__',)
 # End class #}}}

@@ -10,7 +10,7 @@ from warnings import warn
 
 # package imports
 from aossi.cwrapper import CallableWrapper, cid
-from aossi.util import property_, iscallable, ChooseCallable, ChoiceObject
+from aossi.util import iscallable
 from aossi.util.introspect import ismethod
 from aossi.util.odict import odict
 
@@ -43,8 +43,10 @@ def callfunc(sig, func, functype, pass_ret, ret, *args, **kwargs): #{{{
 #    return callback
 ## End def #}}}
 
-class mkcallback(object): #{{{
-    __slots__ = ()
+cdef class mkcallback: #{{{
+    cdef object name
+    cdef object cleanlist
+
     def __init__(self, name, cleanlist): #{{{
         self.name = name
         self.cleanlist = cleanlist
@@ -96,8 +98,8 @@ def disconnect_func(self, listname, slots): #{{{
             del l[found[0]]
 # End def #}}}
 
-class _slot_is_empty(object): #{{{
-    __slots__ = ()
+cdef class _slot_is_empty: #{{{
+    cdef object funclist
     def __init__(self, funclist): #{{{
         self.funclist = funclist
     # End def #}}}
@@ -114,7 +116,8 @@ def _update_funclist(name): #{{{
     return (name, [])
 # End def #}}}
 
-class _call_before(object): #{{{
+cdef class _call_before: #{{{
+    cdef object cleanlist
     def __init__(self, cleanlist, have_slotfunc): #{{{
         self.cleanlist = cleanlist
     # End def #}}}
@@ -128,7 +131,8 @@ class _call_before(object): #{{{
     # End def #}}}
 # End class #}}}
 
-class _call_after(object): #{{{
+cdef class _call_after: #{{{
+    cdef object cleanlist
     def __init__(self, cleanlist, have_slotfunc): #{{{
         self.cleanlist = cleanlist
     # End def #}}}
@@ -151,7 +155,8 @@ def _find_cond_func(s, ln, sl, f, i): #{{{
     return True
 # End def #}}}
 
-class _cleanlist_iter(object): #{{{
+cdef class _cleanlist_iter: #{{{
+    cdef object sig, name, funclist, vals
     def __init__(self, sig, l): #{{{
         self.sig = sig
         self.name = l
@@ -167,7 +172,7 @@ class _cleanlist_iter(object): #{{{
         return self
     # End def #}}}
 
-    def next(self): #{{{
+    def __next__(self): #{{{
         llen, i = self.vals
         if i < llen:
             l = self.funclist
@@ -184,7 +189,8 @@ class _cleanlist_iter(object): #{{{
     # End def #}}}
 # End class #}}}
 
-class _wrapfunc(object): #{{{
+cdef class _wrapfunc: #{{{
+    cdef object sig, func, after, before
     def __init__(self, sig, func, after, before): #{{{
         self.sig = sig
         self.func = func
@@ -203,7 +209,8 @@ class _wrapfunc(object): #{{{
     # End def #}}}
 # End class #}}}
 
-class _wrapfactory(object): #{{{
+cdef class _wrapfactory: #{{{
+    cdef object sig
     def __init__(self, sig): #{{{
         self.sig = sig
     # End def #}}}
@@ -217,6 +224,26 @@ class _wrapfactory(object): #{{{
     # End def #}}}
 # End class #}}}
 
+#    def slot(self, name): #{{{
+#        return (f for f, _ in self._cleanlist(name))
+#    # End def #}}}
+
+cdef class _bs_iterslot: #{{{
+    cdef object cleanlist
+    def __init__(self, l): #{{{
+        self.cleanlist = l
+    # End def #}}}
+
+    def __iter__(self): #{{{
+        return self
+    # End def #}}}
+
+    def __next__(self): #{{{
+        f, _ = selfcleanlist.next()
+        return f
+    # End def #}}}
+# End class #}}}
+
 # ==================================================================================
 # Signal
 # ==================================================================================
@@ -225,9 +252,15 @@ class _wrapfactory(object): #{{{
 # Call function list -- odict listname/func
 # Connections function list -- odict listname/(cfunc, dfunc) 2-tuple
 # Options -- dict option name/value
-class _BaseSignal(object): #{{{
-    __slots__ = ('__weakref__', '_func', '__name__', '_funclist',
-                    '_call_funclist', '_connections', '_vars')
+cdef class _BaseSignal: #{{{
+    cdef public object __name__, _func, _funclist, _call_funclist, _connections, _vars
+    def __new__(self, *args, **kwargs): #{{{
+        self._vars = dict()
+        self._funclist = dict()
+        self._connections = dict()
+        self._call_funclist = dict(map(_mk_call_funclist, ('after', 'replace', 'around', 'before')))
+    # End def #}}}
+
     def __init__(self, signal, **kwargs): #{{{
         if not iscallable(signal):
             raise TypeError("Argument must be callable.")
@@ -243,18 +276,13 @@ class _BaseSignal(object): #{{{
         weak = kwargs.get('weak', True)
         self._func = CallableWrapper(signal, weak=weak)
         self.__name__ = self._func.__name__
-        funclist = self._funclist = dict()
-        conn = self._connections = dict()
-#        call_funclist = self._call_funclist = dict((n, odict()) for n in ('after', 'replace', 'around', 'before'))
-        self._call_funclist = call_funclist = dict(map(_mk_call_funclist, ('after', 'replace', 'around', 'before')))
-        self._vars = getattr(self, '_vars', dict())
         self._vars.update(active=kwargs.get('active', True),
                 callactivate=kwargs.get('activate_on_call', False), caller=callfunc)
 
         # Initialize values of function lists
-        self._init_funclist(funclist)
-        self._init_calls(call_funclist)
-        self._init_connections(conn)
+        self._init_funclist(self._funclist)
+        self._init_calls(self._call_funclist)
+        self._init_connections(self._connections)
     # End def #}}}
 
     def _init_funclist_names(self): #{{{
@@ -447,6 +475,10 @@ class _BaseSignal(object): #{{{
 #        return (f for f, _ in self._cleanlist(name))
 #    # End def #}}}
 
+    def slot(self, name): #{{{
+        return _bs_iterslot(self._cleanlist(name))
+    # End def #}}}
+
     def _setactive(self, v): #{{{
         opt = self._vars
         orig = opt['active']
@@ -471,6 +503,43 @@ class _BaseSignal(object): #{{{
     # End def #}}}
 
     # Properties #{{{
+    property func:
+        def __get__(self): #{{{
+            return self._func
+        # End def #}}}
+    property valid:
+        def __get__(self): #{{{
+            return (not self._func.isdead)
+        # End def #}}}
+    property connected:
+        def __get__(self): #{{{
+            return any(self._funclist.itervalues())
+        # End def #}}}
+    property active:
+        def __get__(self): #{{{
+            return self._vars['active']
+        # End def #}}}
+        def __set__(self, val): #{{{
+            self._setactive(val)
+        # End def #}}}
+    property activate_on_call:
+        def __get__(self): #{{{
+            return self._vars['callactivate']
+        # End def #}}}
+        def __set__(self, val): #{{{
+            self._setcallactivate(val)
+        # End def #}}}
+    property caller:
+        def __get__(self): #{{{
+            return self._vars['caller']
+        # End def #}}}
+        def __set__(self, val): #{{{
+            self._setcaller(val)
+        # End def #}}}
+    property original:
+        def __get__(self): #{{{
+            return self._func.original
+        # End def #}}}
 #    func = property(lambda s: s._func)
 #    valid = property(lambda s: not s._func.isdead)
 #    connected = property(lambda s: any(s._funclist.itervalues()))
@@ -482,7 +551,7 @@ class _BaseSignal(object): #{{{
 # End class #}}}
 
 def getsignal(obj): #{{{
-    if isinstance(obj, BaseSignal):
+    if isinstance(obj, _BaseSignal):
         return obj
     sig = getattr(obj, 'signal', None)
     if sig:

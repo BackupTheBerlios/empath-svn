@@ -82,7 +82,7 @@ def disconnect_func(self, listname, slots): #{{{
 # Connections function list -- odict listname/(cfunc, dfunc) 2-tuple
 # Options -- dict option name/value
 class _BaseSignal(object): #{{{
-    __slots__ = ('__weakref__', '_func', '__name__', '_funclist',
+    __slots__ = ('_func', '__name__', '_funclist',
                     '_call_funclist', '_connections', '_vars')
     def __init__(self, signal, **kwargs): #{{{
         if not iscallable(signal):
@@ -286,9 +286,9 @@ class _BaseSignal(object): #{{{
             self.reload()
     # End def #}}}
 
-#    def slot(self, name): #{{{
-#        return (f for f, _ in self._cleanlist(name))
-#    # End def #}}}
+    def slot(self, name): #{{{
+        return (f for f, _ in self._cleanlist(name))
+    # End def #}}}
 
     def _setactive(self, v): #{{{
         opt = self._vars
@@ -314,13 +314,13 @@ class _BaseSignal(object): #{{{
     # End def #}}}
 
     # Properties #{{{
-#    func = property(lambda s: s._func)
-#    valid = property(lambda s: not s._func.isdead)
-#    connected = property(lambda s: any(s._funclist.itervalues()))
-#    active = property(lambda s: s._vars['active'], lambda s, v: s._setactive(v))
-#    activate_on_call = property(lambda s: s._vars['callactivate'], lambda s, v: s._setcallactivate(v))
-#    caller = property(lambda s: s._vars['caller'], lambda s, c: s._setcaller(c))
-#    original = property(lambda s: s._func.original)
+    func = property(lambda s: s._func)
+    valid = property(lambda s: not s._func.isdead)
+    connected = property(lambda s: any(s._funclist.itervalues()))
+    active = property(lambda s: s._vars['active'], lambda s, v: s._setactive(v))
+    activate_on_call = property(lambda s: s._vars['callactivate'], lambda s, v: s._setcallactivate(v))
+    caller = property(lambda s: s._vars['caller'], lambda s, c: s._setcaller(c))
+    original = property(lambda s: s._func.original)
     # End properties #}}}
 # End class #}}}
 
