@@ -5,218 +5,144 @@
 # This module is part of the eqobj project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from eqobj.core import EqObj
-from eqobj.collections import CollectionMixin
-from eqobj.util import EqObjOptions, MaxCount
+# stdlib imports
+from math import ceil
+from operator import itemgetter
 
-__all__ = ('MaxCount', 'AnyElementMixin', 'AnyElement', 'AllElementsMixin', 'AllElements', 
-            'ExtrapolateOption')
+# package imports
+from eqobj.core import EqObj, IsObj
 
-class SequenceMixin(CollectionMixin): #{{{
+__all__ = ('SequenceMixin', 'Sequence')
+
+class SequenceMixin(object): #{{{
     __slots__ = ()
-# End class #}}}
 
-class AnyElementMixin(SequenceMixin): #{{{
-    __slots__ = ()
-    def _pre_cmp(self, s, obj, target, options): #{{{
-        if not s:
-            return not target
-        elif isinstance(target, int) and len(s) < target:
-            return False
-    # End def #}}}
-
-    def _cmp(self, s, obj, val, target, options): #{{{
-        if target is None and val > 0:
-            return True
-        elif val >= target:
-            return True
-    # End def #}}}
-
-    def _post_cmp(self, s, obj, val, target, options): #{{{
-        if target is None:
-            return bool(val)
-        return val == target
-    # End def #}}}
-
-    def _cmp_loop(self, s, obj, target, options): #{{{
-        s_len, o_len = len(s), len(obj)
-        small_len, big_len = sorted((s_len, o_len))
-        if target == MaxCount:
-            target = s_len
-        pre = self._pre_cmp(s, obj, target, options)
-        if pre is not None:
-            return pre
-        cmp_count, count = self._cmp, 0
-        for i in xrange(small_len):
-            if s[i] == obj[i]:
-                count += 1
-                ret = cmp_count(s, obj, count, target, options)
-                if ret is not None:
-                    return ret
-        return self._post_cmp(s, obj, count, target, options)
-    # End def #}}}
-
-    options = EqObjOptions()
-# End class #}}}
-
-class AllElementsMixin(AnyElementMixin): #{{{
-    __slots__ = ()
     def __init__(self, obj=(), **kwargs): #{{{
-        kwargs.pop('count', None)
-        super(AllElementsMixin, self).__init__(obj, **kwargs)
-        self._options['count'] = MaxCount
+        self._options = self._check_options(kwargs)
+        super(SequenceMixin, self).__init__(self._init_transform(obj))
     # End def #}}}
 
-    def _pre_cmp(self, s, obj, target, options): #{{{
-        if len(s) != len(obj):
-            return False
+    def _init_transform(self, obj): #{{{
+        exact = self._options['exact']
+        def mkv(o): #{{{
+            if exact:
+                return IsObj(o)
+            return o
+        # End def #}}}
+        return tuple(mkv(o) for o in obj)
     # End def #}}}
-# End class #}}}
 
-class SequenceOptionMixin(object): #{{{
-    __slots__ = ()
-    def __init__(self, *args, **kwargs): #{{{
-        if not isinstance(self, SequenceMixin):
-            raise TypeError("SequenceOptionMixin can only be used with SequenceMixin objects")
-        super(SequenceOptionMixin, self).__init__(*args, **kwargs)
-    # End def #}}}
-# End class #}}}
-
-class TrimOption(SequenceOptionMixin): #{{{
-    __slots__ = ()
-    def _check_options(self, opt, expected=()): #{{{
-        expected = ('trim_head', 'trim_tail', 'trim') + expected
+    def _trim_options(self, opt): #{{{
         optget = opt.get
-        th = optget('trim_head', None)
-        tt = optget('trim_tail', None)
-        t = optget('trim', None)
-        t = t if (th is None and tt is None) else bool(th and tt)
-        opt['trim_head'] = th
-        opt['trim_tail'] = tt
-        opt['trim'] = t
-        return super(TrimOption, self)._check_options(opt, expected)
+        strim = (ltrim, rtrim) = optget('ltrim', None), optget('rtrim', None)
+        trim = optget('trim', None)
+        if trim and all(v is None for v in strim):
+            ltrim = rtrim = trim = True
+        else:
+            ltrim, rtrim = map(bool, strim)
+            trim = bool(trim)
+        opt.update(trim=trim, ltrim=ltrim, rtrim=rtrim)
+        return opt
     # End def #}}}
 
-    def _trim_head(self, s, obj, options): #{{{
-        compare = super(TrimOption, self)._cmp_loop
-        obj_len, s_len = len(obj), len(s)
-        min_end = obj_len - (obj_len - s_len)
-        max_start = (obj_len - min_end)+1
-        for i in xrange(max_start):
-            if compare(s, obj[i:min_end+i], s_len, options):
-                return (True, min_end+i)
-        return (False, None)
-    # End def #}}}
-
-    def _cmp_loop(self, s, obj, target, options): #{{{
-        cmp_loop = super(TrimOption, self)._cmp_loop
-        obj_len, s_len = len(obj), len(s)
-        opt = options.get
-        th = opt('trim_head', None)
-        tt = opt('trim_tail', None)
-        t = opt('trim', None)
-        if obj_len > s_len and (th or tt or t):
-            if target == MaxCount:
-                target = s_len
-            elif target < s_len:
-                s_len = target
-            ret, end = False, len(obj)
-            if th:
-                ret, end = self._trim_head(s, obj, options)
-            else:
-                ret, end = cmp_loop(s, obj[:s_len], s_len, options), s_len
-            if tt:
-                return ret
-            else:
-                return (end == obj_len)
-        return cmp_loop(s, obj, target, options)
-    # End def #}}}
-# End class #}}}
-
-class MissingOption(TrimOption): #{{{
-    __slots__ = ()
-    def _check_options(self, opt, expected=()): #{{{
-        expected = ('missing_head', 'missing_tail', 'missing') + expected
+    def _missing_options(self, opt): #{{{
         optget = opt.get
-        th = optget('missing_head', None)
-        tt = optget('missing_tail', None)
-        t = optget('missing', None)
-        t = t if (th is None and tt is None) else bool(th and tt)
-        opt['missing_head'] = th
-        opt['missing_tail'] = tt
-        opt['missing'] = t
-        return super(TrimOption, self)._check_options(opt, expected)
+        smissing = (lmissing, rmissing) = optget('lmissing', None), optget('rmissing', None)
+        missing = optget('missing', None)
+        if missing and all(v is None for v in smissing):
+            lmissing = rmissing = missing = True
+        else:
+            lmissing, rmissing = map(bool, smissing)
+            missing = bool(missing)
+        opt.update(missing=missing, lmissing=lmissing, rmissing=rmissing)
+        return opt
     # End def #}}}
 
-    def _cmp_loop(self, s, obj, target, options): #{{{
-        obj_len, s_len = len(obj), len(s)
-        cmp_loop = super(MissingOption, self)._cmp_loop
-
-        opt = options.pop
-        trimopt = {}
-        trimopt['trim_head'] = th = opt('missing_head', None)
-        trimopt['trim_tail'] = tt = opt('missing_tail', None)
-        trimopt['trim'] = t = opt('missing', None)
-        if isinstance(self, ExtrapolateOption):
-            trimopt['extrapolate'] = False
-        if obj_len < s_len and (th or tt or t):
-            return cmp_loop(obj, s, target, trimopt)
-        return cmp_loop(s, obj, target, options)
+    def _repeat_options(self, opt): #{{{
+        for name in ('repeat', 'pad'):
+            option = opt.get(name, False)
+            if not isinstance(option, (int, slice, bool)):
+                raise TypeError('%s keyword: Expected one of int, slice, boolean object, got %s instead' %(name, option.__class__.__name__))
+            elif not isinstance(option, bool) and isinstance(option, int) and option <= 0:
+                opt[name] = 1
+            else:
+                opt[name] = option
+        return opt
     # End def #}}}
-# End class #}}}
 
-class ExtrapolateOption(SequenceOptionMixin): #{{{
-    __slots__ = ()
     def _check_options(self, opt, expected=()): #{{{
-        expected = ('extrapolate',) + expected
-        return super(ExtrapolateOption, self)._check_options(opt, expected)
+        options = ['trim', 'ltrim', 'rtrim', 'missing', 'lmissing', 'rmissing', 'repeat', 'pad', 'exact']
+        expected = frozenset(options) | frozenset(expected)
+        got = frozenset(opt)
+        if not expected.issuperset(got):
+            raise TypeError("Detected unknown keyword arguments: %s" %", ".join(got - expected))
+        opt['exact'] = bool(opt.get('exact', False))
+        opt = self._trim_options(opt)
+        opt = self._missing_options(opt)
+        opt = self._repeat_options(opt)
+        return opt
     # End def #}}}
 
-    def _cmp_loop(self, s, obj, target, options): #{{{
-        cmp_loop = super(ExtrapolateOption, self)._cmp_loop
-        obj_len, s_len = len(obj), len(s)
-        ex = bool(options.get('extrapolate', False))
-        if ex and s_len < obj_len:
-            if isinstance(target, int):
-                if target < s_len:
-                    s_len = target
-            ret, end = False, len(obj)
-            ret = cmp_loop(s, obj[:s_len], s_len, options)
-            if ret and s:
-                t = target
-                if target is None:
-                    return True
-                elif target == MaxCount:
-                    t = s_len
-                cmp_count = self._cmp
-                last = s[-1]
-                ret = self._pre_cmp(s, obj, s_len, options)
-                if ret is not None:
-                    return ret
-                count = s_len
-                for i in xrange(s_len, obj_len):
-                    if last == obj[i]:
-                        count += 1
-                        if target == MaxCount:
-                            t = count
-                        ret = cmp_count(s, obj, count, t, options)
-                        if ret is not None:
-                            return ret
-                return self._post_cmp(s, obj, count, t, options)
-            return ret
-        return cmp_loop(s, obj, target, options)
+    def __transform__(self, obj): #{{{
+        return tuple(obj)
+    # End def #}}}
+
+    def _unequal_lengths(self, big, small, options): #{{{
+        ltrim, rtrim, repeat = options
+        blen, slen = map(len, [big, small])
+        if blen != slen and not any([ltrim, rtrim]) and repeat is False:
+            return big, small, False
+        if slen and repeat:
+            if isinstance(repeat, bool):
+                repeat = int(ceil(float(blen) / slen))
+                small = (small * repeat)[:blen]
+            elif isinstance(repeat, slice):
+                frag = small[repeat]
+                if frag:
+                    gap = blen - slen
+                    repeat = int(ceil(float(gap) / len(frag)))
+                    small = (small + (frag * repeat))[:blen]
+            else:
+                small = small * repeat
+        return big, small, True
+    # End def #}}}
+
+    def _cmp_loop(self, small, big, options): #{{{
+        ltrim, rtrim, repeat = options
+        slen, blen = map(len, [small, big])
+        maxstart = (blen - slen) if ltrim else 0
+        lastind = slen-1
+        ret = None
+        for i in xrange(0, maxstart+1):
+            for sind, bind in enumerate(xrange(i, slen+i)):
+                lastind = bind
+                if small[sind] != big[bind]:
+                    break
+            else:
+                ret = True
+                break
+            ret = False
+        return (ret and (rtrim or (lastind+1) == blen))
+    # End def #}}}
+
+    def __compare__(self, s, obj): #{{{
+        options = self._options
+        names = ['ltrim', 'rtrim', 'lmissing', 'rmissing', 'repeat', 'pad']
+        ltrim, rtrim, lmissing, rmissing, repeat, pad = itemgetter(*names)(options)
+        slen, olen = map(len, [s, obj])
+        big = small = opt = None
+        if olen < slen:
+            small, big, opt = obj, s, (lmissing, rmissing, pad)
+        else:
+            small, big, opt = s, obj, (ltrim, rtrim, repeat)
+        if olen != slen:
+            big, small, res = self._unequal_lengths(big, small, opt)
+            if not res:
+                return False
+        return self._cmp_loop(small, big, opt)
     # End def #}}}
 # End class #}}}
 
-class AllOptions(object): #{{{
-    pass
-# End class #}}}
-
-class AnyElement(AnyElementMixin, EqObj): #{{{
+class Sequence(SequenceMixin, EqObj): #{{{
     __slots__ = ('_options',)
 # End class #}}}
-
-class AllElements(AllElementsMixin, EqObj): #{{{
-    __slots__ = ('_options',)
-# End class #}}}
-

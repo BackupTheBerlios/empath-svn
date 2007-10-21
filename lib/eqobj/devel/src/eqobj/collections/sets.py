@@ -5,58 +5,81 @@
 # This module is part of the ${__name__} project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from eqobj.core import EqObj
-from eqobj.util import EqObjOptions, MaxCount
-from eqobj.collections.mappings import (AnyKeyMixin, AllKeysMixin, MappingOptionMixin,
-        TrimOption as TrimMapOption, MissingOption as MissingMapOption)
+# stdlib imports
+from operator import itemgetter
 
-__all__ = ('MappingMixin', 'AnyKeyMixin', 'AnyKey', 'AllKeysMixin', 'AllKeys', 'MappingOptionMixin', 
-            'TrimOption', 'MissingOption')
+# package imports
+from eqobj.core import EqObj
+
+__all__ = ('SetMixin', 'Set')
 
 class SetMixin(object): #{{{
     __slots__ = ()
+
+    def __init__(self, obj=(), **kwargs): #{{{
+        self._options = self._check_options(kwargs)
+        super(SetMixin, self).__init__(self._init_transform(obj))
+    # End def #}}}
+
+    def _init_transform(self, obj): #{{{
+        values, validators = set(), set()
+        v1up, v2up = values.add, validators.add
+        for k in obj:
+            if isinstance(k, EqObj):
+                v2up(k)
+            else:
+                v1up(k)
+        return (values, validators)
+    # End def #}}}
+
+    def _trim_options(self, opt): #{{{
+        optget = opt.get
+        trim = bool(optget('trim', False))
+        opt['trim'] = trim
+        return opt
+    # End def #}}}
+
+    def _missing_options(self, opt): #{{{
+        optget = opt.get
+        missing = bool(optget('missing', False))
+        opt['missing'] = missing
+        return opt
+    # End def #}}}
+
+    def _check_options(self, opt, expected=()): #{{{
+        options = ['trim', 'missing']
+        expected = frozenset(options) | frozenset(expected)
+        got = frozenset(opt)
+        if not expected.issuperset(got):
+            raise TypeError("Detected unknown keyword arguments: %s" %", ".join(got - expected))
+        opt = self._trim_options(opt)
+        opt = self._missing_options(opt)
+        return opt
+    # End def #}}}
+
     def __transform__(self, obj): #{{{
         return set(obj)
     # End def #}}}
-# End class #}}}
 
-class AnySetElementMixin(SetMixin, AnyKeyMixin): #{{{
-    __slots__ = ()
-# End class #}}}
-
-class AllSetElementsMixin(SetMixin, AllKeysMixin): #{{{
-    __slots__ = ()
-# End class #}}}
-
-class SetOptionMixin(MappingOptionMixin): #{{{
-    __slots__ = ()
-    def __init__(self, *args, **kwargs): #{{{
-        if not isinstance(self, SetMixin):
-            raise TypeError("SetOptionMixin can only be used with SetMixin objects")
-        super(MappingOptionMixin, self).__init__(*args, **kwargs)
-    # End def #}}}
-
-    def _rmfunc(self, obj): #{{{
-        return obj.remove
+    def __compare__(self, s, obj): #{{{
+        options = self._options
+        t, m = itemgetter('trim', 'missing')(options)
+        valueset, validateset = s
+        trim = obj - valueset
+        missing = valueset - obj
+        tadd, trem, missadd = trim.add, trim.discard, missing.add
+        if missing and not m:
+            return False
+        for ok in frozenset(trim):
+            for vk in validateset:
+                if vk == ok:
+                    trem(ok)
+        if trim and not t:
+            return False
+        return True
     # End def #}}}
 # End class #}}}
 
-class TrimOption(SetOptionMixin, TrimMapOption): #{{{
-    __slots__ = ()
-
-class MissingOption(SetOptionMixin, MissingMapOption): #}}}
-    __slots__ = ()
-# End class #}}}
-
-class AllOptions(TrimOption, MissingOption): #{{{
-    __slots__ = ()
-# End class #}}}
-
-class AnySetElement(AllOptions, AnySetElementMixin, EqObj): #{{{
+class Set(SetMixin, EqObj): #{{{
     __slots__ = ('_options',)
 # End class #}}}
-
-class AllSetElements(AllOptions, AllSetElementsMixin, EqObj): #{{{
-    __slots__ = ('_options',)
-# End class #}}}
-

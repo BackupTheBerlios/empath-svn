@@ -5,7 +5,9 @@
 # This module is part of the eqobj project and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-__all__ = ('EqObj', 'Invert')
+__all__ = ('EqObj', 'IsObj', 
+            'BooleanOperation', 'OrObj', 'AndObj', 'AnyObj', 'AllObj', 
+            'Invert')
 
 _obj_getattr = object.__getattribute__
 
@@ -21,7 +23,7 @@ class EqObj(object): #{{{
     # End def #}}}
 
     def __compare__(self, s, obj): #{{{
-        raise NotImplementedError
+        return (s == obj)
     # End def #}}}
 
     def __call__(self, *args): #{{{
@@ -55,7 +57,7 @@ class EqObj(object): #{{{
     # End def #}}}
 
     def __ne__(self, obj): #{{{
-        return not self.__eq__
+        return not self.__eq__(obj)
     # End def #}}}
 
     def __invert__(self): #{{{
@@ -64,6 +66,13 @@ class EqObj(object): #{{{
 
     def __nonzero__(self): #{{{
         return self()
+    # End def #}}}
+# End class #}}}
+
+class IsObj(EqObj): #{{{
+    __slots__ = ()
+    def __compare__(self, s, obj): #{{{
+        return (s is obj)
     # End def #}}}
 # End class #}}}
 
@@ -88,6 +97,26 @@ class AndObj(BooleanOperation): #{{{
     def __compare__(self, s, obj): #{{{
         s1, s2 = s
         return (s1(obj) and s2(obj))
+    # End def #}}}
+# End class #}}}
+
+class AnyObj(EqObj): #{{{
+    __slots__ = ()
+    def __init__(self, eobj, *objects): #{{{
+        cur = eobj
+        for eobj in objects:
+            cur = OrObj(cur, eobj)
+        super(AnyObj, self).__init__(cur)
+    # End def #}}}
+# End class #}}}
+
+class AllObj(EqObj): #{{{
+    __slots__ = ()
+    def __init__(self, eobj, *objects): #{{{
+        cur = eobj
+        for eobj in objects:
+            cur = AndObj(cur, eobj)
+        super(AllObj, self).__init__(cur)
     # End def #}}}
 # End class #}}}
 
