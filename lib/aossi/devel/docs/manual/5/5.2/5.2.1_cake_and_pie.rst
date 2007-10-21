@@ -1,5 +1,5 @@
 ====================
-4.2.1 Cake and Pie
+5.2.1 Cake and Pie
 ====================
 
 Being able to define signals and connect callables to slots that run before

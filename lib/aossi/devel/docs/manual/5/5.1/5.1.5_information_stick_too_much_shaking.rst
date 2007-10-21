@@ -1,5 +1,5 @@
 ===========================================
-4.1.5 Information, Stick, Too Much Shaking?
+5.1.5 Information, Stick, Too Much Shaking?
 ===========================================
 
 Other ``BaseSignal`` Attributes

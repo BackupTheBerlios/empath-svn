@@ -589,8 +589,6 @@ def make_signal(**kwargs): #{{{
                 raise TypeError("The 'sigext' keyword expected SignalExtension classes, got %s instead" %ext.__name__)
             sigapp(ext)
         sigapp(BaseSignal)
-#        signature = list(kwargs.pop('decoext', ()))
-#        signature.extend([DecoSignalExtension] + list(kwargs.pop('sigext', ())) + [BaseSignal])
         cstr = """
         class _NewDecoSignal(%s):
             __slots__ = ()

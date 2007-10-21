@@ -1,5 +1,5 @@
 ============================================
-4.2.1.5 What Do You Mean "I'm Expendable"?!
+5.2.1.5 What Do You Mean "I'm Expendable"?!
 ============================================
 
 For the most part, the underlying callable of a signal should be useful by

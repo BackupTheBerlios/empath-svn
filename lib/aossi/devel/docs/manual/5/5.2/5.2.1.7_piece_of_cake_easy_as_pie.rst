@@ -1,5 +1,5 @@
 ============================================
-4.2.1.7 Piece of Cake, Easy as Pie
+5.2.1.7 Piece of Cake, Easy as Pie
 ============================================
 
 The ``aossi.signals`` module provides the following two classes that serve
