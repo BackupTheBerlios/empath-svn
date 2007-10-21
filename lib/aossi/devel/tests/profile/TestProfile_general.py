@@ -15,7 +15,7 @@ from aossi.decorators import (signal, make_signal, DefaultDecoSignal, OnReturnDe
                 StreamDecoSignal, CondDecoSignal, WhenDecoSignal, CascadeDecoSignal, 
                 MatchTypeDecoSignal, MatchDecoSignal)
 from aossi.deco import signal as oldsig
-from dispatch import generic
+#from dispatch import generic
 
 #class Signal(OnReturnExtension, StreamExtension, ReplaceExtension, AroundExtension, BaseSignal): #{{{
 #    __slots__ = ()
@@ -97,20 +97,22 @@ class TestGeneralProfile(BaseUnitTest): #{{{
         f('AOSSI SIG%i' %len(l))
     # End def #}}}
 
-    @aossi_sig.cond(lambda s, l, f: True)
+#    @aossi_sig.cond(lambda s, l, f: True)
+#    @aossi_sig.when('isinstance(l, list)')
+    @aossi_sig.cascade('isinstance(l, list)')
     def aossi_before(self, l, f): #{{{
         f('aossi before')
     # End def #}}}
 
-    @generic()
-    def rd_sig(self, l, f): #{{{
-        f('RD SIG%i' %len(l))
-    # End def #}}}
+#    @generic()
+#    def rd_sig(self, l, f): #{{{
+#        f('RD SIG%i' %len(l))
+#    # End def #}}}
 
-    @rd_sig.when("True")
-    def rd_before(self, l, f): #{{{
-        f('rd before')
-    # End def #}}}
+#    @rd_sig.when("True")
+#    def rd_before(self, l, f): #{{{
+#        f('rd before')
+#    # End def #}}}
 
     def profile_dispatch(self, pfname, pdname, prname, sig): #{{{
         res = []
