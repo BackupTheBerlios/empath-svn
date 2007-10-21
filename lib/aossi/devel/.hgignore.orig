@@ -1,18 +1,15 @@
 commit[.]log
 [.].*[.]sw[po]
-<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.1173430297
 .*[.]py[co]
 .*[.].*~
 ([^/]*[/])*[.]svn
+tests[/]profile[/]data[/].*
+<<<<<<< /home/smokybobo/usr/share/projects/devel/berlios.de/empath/lib/aossi/devel/.hgignore.orig.241614483
 src[/].*[.]egg-info[/].*
 docs[/]html[/].*
 screenrc
 [.]coverage
-||||||| /tmp/.hgignore~base.SlKbni
-.*[.]pyc
-src[/]aossi.egg-info[/].*
+||||||| /tmp/.hgignore~base.kGxr-s
 =======
-.*[.]pyc
-src[/]aossi.egg-info[/].*
-tests[/]profile[/]data[/].*
->>>>>>> /tmp/.hgignore~other.jfXZyv
+screenrc
+>>>>>>> /tmp/.hgignore~other.6G7wgZ
