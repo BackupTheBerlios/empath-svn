@@ -9,6 +9,11 @@ from aossi.util.introspect import *
 from aossi.util.callobj import quote as cref
 from inspect import formatargspec, getargspec
 
+try:
+    from aossi._speedups.util import ChooseCallable, AmbiguousChoiceError, StopCascade
+except ImportError:
+    from aossi.util._util import ChooseCallable, AmbiguousChoiceError, StopCascade
+
 __all__ = ('property_', 'deprecated', 'cref', 'ChooseCallable', 'ChoiceObject', 
             'AmbiguousChoiceError', 'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
             'cargnames', 'cgetargspec', 'cargdefstr', 'cargval', 'methodtype', 'methodname',
@@ -27,9 +32,6 @@ METHODTYPE_INSTANCE = 3
 # ==================================================================================
 # Exceptions
 # ==================================================================================
-class AmbiguousChoiceError(StandardError): pass
-class StopCascade(Exception): pass
-
 # Based on the following recipe:
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/205183
 def property_(func): #{{{
@@ -163,56 +165,6 @@ def methodname(obj): #{{{
     for i in dir(o):
         if getattr(o, i) == obj:
             return i
-# End def #}}}
-
-# choices: sequence of 2-tuples
-#   - A function that computes whether or not its partner will be run
-#   - A callable that runs if its partner evaluates to True
-# policy: Default policies: default, cascade, first, last
-# origfunc: The original callable that is wrapped
-# callfunc: A callable that accepts three arguments:
-#   - A callable to call
-#   - Arguments passed to the given callable
-#   - Keyword arguments passed to the given callable
-def ChooseCallable(choices, policy, origfunc, callfunc, *args, **kwargs): #{{{
-    if policy == 'default':
-        return None
-    cascade = policy == 'cascade'
-    def build_found(): #{{{
-        def cascade_chooser(chooser, *args, **kwargs): #{{{
-            cret = stop = False
-            try:
-                cret = callfunc(chooser, *args, **kwargs)
-            except StopCascade, err:
-                if err.args:
-                    cret = bool(err.args[0])
-                stop = True
-            return cret, stop
-        # End def #}}}
-        if cascade:
-            yield origfunc
-        for chooser, func in choices: #{{{
-            cret = stop = False
-            if cascade:
-                cret, stop = cascade_chooser(chooser, *args, **kwargs)
-            else:
-                cret = callfunc(chooser, *args, **kwargs)
-            if cret:
-                yield func
-                if policy == 'first':
-                    return 
-            if cascade and stop:
-                break
-        # End for #}}}
-    # End def #}}}
-    found = [f for f in build_found()]
-    if not found:
-        return None
-    elif policy == 'last':
-        return found[-1:]
-    elif cascade or len(found) == 1:
-        return found
-    raise AmbiguousChoiceError('Found more than one selectable callable')
 # End def #}}}
 
 # Assumes choosefunc and func are CallableWrapper objects
