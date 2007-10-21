@@ -89,43 +89,43 @@ Contents
     - 4.3.3 BaseSignal
     - 4.3.4 getsignal
 
-- 4 Teaching By Example
+- 5 Teaching By Example
 
-  - 4.1 The Basics
+  - 5.1 The Basics
 
-    - 4.1.1 Before and After
-    - 4.1.2 Experiencing Disconnect
-    - 4.1.3 Advice for the Active
-    - 4.1.4 Call Me When You're Ready
-    - 4.1.5 Information, Stick, Too Much Shaking?
+    - 5.1.1 Before and After
+    - 5.1.2 Experiencing Disconnect
+    - 5.1.3 Advice for the Active
+    - 5.1.4 Call Me When You're Ready
+    - 5.1.5 Information, Stick, Too Much Shaking?
 
-  - 4.2 Your Very Own Signal
+  - 5.2 Your Very Own Signal
 
-    - 4.2.1 Cake and Pie
+    - 5.2.1 Cake and Pie
 
-      - 4.2.1.1 Core Concepts
-      - 4.2.1.2 Around We Go
-      - 4.2.1.3 Remind Me When We Return
-      - 4.2.1.4 See, There's This Pipe, And...
-      - 4.2.1.5 What Do You Mean "I'm Expendable"?!
-      - 4.2.1.6 Choices, Choices
-      - 4.2.1.7 Piece Of Cake, Easy As Pie
+      - 5.2.1.1 Core Concepts
+      - 5.2.1.2 Around We Go
+      - 5.2.1.3 Remind Me When We Return
+      - 5.2.1.4 See, There's This Pipe, And...
+      - 5.2.1.5 What Do You Mean "I'm Expendable"?!
+      - 5.2.1.6 Choices, Choices
+      - 5.2.1.7 Piece Of Cake, Easy As Pie
 
-    - 4.2.2 Meet Me Later Than After
+    - 5.2.2 Meet Me Later Than After
 
-  - 4.3 Decorate To Renovate
+  - 5.3 Decorate To Renovate
 
-    - 4.3.1 Here's Some Paint
+    - 5.3.1 Here's Some Paint
 
-      - 4.3.1.1 It Better Be Ready When I Get Back
-      - 4.3.1.2 Fashions From Around The World
-      - 4.3.1.3 On The Other Side of the Stream
-      - 4.3.1.4 Make A Decision Already!
-      - 4.3.1.5 Remain Flexible
-      - 4.3.1.6 Let's Do It All!
-      - 4.3.1.7 Is This A Black-Tie Affair?
-      - 4.3.1.8 Pigs Can Fly... If They're Pink
+      - 5.3.1.1 It Better Be Ready When I Get Back
+      - 5.3.1.2 Fashions From Around The World
+      - 5.3.1.3 On The Other Side of the Stream
+      - 5.3.1.4 Make A Decision Already!
+      - 5.3.1.5 Remain Flexible
+      - 5.3.1.6 Let's Do It All!
+      - 5.3.1.7 Is This A Black-Tie Affair?
+      - 5.3.1.8 Pigs Can Fly... If They're Pink
 
-    - 4.3.2 Standard Phone Rates Apply
-    - 4.3.3 Send That Signal
+    - 5.3.2 Standard Phone Rates Apply
+    - 5.3.3 Send That Signal
 
