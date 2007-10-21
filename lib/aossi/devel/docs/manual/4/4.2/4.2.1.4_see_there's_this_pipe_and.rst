@@ -44,9 +44,8 @@ Implementation
 ...                return wrap
 ...            yield streamin_wrap
 ...        sup = super(StreamExtension, self)._init_calls_around(cleanlist)
-...        ret = odict()
+...        ret = odict(sup.iteritems())
 ...        ret['streamin'] = call_streamin
-...        ret.update(sup.iteritems())
 ...        return ret
 ...    def _init_calls_after(self, cleanlist):
 ...        def call_stream(self, cw, func, ret, args, kwargs):

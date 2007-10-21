@@ -195,9 +195,8 @@ class StreamExtension(SignalExtension): #{{{
             yield streamin_wrap
         # End def #}}}
         sup = super(StreamExtension, self)._init_calls_around(cleanlist)
-        ret = odict()
+        ret = odict(sup.iteritems())
         ret['streamin'] = call_streamin
-        ret.update(sup.iteritems())
         return ret
     # End def #}}}
 
