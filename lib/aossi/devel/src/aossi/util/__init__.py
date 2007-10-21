@@ -8,11 +8,13 @@
 from aossi.util.introspect import *
 from aossi.util.callobj import quote as cref
 from inspect import formatargspec, getargspec
+from smanstal.types.introspect import isclassmethod, isstaticmethod
 
 __all__ = ('cref', 'ChooseCallable', 'ChoiceObject', 'AmbiguousChoiceError',
             'StopCascade', 'needs_wrapping', 'callableobj', 'callable_wrapper',
             'cargnames', 'cgetargspec', 'cargdefstr', 'cargval', 'methodtype', 'methodname',
-            'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE')
+            'METHODTYPE_NOTMETHOD', 'METHODTYPE_UNBOUND', 'METHODTYPE_CLASS', 'METHODTYPE_INSTANCE',
+            'isclassmethod', 'isstaticmethod')
 
 _isf, _ism, _isb = isfunction, ismethod, isbuiltin
 # ==================================================================================
@@ -35,6 +37,7 @@ def needs_wrapping(obj): #{{{
     if not iscallable(obj):
         return False
     elif _ism(obj) or _isf(obj):
+#    elif any(f(obj) for f in (_ism, _isf, isclassmethod, isstaticmethod)):
         return False
     elif hasattr(obj, '__call__') and _ism(obj.__call__):
         return False
@@ -46,6 +49,7 @@ def callableobj(obj): #{{{
     if not iscallable(obj):
         return None
     if _ism(obj) or _isf(obj):
+#    if any(f(obj) for f in (_ism, _isf, isclassmethod, isstaticmethod)):
         return obj
     elif hasattr(obj, '__call__') and _ism(obj.__call__):
         return obj.__call__
