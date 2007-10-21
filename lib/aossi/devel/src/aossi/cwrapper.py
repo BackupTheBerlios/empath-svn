@@ -7,10 +7,13 @@
 
 __all__ = ('CallableWrapper', 'cid', 'num_static_args')
 
+# stdlib imports
 from warnings import warn
 from types import MethodType as method
 from inspect import getargspec, isfunction as _isf, ismethod as _ism, isbuiltin as _isb, isclass
-from aossi.util import (iscallable, needs_wrapping, methodtype, cref, ChoiceObject, callableobj,
+
+# package imports
+from aossi.util import (iscallable, needs_wrapping, cgetargspec, methodtype, cref, ChoiceObject, callableobj,
         METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND, METHODTYPE_INSTANCE, METHODTYPE_CLASS)
 
 __all__ = ('cid', 'num_static_args', 'CallableWrapper')
@@ -18,7 +21,15 @@ __all__ = ('cid', 'num_static_args', 'CallableWrapper')
 def cid(obj): #{{{
     if isinstance(obj, CallableWrapper) or isinstance(obj, ChoiceObject):
         return obj.cid
-    return hash(obj)
+    try:
+        ret = hash(obj)
+    except:
+        obj = callableobj(obj)
+        mtype = methodtype(obj)
+        if mtype not in (METHODTYPE_NOTMETHOD, METHODTYPE_UNBOUND):
+            obj = obj.im_func
+        ret = hash(obj)
+    return ret
 # End def #}}}
 
 # Returns 2-tuple:
@@ -35,17 +46,20 @@ def num_static_args(obj): #{{{
         obj = obj.im_func
     if isinstance(obj, CallableWrapper):
         return obj._numargs, obj._maxargs
-    if not _isf(obj):
+    isc = isclass(obj)
+    if not _isf(obj) and not isc:
         obj = obj.__call__
         if not _ism(obj):
             return -1, None
-    argspec = getargspec(obj)
+    argspec = cgetargspec(obj)
     l, d = len(argspec[0]), argspec[3]
     max = l
     if argspec[1]:
         max = None
     if d:
         l -= len(d)
+        if isc:
+            l -= 1
     return l, max
 # End def #}}}
 
