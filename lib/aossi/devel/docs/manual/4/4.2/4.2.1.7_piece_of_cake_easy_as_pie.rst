@@ -1,0 +1,17 @@
+============================================
+4.2.1.7 Piece of Cake, Easy as Pie
+============================================
+
+The ``aossi.signals`` module provides the following two classes that serve
+to combine all the previous extensions into one signal:
+
+>>> from aossi.core import BaseSignal
+>>> from aossi.signals import (OnReturnExtension, StreamExtension, ChooseExtension, ReplaceExtension, AroundExtension)
+>>> class DefaultExtension(OnReturnExtension, StreamExtension, ChooseExtension, ReplaceExtension, AroundExtension):
+...    __slots__ = ()
+...
+>>> class Signal(DefaultExtension, BaseSignal):
+...    __slots__ = ()
+...
+
+
