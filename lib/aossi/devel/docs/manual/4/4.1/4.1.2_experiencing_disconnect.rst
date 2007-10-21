@@ -52,6 +52,16 @@ only disconnect everything in the specified slot type:
 >>> print signal([])
 ['signal', 'after']
 
+Similarly, if you pass in the ``deleteall`` keyword, then the specified
+slots will disconnect everything regardless of what callabled you specify:
+
+>>> signal.connect(before=[before, before2], after=[after])
+>>> print signal([])
+['before', 'before2', 'signal', 'after']
+>>> signal.disconnect(before=[before], deleteall=True)
+>>> print signal([])
+['signal', 'after']
+
 As an interesting aside in the above examples, as the ``signal`` reference
 is getting reassigned to a new ``BaseSignal`` object, the original
 function the ``signal`` name referenced to would get garbage
@@ -62,7 +72,6 @@ to be set to ``False`` when creating a new ``BaseSignal`` object. If
 we keep the default value of ``True``, then a ``RuntimeWarning`` exception
 is issued:
 
->>> from aossi.core import BaseSignal
 >>> from warnings import simplefilter
 >>> simplefilter('error', RuntimeWarning)
 >>> def signal(l):
