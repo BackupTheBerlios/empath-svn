@@ -92,7 +92,8 @@ def func_ismethod(func, *args): #{{{
 class MetaDecoSignalExtension(type): #{{{
     def __new__(mcls, classname, bases, clsdict): #{{{
         setup = {'__genericdecorators__': ['after', 'before'],
-                 '__decorators__': ['global_settings', 'settings']}
+                 '__decorators__': ['global_settings', 'settings'],
+                 '__dependencies__': []}
         for name, default in setup.iteritems():
             clsdict[name] = mcls._magic_sets(name, default, (classname, bases, clsdict))
         del setup
@@ -125,7 +126,7 @@ class DecoSignalExtension(SignalExtension): #{{{
     __slots__ = ()
 
     def __init__(self, signal, **kwargs): #{{{
-        for cls in self.dependencies:
+        for cls in self.__dependencies__:
             if not isinstance(self, cls):
                 raise TypeError("CustomDecoSignal dependency not fulfilled: %s type required" %cls.__name__)
         self._vars = getattr(self, '_vars', dict())
@@ -284,12 +285,23 @@ class DecoSignalExtension(SignalExtension): #{{{
         return func
     # End def #}}}
 
-    def _get_decorators(self): #{{{
-        return self.__genericdecorators__ | self.__decorators__
+    @property_
+    def decorators(): #{{{
+        def fget(self): #{{{
+            return self.__genericdecorators__ | self.__decorators__
+        # End def #}}}
+        return locals()
     # End def #}}}
 
-    def _get_dependencies(self): #{{{
-        return frozenset()
+    @property_
+    def connect_settings(): #{{{
+        def fget(self): #{{{
+            return s._allsettings()
+        # End def #}}}
+        def fset(self, cs): #{{{
+            s._set_settings(cs)
+        # End def #}}}
+        return locals()
     # End def #}}}
 
     @property_
@@ -308,12 +320,6 @@ class DecoSignalExtension(SignalExtension): #{{{
         # End def #}}}
         return locals()
     # End def #}}}
-
-    # Properties #{{{
-    connect_settings = property(lambda s: s._allsettings(), lambda s, cs: s._set_settings(cs))
-    decorators = property(lambda s: s._get_decorators())
-    dependencies = property(lambda s: s._get_dependencies())
-    # End properties #}}}
 # End class #}}}
 # ==================================================================================
 # CustomDecoSignal
@@ -409,6 +415,7 @@ class CondDecoSignal(CustomDecoSignal): #{{{
 class WhenDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
     __decorators__ = ['when', 'when_return', 'when_yield']
+    __dependencies__ = [CondDecoSignal]
     def _when(self, condfunc, s): #{{{
         if not isinstance(s, basestring):
             raise TypeError('argument must be a string')
@@ -440,11 +447,6 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
     def when_yield(self, s): #{{{
         return self._when(self.yield_cond, s)
     # End def #}}}
-
-    def _get_dependencies(self): #{{{
-        sup = super(WhenDecoSignal, self)._get_dependencies()
-        return sup | frozenset([CondDecoSignal])
-    # End def #}}}
 # End class #}}}
 
 # ==================================================================================
@@ -453,6 +455,7 @@ class WhenDecoSignal(CustomDecoSignal): #{{{
 class CascadeDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
     __decorators__ = ['cascade', 'cascade_return', 'cascade_yield']
+    __dependencies__ = [CondDecoSignal]
     def _cascade(self, condfunc, s, stop=False): #{{{
         self._set_settings(dict((n, 'cascade') for n in ('policy', 'return_policy', 'yield_policy')))
         if not isinstance(s, basestring):
@@ -494,17 +497,13 @@ class CascadeDecoSignal(CustomDecoSignal): #{{{
     def cascade_yield(self, s, stop=False): #{{{
         return self._cascade(self.yield_cond, s, stop)
     # End def #}}}
-
-    def _get_dependencies(self): #{{{
-        sup = super(CascadeDecoSignal, self)._get_dependencies()
-        return sup | frozenset([CondDecoSignal])
-    # End def #}}}
 # End class #}}}
 # ==================================================================================
 # GenericMatchDecoSignal
 # ==================================================================================
 class GenericMatchDecoSignal(CustomDecoSignal): #{{{
     __slots__ = ()
+    __dependencies__ = [CondDecoSignal]
     def _custom_blocked_csettings(self, name): #{{{
         sw = name.startswith
         block_startswith = ('margs_', 'mkw_', 'match_')
@@ -515,11 +514,6 @@ class GenericMatchDecoSignal(CustomDecoSignal): #{{{
         sw = varname.startswith
         exp_startswith = ('margs_', 'mkw_', 'match_')
         return any(sw(s) for s in exp_startswith)
-    # End def #}}}
-
-    def _get_dependencies(self): #{{{
-        sup = super(GenericMatchDecoSignal, self)._get_dependencies()
-        return sup | frozenset([CondDecoSignal])
     # End def #}}}
 # End class #}}}
 # ==================================================================================
