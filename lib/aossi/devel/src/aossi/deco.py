@@ -144,8 +144,9 @@ class DecoSignal(Signal): #{{{
         if ism:
             callmeth = bool(s.get('callmethod', False))
             if callmeth and not mk_sig:
-                name, vardict = func.__name__, dict()
-                defstr, callstr = cargdefstr(func)
+                func_obj = func[1] if istup else func
+                name, vardict = func_obj.__name__, dict()
+                defstr, callstr = cargdefstr(func_obj)
                 self_str = defstr.split(',', 1)[0].strip()
                 callstr = callstr.split(',', 1)[1].strip()
                 fstr = """
