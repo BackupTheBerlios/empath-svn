@@ -7,6 +7,7 @@
 
 # stdlib imports
 from functools import wraps
+from operator import itemgetter
 
 # 3rd-party imports
 from eqobj.collections.sequences import Sequence
@@ -28,6 +29,10 @@ __all__ = ('DecoSignalExtension', 'CustomDecoSignal', 'GenericMatchDecoSignal',
             'MatchTypeDecoSignal', 'MatchDecoSignal',
             'make_signal', 'DefaultDecoSignal', 'signal')
 
+# ==================================================================================
+# Module Globals
+# ==================================================================================
+OPT_OVERLOAD_DEFAULT = False
 # ==================================================================================
 # Helpers
 # ==================================================================================
@@ -174,7 +179,7 @@ class DecoSignalExtension(SignalExtension): #{{{
 
     def _expected_settings(self, kwargs, gset): #{{{
         return frozenset(['clear', 'weak', 'weakcondf', 'globals', 
-                    'ismethod', 'callmethod', 'MAKE_SIGNAL'])
+                    'ismethod', 'callmethod', 'MAKE_SIGNAL', 'overload'])
     # End def #}}}
 
     def _custom_expected(self, varname, kwargs, gset): #{{{
@@ -199,11 +204,29 @@ class DecoSignalExtension(SignalExtension): #{{{
         gset.update(kwargs)
     # End def #}}}
 
+    def _blocked_func_settings(self): #{{{
+        return set(['ismethod', 'callmethod', 'overload'])
+    # End def #}}}
+
+    def _custom_blocked_func_settings(self, name): #{{{
+        return False
+    # End def #}}}
+
+    def _func_settings_options(self, lset, gset): #{{{
+        overload = bool(lset.get('overload', OPT_OVERLOAD_DEFAULT))
+        if overload:
+            lset['weak'] = lset['weakcondf'] = False
+        return dict(overload=overload)
+    # End def #}}}
+
     def _func_settings(self, func): #{{{
-        mk_sig = self._vars['global_settings'].pop('MAKE_SIGNAL', 0)
+        global_settings = self._vars['global_settings']
+        mk_sig = global_settings.pop('MAKE_SIGNAL', 0)
         s = self._csettings()
-        block = set(['ismethod', 'callmethod'])
-        news = dict((k, v) for k, v in s.iteritems() if k not in block)
+        options = self._func_settings_options(s, global_settings)
+        block = self._blocked_func_settings()
+        custom_block = self._custom_blocked_func_settings
+        news = dict((k, v) for k, v in s.iteritems() if k not in block and not custom_block(k))
         ism = bool(s.get('ismethod', False))
         istup = isinstance(func, tuple)
         meth_app = self._vars['methods'].append
@@ -229,7 +252,7 @@ class DecoSignalExtension(SignalExtension): #{{{
                     meth_app(f)
             else:
                 meth_app(func)
-        return func, news
+        return func, news, options
     # End def #}}}
 
     def global_settings(self, **kwargs): #{{{
@@ -251,9 +274,11 @@ class DecoSignalExtension(SignalExtension): #{{{
     # End def #}}}
 
     def _generic(self, func, name): #{{{
-        pfunc, s = self._func_settings(func)
+        pfunc, s, opts = self._func_settings(func)
         s[name] = [pfunc]
         self.connect(**s)
+        if opts['overload']:
+            return self
         return func
     # End def #}}}
 
@@ -338,8 +363,11 @@ class CondDecoSignal(CustomDecoSignal): #{{{
 
     def _cond(self, name, condfunc): #{{{
         def factory(func): #{{{
-            self._generic((condfunc, func), name)
-            return func
+            condtup = (condfunc, func)
+            ret = self._generic(condtup, name)
+            if ret is condtup:
+                return func
+            return ret
         # End def #}}}
         return factory
     # End def #}}}
@@ -577,14 +605,17 @@ class MatchDecoSignal(GenericMatchDecoSignal): #{{{
 # ==================================================================================
 def make_signal(**kwargs): #{{{
     def mkdeco(f, kwargs): #{{{
+        sigkw = kwargs.pop('sigkw_', {})
+        if 'overload' in kwargs:
+            sigkw['weak'] = False
         signature = []
         sigapp = signature.append
-        for ext in kwargs.pop('decoext', ()):
+        for ext in kwargs.pop('decoext_', ()):
             if not isclass(ext) or not issubclass(ext, CustomDecoSignal):
                 raise TypeError("The 'decoext' keyword expected CustomDecoSignal classes, got %s instead" %ext.__name__)
             sigapp(ext)
         sigapp(DecoSignalExtension)
-        for ext in kwargs.pop('sigext', ()):
+        for ext in kwargs.pop('sigext_', ()):
             if not isclass(ext) or not issubclass(ext, SignalExtension):
                 raise TypeError("The 'sigext' keyword expected SignalExtension classes, got %s instead" %ext.__name__)
             sigapp(ext)
@@ -594,7 +625,7 @@ def make_signal(**kwargs): #{{{
             __slots__ = ()
         """ %', '.join('signature[%i]' %i for i in xrange(len(signature)))
         exec compile(cstr.strip(), '<string>', 'exec') in locals()
-        return _NewDecoSignal(f)
+        return _NewDecoSignal(f, **sigkw)
     # End def #}}}
     def settings(func): #{{{
         signal = getattr(func, 'signal', None)
@@ -615,8 +646,8 @@ def make_signal(**kwargs): #{{{
         d.signal = signal
         for n in signal.decorators:
             setattr(d, n, getattr(signal, n))
-        kwargs.pop('decoext', ())
-        kwargs.pop('sigext', ())
+        kwargs.pop('decoext_', ())
+        kwargs.pop('sigext_', ())
         kwargs['MAKE_SIGNAL'] = 1
         return global_settings(d, **kwargs)(d)
     # End def #}}}
@@ -661,8 +692,8 @@ class DefaultDecoSignal(OnReturnDecoSignal, ReplaceDecoSignal, AroundDecoSignal,
 def signal(**kwargs): #{{{
     sigext = [DefaultExtension]
     decoext = [DefaultDecoSignal]
-    kwargs['sigext'] = sigext
-    kwargs['decoext'] = decoext
+    kwargs['sigext_'] = sigext
+    kwargs['decoext_'] = decoext
     return make_signal(**kwargs)
 # End def #}}}
 # ==================================================================================
