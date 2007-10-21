@@ -25,6 +25,8 @@ Implementation
 ...        def call_streamin(self):
 ...            def streamin_wrap(func):
 ...                def wrap(cw, *args, **kwargs):
+...                    if not self._funclist['streamin']:
+...                        return func(*args, **kwargs)
 ...                    sig, signame = None, cw.__name__
 ...                    if args:
 ...                        for cls in mro(args[0].__class__):
@@ -40,7 +42,10 @@ Implementation
 ...                    callfunc = self.caller
 ...                    for sfunc, t in cleanlist('streamin'):
 ...                        callfunc(self, sfunc, 'streamin', False, None, *args)
-...                    args, kwargs = args
+...                    if sig:
+...                        args, kwargs = [args[0]] + args[1], args[2]
+...                    else:
+...                        args, kwargs = args
 ...                    return func(*args, **kwargs)
 ...                return wrap
 ...            yield streamin_wrap

@@ -172,6 +172,8 @@ class StreamExtension(SignalExtension): #{{{
         def call_streamin(self): #{{{
             def streamin_wrap(func): #{{{
                 def wrap(cw, *args, **kwargs): #{{{
+                    if not self._funclist['streamin']:
+                        return func(*args, **kwargs)
                     sig, signame = None, cw.__name__
                     if args:
                         for cls in mro(args[0].__class__):
@@ -186,8 +188,11 @@ class StreamExtension(SignalExtension): #{{{
                         args = (list(args), kwargs)
                     callfunc = self.caller
                     for sfunc, t in cleanlist('streamin'):
-                        callfunc(self, sfunc, 'streamin', False, None, *args, **kwargs)
-                    args, kwargs = args
+                        callfunc(self, sfunc, 'streamin', False, None, *args)
+                    if sig:
+                        args, kwargs = [args[0]] + args[1], args[2]
+                    else:
+                        args, kwargs = args
                     return func(*args, **kwargs)
                 # End def #}}}
                 return wrap
