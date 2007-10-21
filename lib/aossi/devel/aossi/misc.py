@@ -133,10 +133,9 @@ def ChooseCallable(choices, policy, *args, **kwargs): #{{{
     def build_found(): #{{{
         for chooser, func in choices: #{{{
             if chooser(*args, **kwargs):
-                if policy == 'first':
-                    yield func
-                    return 
                 yield func
+                if policy == 'first':
+                    return 
     # End def #}}}
     found = [f for f in build_found()]
     if not found:
