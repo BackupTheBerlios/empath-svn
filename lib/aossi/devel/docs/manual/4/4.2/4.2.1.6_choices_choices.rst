@@ -1,0 +1,299 @@
+============================================
+4.2.1.6 Choices, Choices
+============================================
+
+One of the most interesting pieces of functionality is the
+``ChooseExtension`` class. This signal extension provides a way of
+supplying callables that return a boolean value that determines whether or
+not an accompanying callable should be used as the replacement signal. As
+the implementation of this is a bit more complicated than the previous
+extensions, instead of the full blown implementation being shown the
+following section will provide an overview of the implementation followed
+by the usual usage section.
+
+Implementation Overview
+========================
+
+The ``ChooseExtension`` class defines three **replace** category slots:
+``choose``, ``choosereturn``, and ``chooseyield``. The ``choose`` slot
+operates on the input to a signal, and ``choosereturn`` and
+``chooseyield`` operates on the output of a signal.
+
+Similar to the previous extensions, ``ChooseExtension`` overrides the
+following methods:
+
+``_init_funclist_names()``
+   Define the slot names
+
+``_init_calls_replace()``
+   Define slot functionality
+
+What makes this extension a bit more complicated than the other extensions
+is that it defines a few properties as well as uses a more customized
+version of the ``callfunc()`` function previous extensions used. These
+properties are needed in order to allow a user to decide the behaviour of
+the choosing algorithm. This is due to the difficulty of *knowing* what to
+do in certain situations. For example, if there are two choice callables
+connected to a signal, and both are decided to be suitable to replace the
+underlying signal callable, which of the two should be chosen?
+
+The new properties ``ChooseExtension`` provides are as follows:
+
+``chooser_policy``
+``return_chooser_policy``
+``yield_chooser_policy``
+   Define policy for the ``choose``, ``choosereturn``, and ``chooseyield`` slots respectively
+
+``chooser``
+``return_chooser``
+``yield_chooser``
+   Set the callable that will implement the actual decision-making process
+   for the ``choose``, ``choosereturn``, and ``chooseyield`` slots
+   respectively
+
+The ``ChooseExtension`` expects a 2-tuple to be passed to the ``connect()``
+method instead of a single callable. This 2-tuple is a pair of callables,
+the first of which accepts the arguments passed to the signal and returns a
+boolean value. If this value is True, then the second callable is marked as
+suitable for replacing the signal callable. If False, then the choosing
+algorithm continues to the next pair of choice callables. Because of this
+change, the class overrides the following methods:
+
+``_init_connections(connections)``
+   Given the list of names of all connected callables, maps slot names to
+   callables. Because of the changes required in the class, the behaviour
+   of this method is changed to map a slot name to a 2-tuple of callables
+   as described above. 
+
+``_find_cond(**kw)``
+   This is a factory method. It returns a method that, when searching for a
+   specific callable that may be contained in the various slots, decides
+   for each slot callable that matches the callable passed to the
+   ``_find()`` method whether or not the match is valid. This method is
+   overriden to take into account that callables are represented in 2-tuple
+   form.
+
+``__init__()``
+   This method is overridden merely to provide default values to the new
+   properties defined for this class.
+
+
+Usage
+======
+
+The Basics
+-----------
+
+To use this extension, we need to mix the ``ChooseExtension`` class into a
+subclass of ``BaseSignal``:
+
+>>> from aossi.core import BaseSignal
+>>> from aossi.signals import ChooseExtension
+>>> class ChooseSignal(ChooseExtension, BaseSignal): pass
+...
+>>> def test(l):
+...      l.append('signal')
+...      return l
+...
+>>> def simple_decide(l):
+...   return (not l)
+...
+>>> def simple_choice(l):
+...     l.append('choice')
+...     return l
+...
+
+
+The above implementation would then result in:
+
+>>> signal = ChooseSignal(test)
+>>> print signal([])
+['signal']
+>>> signal.connect(choose=[(simple_decide, simple_choice)])
+>>> print signal([])
+['choice']
+>>> print signal([1])
+[1, 'signal']
+
+An example with the ``choosereturn`` slot:
+
+>>> def decide_return(l):
+...   return isinstance(l[0], int)
+...
+>>> def choose_return(l):
+...   l.append('choose_return')
+...   return l
+...
+>>> signal.connect(choosereturn=[(decide_return, choose_return)])
+>>> print signal([1])
+[1, 'signal', 'choose_return']
+>>> print signal([])
+['choice']
+
+And finally, an example with the ``chooseyield`` slot:
+
+>>> def test_yield(l):
+...   for i, s in enumerate(l):
+...      yield i
+...      yield s
+...
+>>> def decide_yield(val):
+...   return isinstance(val, int)
+...
+>>> def choose_yield(val):
+...   return "FOUND INT: %i" %val
+...
+>>> ysignal = ChooseSignal(test_yield)
+>>> ysignal.connect(chooseyield=[(decide_yield, choose_yield)])
+>>> print list(ysignal('abc'))
+['FOUND INT: 0', 'a', 'FOUND INT: 1', 'b', 'FOUND INT: 2', 'c']
+
+Note that if the signal does not return a generator, the chooseyield
+callables will not run:
+
+>>> signal.connect(chooseyield=[(decide_yield, choose_yield)])
+>>> print signal([])
+['choice']
+>>> def decide(l):
+...   return isinstance(l, basestring)
+...
+>>> signal.disconnect(choose=[], choosereturn=[])
+>>> signal.connect(choose=[(decide, test_yield)])
+>>> print list(signal('abc'))
+['FOUND INT: 0', 'a', 'FOUND INT: 1', 'b', 'FOUND INT: 2', 'c']
+
+Specifying Policy
+-------------------
+
+Description
+~~~~~~~~~~~~~~
+
+The default callable used for ``chooser``, ``return_chooser``, and
+``yield_chooser`` is the function ``ChooseCallable()`` which is defined in
+the ``aossi.util`` module. This function understands 5 basic policies:
+
+No policy
+   This is represented by the ``None`` object. Without a policy,
+   ``ChooseCallable()`` will return either ``None`` if there are no slot
+   callables, or a list containing a single function to replace the signal
+   with if only one decision callable returned True. If more than one
+   decision callable returned True, an ``AmbiguousChoiceError`` exception
+   is raised.
+
+Default
+   This is represented by the string ``'default'``. This policy will
+   effectively cause the chooser callable to completely ignore every choice
+   pair in its slots and return None. This results in the original signal
+   callable to remain as if there were no callables connected in any of the
+   slots defined by the ``ChoiceExtension`` class.
+
+First
+   This is represented by the string ``'first'``. With this policy, the
+   first decision callable to return ``True`` will cause its partner to be used
+   as the replacement signal regardless if there are any other decision
+   callables that would return ``True``. 
+
+Last
+   Represented by the string ``'last'``, this policy will cause the last
+   decision callable to return ``True`` to return its partner callable as
+   the replacement signal.
+
+Cascade
+   This last policy is represented by the string ``'cascade'``. For every
+   decision callable that returns a ``True`` value, its partner callable
+   will be run with the arguments sent to the original signal. The return
+   value of the last pair's signal replacement callable will then be used
+   as the overall signal's return value. For this policy, the original
+   signal is seen as the first signal callable and will always be run.
+
+Examples
+~~~~~~~~~
+
+Note that these examples illustrate only callables within the ``choose``
+slot. The behaviour should be considered the same for the ``choosereturn``
+and ``chooseyield`` slots.
+
+All of the examples will use the following function as the base signal:
+
+>>> def test(l):
+...      l.append('signal')
+...      return l
+...
+
+And the following decision callable is useful for some of the examples:
+
+>>> def always_true(l):
+...   return True
+...
+
+No Policy
+``````````
+The examples earlier in this chapter all have no policy.
+
+Default
+````````
+>>> def some(l):
+...     l.append('ZZZ')
+...     return l
+...
+>>> signal = ChooseSignal(test)
+>>> signal.connect(choose=[(always_true, some)])
+>>> print signal([])
+['ZZZ']
+>>> signal.chooser_policy = 'default'
+>>> print signal([])
+['signal']
+
+First
+``````
+>>> def choice_a(l):
+...     l.append('A')
+...     return l
+...
+>>> def choice_b(l):
+...     l.append('B')
+...     return l
+...
+>>> signal = ChooseSignal(test)
+>>> signal.chooser_policy = 'first'
+>>> print signal.chooser_policy
+first
+>>> signal.connect(choose=[(always_true, choice_a), (always_true, choice_b)])
+>>> print signal([])
+['A']
+
+Last
+``````
+>>> def choice_a(l):
+...     l.append('A')
+...     return l
+...
+>>> def choice_b(l):
+...     l.append('B')
+...     return l
+...
+>>> signal = ChooseSignal(test)
+>>> signal.chooser_policy = 'last'
+>>> print signal.chooser_policy
+last
+>>> signal.connect(choose=[(always_true, choice_a), (always_true, choice_b)])
+>>> print signal([])
+['B']
+
+Cascade
+````````
+>>> def choice_a(l):
+...     l.append('A')
+...     return ['A']
+...
+>>> def choice_b(l):
+...     return (l, ['B'])
+...
+>>> signal = ChooseSignal(test)
+>>> signal.chooser_policy = 'cascade'
+>>> print signal.chooser_policy
+cascade
+>>> signal.connect(choose=[(always_true, choice_a), (always_true, choice_b)])
+>>> print signal([])
+(['signal', 'A'], ['B'])
+
