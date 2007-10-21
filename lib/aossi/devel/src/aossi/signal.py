@@ -114,7 +114,7 @@ class Signal(BaseSignal): #{{{
             yield n
     # End def #}}}
 
-    def _init_calls_replace(self, cleanlist): #{{{
+    def _init_calls_replace(self, cleanlist, have_slotfunc): #{{{
         def call_replace(self): #{{{
             def do_wrap(func): #{{{
                 def newcall(cw, *args, **kwargs): #{{{
@@ -164,14 +164,14 @@ class Signal(BaseSignal): #{{{
         return ret
     # End def #}}}
 
-    def _init_calls_around(self, cleanlist): #{{{
+    def _init_calls_around(self, cleanlist, have_slotfunc): #{{{
         def call_around(self): #{{{
             return (arfunc for arfunc, _ in cleanlist('around'))
         # End def #}}}
         return odict(around=call_around)
     # End def #}}}
 
-    def _init_calls_after(self, cleanlist): #{{{
+    def _init_calls_after(self, cleanlist, have_slotfunc): #{{{
         def call_streamin(self, cw, func, ret, args, kwargs): #{{{
             callfunc, cnam, sig, signame = self.caller, 'streamin', None, cw.__name__
             if args:
@@ -201,7 +201,7 @@ class Signal(BaseSignal): #{{{
                 callfunc(self, rfunc, 'onreturn', True, ret, *args, **kwargs)
             return ret
         # End def #}}}
-        sup = super(Signal, self)._init_calls_after(cleanlist)
+        sup = super(Signal, self)._init_calls_after(cleanlist, have_slotfunc)
         ret = odict()
         ret['streamin'] = call_streamin
         ret['stream'] = call_stream
